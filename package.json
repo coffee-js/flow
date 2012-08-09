@@ -1,0 +1,42 @@
+{
+  "name": "flow",
+  "version": "0.0.1",
+  "description": "a programming language",
+  "keywords": [
+    "language",
+    "compiler",
+    "javascript"
+   ],
+  "author": "Emerge <emerge260@gmail.com>",
+  "main": "./js/lib/flow.js",
+  "directories": {
+    "bin": "./js/bin",
+    "lib": "./js/lib",
+    "src": "./coffee",
+    "docs": "./docs",
+    "test": "./test"
+  },
+  "bin": {
+    "flow": "./bin/flow"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/emerge/flow.git"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "express": "= 2.5.11",
+    "coffeekup": ">= 0.3.1",
+    "now": ">= 0.8.0",
+    "watchr": ">= 2.0.0",
+    "jasmine-node": ">= 1.0.0",
+    "walkdir": ">= 0.0.4",
+    "mocha": ">= 1.0.0",
+    "coffee-script": ">= 1.1.0",
+    "requirejs": ">= 2.0.0"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  }
+}
