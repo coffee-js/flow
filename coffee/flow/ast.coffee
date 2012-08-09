@@ -15,7 +15,7 @@ class ast.NodeWord extends ast.Node
 
 
 class ast.NodeBlock extends ast.Node
-  constructor: (@seq) ->
+  constructor: (@args, @seq) ->
 
 
 class ast.NodeElem extends ast.Node

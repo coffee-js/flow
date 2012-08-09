@@ -19,15 +19,25 @@ combinator = do ->
   name = pc.map pc.seq(pc.rep1(nameChar), colon, endToken),
     (n) -> n[0].reduce (t,s)->t.concat(s)
 
-  word = pc.map pc.seq(pc.and(pc.rep1(pc.neg pc.space()), pc.neg(pc.seq pc.ch('[]'), endToken), pc.neg(name)), endToken),
+  word = pc.map pc.seq( pc.and(
+      pc.rep1(pc.neg pc.space()),
+      pc.neg(pc.seq pc.ch('[]'), endToken),
+      pc.neg(pc.seq pc.tok('>>'), endToken),
+      pc.neg(name)), endToken),
     (n) -> new ast.NodeWord n[0].reduce (t,s)->t.concat(s)
 
   elem = null
   _elem = pc.lazy ->elem
 
+  args = pc.map pc.seq(pc.rep1(word), pc.tok('>>'), pc.space()),
+    (n) -> n[0]
   seq = pc.rep1 _elem
-  block = pc.map pc.seq(pc.tok('['), pc.space(), pc.optional(seq), pc.tok(']'), endToken),
-    (n) -> new ast.NodeBlock if n[2]==true then [] else n[2]
+
+  block = pc.map pc.seq(pc.tok('['), pc.space(), pc.optional(args), pc.optional(seq), pc.tok(']'), endToken),
+    (n) ->
+      args = if n[2]==true then [] else n[2]
+      seq = if n[3]==true then [] else n[3]
+      new ast.NodeBlock args, seq
   value = pc.choice block, number, string, word
 
   elem = pc.map pc.seq(pc.optional(name), value),

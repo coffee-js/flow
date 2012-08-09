@@ -116,6 +116,7 @@ describe "Fn Parser", ->
         {
           name: null
           val:
+            args: []
             seq: [
               {
                 name: null
@@ -133,10 +134,12 @@ describe "Fn Parser", ->
       p = parser.block
       (expect (p pc.ps "[]").match).toEqual null
       (expect (p pc.ps "[ [ sd: 45 [] ] - ]").match).toEqual {
+        args: []
         seq: [
           {
             name: null
             val:
+              args: []
               seq: [
                 {
                   name: "sd"
@@ -157,7 +160,49 @@ describe "Fn Parser", ->
           }
         ]
       }
-
+      (expect (p pc.ps "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match).toEqual {
+        args: [
+          {
+            name: "aa"
+          }
+          {
+            name: "bb"
+          }
+        ]
+        seq: [
+          {
+            name: null
+            val:
+              args: [
+                {
+                  name: "cc"
+                }
+              ]
+              seq: [
+                {
+                  name: "sd"
+                  val:
+                    val: 45
+                }
+                {
+                  name: null
+                  val:
+                    name: "[]"
+                }
+              ]
+          }
+          {
+            name: null
+            val:
+              name: "-"
+          }
+          {
+            name: null
+            val:
+              name: "aa"
+          }
+        ]
+      }
 
 
 
