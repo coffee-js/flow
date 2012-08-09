@@ -5,8 +5,6 @@ ast = require "./ast"
 
 combinator = do ->
   endToken = pc.choice pc.space(), pc.end()
-  ws = (p) ->
-    pc.map pc.seq(p, endToken), (n)->n[0]
 
   int10 = pc.map pc.rep1(pc.range '0','9'), (n)->n.reduce (t,s)->t.concat(s)
   number = pc.map pc.seq(pc.optional(pc.tok '-'), int10, endToken),
@@ -21,7 +19,7 @@ combinator = do ->
   name = pc.map pc.seq(pc.rep1(nameChar), colon, endToken),
     (n) -> n[0].reduce (t,s)->t.concat(s)
 
-  word = pc.map pc.seq(pc.and(pc.rep1(pc.neg pc.space()), pc.neg(ws(pc.ch '[]')), pc.neg(name)), endToken),
+  word = pc.map pc.seq(pc.and(pc.rep1(pc.neg pc.space()), pc.neg(pc.seq pc.ch('[]'), endToken), pc.neg(name)), endToken),
     (n) -> new ast.NodeWord n[0].reduce (t,s)->t.concat(s)
 
   elem = null
