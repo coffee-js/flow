@@ -54,42 +54,16 @@ class Context
     if @name
       @words[@name] = @curBlock
 
-  setWord: (name, val) ->
-    @words[name] = val
-
   getWord: (name) ->
-    if name.match /^\$$/
-      if @parent
-        @parent.values
-      else
-        throw "no parent ctx for word: #{name}"
-
-    else if name.match /^\$(-?\d+)$/
-      i = parseInt name.substring(1, name.length)
-      if @parent
-        if i > 0
-          v = @parent.values[i-1]
-        else if 0 == i
-          v = @curBlock
-        else
-          l = @parent.values.length
-          v = @parent.values[l+i]
-        if v == undefined
-          throw "parent ctx no #{name}"
-        v
-      else
-        throw "no parent ctx for word: #{name}"
-
+    word = @words[name]
+    if word
+      word
+    else if @parent
+      @parent.getWord name
+    else if buildinWords[name]
+      buildinWords[name]
     else
-      word = @words[name]
-      if word
-        word
-      else if @parent
-        @parent.getWord name
-      else if buildinWords[name]
-        buildinWords[name]
-      else
-        null
+      null
 
 
 elemEval = (node, ctx) ->
@@ -99,10 +73,13 @@ elemEval = (node, ctx) ->
 nodeEval = (node, ctx) ->
   if      node instanceof ast.NodeValue
     valueEval node, ctx
+
   else if node instanceof ast.NodeWord
     wordEval  node, ctx
+
   else if node instanceof ast.NodeBlock
     node
+
   else
     throw "unsupport node:\n#{pp node}"
 
@@ -115,18 +92,19 @@ wordEval = (node, ctx) ->
 
   if      word instanceof ast.NodeBlock
     v = blockEval word, ctx, node.name
-    ctx.values.length = 0
+
   else if word instanceof ast.Node
     v = nodeEval word, ctx
-    ctx.setWord node.name, v
+
   else if word instanceof Function
     v = word(ctx)
-    ctx.values.length = 0
+
   else if word != undefined
     v = word
+
   else
     v = eval(node.name)(ctx.values...)
-    ctx.values.length = 0
+
   v
 
 
@@ -151,8 +129,8 @@ blockEval = (node, parentCtx, name) ->
   
 
 
-interp.eval = (node) ->
-  blockEval node
+interp.eval = (seq) ->
+  blockEval new ast.NodeBlock [], seq
 
 
 
