@@ -11,12 +11,12 @@ describe "Fn Interp", ->
 
   describe "buildin words", ->
 
-    # it "math OPs", ->
-    #   seq = (parser.parse "1 2 + 3 - 20").match
-    #   (expect (interp.eval new ast.NodeBlock seq)).toEqual [0, 20]
+    it "math OPs", ->
+      seq = (parser.parse "1 2 + 3 - 20").match
+      (expect (interp.eval new ast.NodeBlock seq)).toEqual [0, 20]
 
-    #   seq = (parser.parse "1 2 + 3 4 - *").match
-    #   (expect (interp.eval new ast.NodeBlock seq)).toEqual [-3]
+      seq = (parser.parse "1 2 + 3 4 - *").match
+      (expect (interp.eval new ast.NodeBlock seq)).toEqual [-3]
 
 
     # it "if function", ->
