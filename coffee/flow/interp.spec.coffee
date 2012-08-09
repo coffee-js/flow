@@ -9,14 +9,16 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 describe "Fn Interp", ->
 
+  run = (seq) -> interp.eval new ast.NodeBlock [], seq
+
   describe "buildin words", ->
 
-    # it "math OPs", ->
-    #   seq = (parser.parse "1 2 + 3 - 20").match
-    #   (expect (interp.eval new ast.NodeBlock seq)).toEqual [0, 20]
+    it "math OPs", ->
+      seq = (parser.parse "1 2 + 3 - 20").match
+      (expect (run seq)).toEqual [0, 20]
 
-    #   seq = (parser.parse "1 2 + 3 4 - *").match
-    #   (expect (interp.eval new ast.NodeBlock seq)).toEqual [-3]
+      seq = (parser.parse "1 2 + 3 4 - *").match
+      (expect (run seq)).toEqual [-3]
 
 
     # it "if function", ->
