@@ -3,37 +3,40 @@ ast = require "./ast"
 
 
 log = (s) -> console.log s
-pp = (s) -> console.log JSON.stringify s, null, '  '
+pp  = (s) -> console.log JSON.stringify s, null, '  '
 
 
-lastArgs = (n, ctx) ->
+getArgs = (n, ctx) ->
   l = ctx.values.length
-  if l < n then throw "no enough args"
-  [ctx.values.slice(0,l-n), ctx.values.slice(l-n)]
+  if l < n
+    throw "no enough args #{ctx}"
+  args = ctx.values.slice l-n
+  ctx.values.length = l-n
+  args
 
-lastArgs1 = (ctx) -> lastArgs 1, ctx
-lastArgs2 = (ctx) -> lastArgs 2, ctx
-lastArgs3 = (ctx) -> lastArgs 3, ctx
+getArgs1 = (ctx) -> getArgs 1, ctx
+getArgs2 = (ctx) -> getArgs 2, ctx
+getArgs3 = (ctx) -> getArgs 3, ctx
 
 
 buildinWords = {
-  "+": (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a+b]
-  "-": (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a-b]
-  "*": (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a*b]
-  "/": (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a/b]
+  "+":    (ctx) -> [a,b] = getArgs2 ctx; [a+b]
+  "-":    (ctx) -> [a,b] = getArgs2 ctx; [a-b]
+  "*":    (ctx) -> [a,b] = getArgs2 ctx; [a*b]
+  "/":    (ctx) -> [a,b] = getArgs2 ctx; [a/b]
 
-  '=':  (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a==b]
-  '<':  (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a<b]
-  '>':  (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a>b]
-  '<=': (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a<=b]
-  '>=': (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a>=b]
+  '=':    (ctx) -> [a,b] = getArgs2 ctx; [a==b]
+  '<':    (ctx) -> [a,b] = getArgs2 ctx; [a<b]
+  '>':    (ctx) -> [a,b] = getArgs2 ctx; [a>b]
+  '<=':   (ctx) -> [a,b] = getArgs2 ctx; [a<=b]
+  '>=':   (ctx) -> [a,b] = getArgs2 ctx; [a>=b]
 
-  'not': (ctx) -> [remain, [a]] = lastArgs1(ctx); remain.concat [!a]
-  'and': (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a&&b]
-  'or':  (ctx) -> [remain, [a,b]] = lastArgs2(ctx); remain.concat [a||b]
+  'not':  (ctx) -> [a]   = getArgs1 ctx; [!a]
+  'and':  (ctx) -> [a,b] = getArgs2 ctx; [a&&b]
+  'or':   (ctx) -> [a,b] = getArgs2 ctx; [a||b]
 
-  'if': (ctx) ->
-    [remain, [cond, whenTrue, whenFalse]] = lastArgs3(ctx)
+  'if':   (ctx) ->
+    [cond, whenTrue, whenFalse] = getArgs3(ctx)
 
     if !(whenTrue instanceof ast.NodeBlock)
       throw "whenTrue is not a block: #{pp whenTrue}"
@@ -41,18 +44,18 @@ buildinWords = {
       throw "whenFalse is not a block: #{pp whenFalse}"
 
     if cond
-      remain.concat blockEval whenTrue, ctx
+      blockEval whenTrue, ctx
     else
-      remain.concat blockEval whenFalse, ctx
+      blockEval whenFalse, ctx
 }
 
 
 class Context
-  constructor: (@parent, @curBlock, @name) ->
+  constructor: (@parent, @node, @name) ->
     @values = []
     @words = {}
     if @name
-      @words[@name] = @curBlock
+      @words[@name] = @node
 
   getWord: (name) ->
     word = @words[name]
@@ -73,13 +76,10 @@ elemEval = (node, ctx) ->
 nodeEval = (node, ctx) ->
   if      node instanceof ast.NodeValue
     valueEval node, ctx
-
   else if node instanceof ast.NodeWord
     wordEval  node, ctx
-
   else if node instanceof ast.NodeBlock
     node
-
   else
     throw "unsupport node:\n#{pp node}"
 
@@ -92,24 +92,36 @@ wordEval = (node, ctx) ->
 
   if      word instanceof ast.NodeBlock
     v = blockEval word, ctx, node.name
-
   else if word instanceof ast.Node
     v = nodeEval word, ctx
-
-  else if word instanceof Function
-    v = word(ctx)
-
-  else if word != undefined
+  else if !(word instanceof Function) && (word != undefined)
     v = word
-
+  else if word instanceof Function
+    v = word ctx
   else
-    v = eval(node.name)(ctx.values...)
-
+    v = eval node.name ctx.values...
   v
 
 
 blockEval = (node, parentCtx, name) ->
   ctx = new Context parentCtx, node, name
+
+  needArgs = node.args.length > 0
+
+  if !parentCtx && needArgs
+    throw "no enough args #{pp name}"
+
+  if parentCtx && needArgs
+    l = parentCtx.values.length
+    if l < node.args.length
+      throw "no enough args #{pp name}"
+
+    for i in [0..node.args.length-1]
+      a = node.args[i]
+      v = parentCtx.values[l-i-1]
+      ctx.words[a.name] = v
+
+    parentCtx.values.length = l - node.args.length
 
   for e in node.seq
     if e.name
@@ -118,15 +130,18 @@ blockEval = (node, parentCtx, name) ->
       ctx.words[e.name] = e.val
 
   for e in node.seq
-    v = elemEval e, ctx
-
-    if v instanceof Array
-      for ve in v
-        ctx.values.push ve
+    if (e.val instanceof ast.NodeWord) && (e.val.name == ";")
+      ctx.values.length = 0
     else
-      ctx.values.push v
+      v = elemEval e, ctx
+      if v instanceof Array
+        for ve in v
+          ctx.values.push ve
+      else
+        ctx.values.push v
+
   ctx.values
-  
+
 
 
 interp.eval = (seq) ->
