@@ -55,9 +55,12 @@ class Context
     @values = []
     @words = {}
 
+  setWord: (name, word) ->
+    @words[name] = word
+
   getWord: (name) ->
     word = @words[name]
-    if word
+    if word != undefined
       word
     else if @parent
       @parent.getWord name
@@ -115,14 +118,14 @@ blockEval = (node, parentCtx) ->
       for i in [0..node.args.length-1]
         a = node.args[i]
         v = parentCtx.values[l-i-1]
-        ctx.words[a.name] = v
+        ctx.setWord a.name, v
       parentCtx.values.length = l - node.args.length
 
   for e in node.seq
     if e.name
-      if ctx.words[e.name] != undefined
+      if ctx.getWord e.name
         throw "redefined: #{e.name}"
-      ctx.words[e.name] = e.val
+      ctx.setWord e.name, e.val
 
   for e in node.seq
     if (e.val instanceof ast.NodeWord) && (e.val.name == ";")
