@@ -36,11 +36,14 @@ describe "Fn Interp", ->
 
 
     it "recursion call", ->
-      # seq = (parser.parse "fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - + ] if ] ; 2 fib").match
-      # (expect (interp.eval seq)).toEqual [1]
+      # seq = (parser.parse "fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - + ] if ] ; 2 fib 1 fib").match
+      # (expect (interp.eval seq)).toEqual [1, 1]
 
-      seq = (parser.parse "fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - fib + ] if ] ; 2 fib").match
-      (expect (interp.eval seq)).toEqual [2]
+      seq = (parser.parse "fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib 2 fib ] if ] ; 3 fib").match
+      (expect (interp.eval seq)).toEqual [1]
+
+      # seq = (parser.parse "fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - fib + ] if ] ; 2 fib").match
+      # (expect (interp.eval seq)).toEqual [2]
 
       # src = "fib: [ n: >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - fib + ] if ] 10 fib"
       # seq = (parser.parse src).match

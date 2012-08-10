@@ -36,26 +36,24 @@ buildinWords = {
   'or':   (ctx) -> [a,b] = getArgs2 ctx; [a||b]
 
   'if':   (ctx) ->
-    [cond, whenTrue, whenFalse] = getArgs3(ctx)
+    [cond, whenTrue, whenFals] = getArgs3(ctx)
 
     if !(whenTrue instanceof ast.NodeBlock)
       throw "whenTrue is not a block: #{pp whenTrue}"
-    if !(whenFalse instanceof ast.NodeBlock)
-      throw "whenFalse is not a block: #{pp whenFalse}"
+    if !(whenFals instanceof ast.NodeBlock)
+      throw "whenFals is not a block: #{pp whenFals}"
 
     if cond
       blockEval whenTrue, ctx
     else
-      blockEval whenFalse, ctx
+      blockEval whenFals, ctx
 }
 
 
 class Context
-  constructor: (@parent, @node, @name) ->
+  constructor: (@parent) ->
     @values = []
     @words = {}
-    if @name
-      @words[@name] = @node
 
   getWord: (name) ->
     word = @words[name]
@@ -91,7 +89,7 @@ wordEval = (node, ctx) ->
   word = ctx.getWord node.name
 
   if      word instanceof ast.NodeBlock
-    v = blockEval word, ctx, node.name
+    v = blockEval word, ctx
   else if word instanceof ast.Node
     v = nodeEval word, ctx
   else if !(word instanceof Function) && (word != undefined)
@@ -103,25 +101,22 @@ wordEval = (node, ctx) ->
   v
 
 
-blockEval = (node, parentCtx, name) ->
-  ctx = new Context parentCtx, node, name
+blockEval = (node, parentCtx) ->
+  ctx = new Context parentCtx
 
-  needArgs = node.args.length > 0
-
-  if !parentCtx && needArgs
-    throw "no enough args #{pp name}"
-
-  if parentCtx && needArgs
-    l = parentCtx.values.length
-    if l < node.args.length
+  if node.args.length > 0
+    if !parentCtx
       throw "no enough args #{pp name}"
+    else
+      l = parentCtx.values.length
+      if l < node.args.length
+        throw "no enough args #{pp name}"
 
-    for i in [0..node.args.length-1]
-      a = node.args[i]
-      v = parentCtx.values[l-i-1]
-      ctx.words[a.name] = v
-
-    parentCtx.values.length = l - node.args.length
+      for i in [0..node.args.length-1]
+        a = node.args[i]
+        v = parentCtx.values[l-i-1]
+        ctx.words[a.name] = v
+      parentCtx.values.length = l - node.args.length
 
   for e in node.seq
     if e.name
@@ -145,7 +140,7 @@ blockEval = (node, parentCtx, name) ->
 
 
 interp.eval = (seq) ->
-  blockEval new ast.NodeBlock [], seq
+  blockEval (new ast.NodeBlock [], seq), null
 
 
 
