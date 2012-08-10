@@ -1,13 +1,13 @@
 {
-  "name": "flow",
+  "name": "flow-script",
   "version": "0.0.1",
-  "description": "a programming language",
+  "description": "flow programming language (protype)",
   "keywords": [
     "language",
     "compiler",
     "javascript"
    ],
-  "author": "Emerge <emerge260@gmail.com>",
+  "author": "logicthink <emerge260@gmail.com>",
   "main": "./js/lib/flow.js",
   "directories": {
     "bin": "./js/bin",

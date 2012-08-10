@@ -52,7 +52,9 @@ describe "Fn Interp", ->
       (expect (interp.eval seq)).toEqual [89]
 
 
-
+    it "external call", ->
+      seq = (parser.parse "\"hello world!\" console.log ;").match
+      (expect (interp.eval seq)).toEqual []
 
 
 

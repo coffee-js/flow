@@ -3,7 +3,7 @@ ast = require "./ast"
 
 
 log = (s) -> console.log s
-pp  = (s) -> console.log JSON.stringify s, null, '  '
+pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
 getArgs = (n, ctx) ->
@@ -95,12 +95,20 @@ wordEval = (node, ctx) ->
     v = blockEval word, ctx
   else if word instanceof ast.Node
     v = nodeEval word, ctx
-  else if !(word instanceof Function) && (word != undefined)
+  else if !(word instanceof Function) && (word != null)
     v = word
   else if word instanceof Function
     v = word ctx
   else
-    v = eval node.name ctx.values...
+    args = []
+    for v in ctx.values
+      if typeof(v)=='string'
+        args.push "\"" + v + "\""
+      else
+        args.push v
+    a = args.join ","
+    jsCode = node.name + "(" + a + ")"
+    v = eval jsCode
   v
 
 
