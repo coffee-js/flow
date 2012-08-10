@@ -17,7 +17,6 @@
     "test": "./test"
   },
   "bin": {
-    "flow": "./bin/flow"
   },
   "repository": {
     "type": "git",
