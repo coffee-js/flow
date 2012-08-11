@@ -14,30 +14,35 @@ getArgs = (n, ctx) ->
   ctx.values.length = l-n
   args
 
-getArgs1 = (ctx) -> getArgs 1, ctx
-getArgs2 = (ctx) -> getArgs 2, ctx
-getArgs3 = (ctx) -> getArgs 3, ctx
+class BuildinWord
+  constructor: (@numArgs, @fn) ->
+
+  eval: (ctx) ->
+    args = [ctx].concat getArgs @numArgs, ctx
+    @fn args...
+
+
+bw = ->
+  new BuildinWord arguments...
 
 
 buildinWords = {
-  "+":    (ctx) -> [a,b] = getArgs2 ctx; [a+b]
-  "-":    (ctx) -> [a,b] = getArgs2 ctx; [a-b]
-  "*":    (ctx) -> [a,b] = getArgs2 ctx; [a*b]
-  "/":    (ctx) -> [a,b] = getArgs2 ctx; [a/b]
+  "+":    bw 2, (ctx, a, b) -> [a+b]
+  "-":    bw 2, (ctx, a, b) -> [a-b]
+  "*":    bw 2, (ctx, a, b) -> [a*b]
+  "/":    bw 2, (ctx, a, b) -> [a/b]
 
-  '=':    (ctx) -> [a,b] = getArgs2 ctx; [a==b]
-  '<':    (ctx) -> [a,b] = getArgs2 ctx; [a<b]
-  '>':    (ctx) -> [a,b] = getArgs2 ctx; [a>b]
-  '<=':   (ctx) -> [a,b] = getArgs2 ctx; [a<=b]
-  '>=':   (ctx) -> [a,b] = getArgs2 ctx; [a>=b]
+  '=':    bw 2, (ctx, a, b) -> [a==b]
+  '<':    bw 2, (ctx, a, b) -> [a<b]
+  '>':    bw 2, (ctx, a, b) -> [a>b]
+  '<=':   bw 2, (ctx, a, b) -> [a<=b]
+  '>=':   bw 2, (ctx, a, b) -> [a>=b]
 
-  'not':  (ctx) -> [a]   = getArgs1 ctx; [!a]
-  'and':  (ctx) -> [a,b] = getArgs2 ctx; [a&&b]
-  'or':   (ctx) -> [a,b] = getArgs2 ctx; [a||b]
+  'not':  bw 1, (ctx, a)    -> [!a]
+  'and':  bw 2, (ctx, a, b) -> [a&&b]
+  'or':   bw 2, (ctx, a, b) -> [a||b]
 
-  'if':   (ctx) ->
-    [cond, whenTrue, whenFals] = getArgs3(ctx)
-
+  'if':   bw 3, (ctx, cond, whenTrue, whenFals) ->
     if !(whenTrue instanceof ast.NodeBlock)
       throw "whenTrue is not a block: #{pp whenTrue}"
     if !(whenFals instanceof ast.NodeBlock)
@@ -95,10 +100,10 @@ wordEval = (node, ctx) ->
     v = blockEval word, ctx
   else if word instanceof ast.Node
     v = nodeEval word, ctx
-  else if !(word instanceof Function) && (word != null)
+  else if word instanceof BuildinWord
+    v = word.eval ctx
+  else if word != null
     v = word
-  else if word instanceof Function
-    v = word ctx
   else
     args = []
     for v in ctx.values
