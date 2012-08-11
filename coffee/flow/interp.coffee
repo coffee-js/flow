@@ -14,6 +14,7 @@ getArgs = (n, ctx) ->
   ctx.values.length = l-n
   args
 
+
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
@@ -81,16 +82,14 @@ class Context
 wordEval = (node, ctx) ->
   word = ctx.getWord node.name
 
-  if      word instanceof BuildinWord
+  if      word instanceof ast.NodeBlock
+    blockEval word, ctx
+  else if word instanceof ast.NodeWord
+    wordEval  word, ctx
+  else if word instanceof BuildinWord
     word.eval ctx
-  else if word instanceof ast.NodeElem
-    v = word.val
-    if      v instanceof ast.NodeBlock
-      blockEval v, ctx
-    else if v instanceof ast.NodeWord
-      wordEval  v, ctx
-    else if v != null
-      v
+  else if word != null
+    word
   else
     args = []
     for e in ctx.values
@@ -118,14 +117,14 @@ blockEval = (node, parentCtx) ->
       for i in [0..node.args.length-1]
         a = node.args[i]
         v = parentCtx.values[l-i-1]
-        ctx.setWord a.name, v
+        ctx.setWord a.name, v.val
       parentCtx.values.length = l - node.args.length
 
   for e in node.seq
     if e.name != null
       if (ctx.getWord e.name) != null
         throw "redefined: #{e.name}"
-      ctx.setWord e.name, e
+      ctx.setWord e.name, e.val
 
   for e in node.seq
     if (e.val instanceof ast.NodeWord) && (e.val.name == ";")
