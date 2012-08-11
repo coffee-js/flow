@@ -1,6 +1,10 @@
 pc = exports
 
 
+log = (s) -> console.log s
+pp = (s) -> console.log JSON.stringify s, null, '  '
+
+
 class ParserState
   constructor: (@txt, pos, lastFailPos) ->
     @pos = pos ? 0
@@ -50,7 +54,7 @@ pc.range = (lower, upper) ->
 pc.space = ->
   (st) ->
     m = st.txt.substring(st.pos, st.txt.length).match /^\s+/
-    if m
+    if m != null
       pc.ret st.forward(m[0].length), m[0]
     else pc.ret st.fail(), null
 
@@ -58,7 +62,7 @@ pc.ws = (p) ->
   (st) ->
     m = st.txt.substring(st.pos, st.txt.length).match /^\s+/
     nst = st
-    if m
+    if m != null
       nst = st.forward m[0].length
     return p(nst)
 
@@ -68,7 +72,7 @@ pc.choice = ->
     r = null
     for p in parsers
       r = p st
-      if r.match
+      if r.match != null
         break
     return r
 
@@ -79,7 +83,7 @@ pc.seq = ->
     a = []
     for p in parsers
       r = p nst
-      if !r.match
+      if r.match == null
         return pc.ret r.state, null
       nst = r.state
       a.push r.match
@@ -88,7 +92,7 @@ pc.seq = ->
 pc.optional = (p) ->
   (st) ->
     r = p st
-    if r.match
+    if r.match != null
       r
     else pc.ret st, true
 
@@ -96,7 +100,7 @@ pc.rep0 = (p) ->
   (st) ->
     nst = st
     a = []
-    while (r = p(nst)).match
+    while (r = p(nst)).match != null
       nst = r.state
       a.push r.match
     return pc.ret nst, a
@@ -104,11 +108,11 @@ pc.rep0 = (p) ->
 pc.rep1 = (p) ->
   (st) ->
     r = p(st)
-    if !r.match
+    if r.match == null
       return pc.ret st.fail(), null
     nst = r.state
     a = [r.match]
-    while (r = p(nst)).match
+    while (r = p(nst)).match != null
       nst = r.state
       a.push r.match
     return pc.ret nst, a
@@ -118,14 +122,14 @@ pc.neg = (p) ->
     if st.txt.length-st.pos < 1
       return pc.ret st.fail(), null
     r = p st
-    if !r.match
+    if r.match == null
       pc.ret st.forward(1), st.txt[st.pos]
     else pc.ret st.fail(), null
 
 pc.map = (p, f) ->
   (st) ->
     r = p st
-    if r.match
+    if r.match != null
       pc.ret r.state, f(r.match, st.pos)
     else pc.ret st.fail(), null
 
@@ -144,10 +148,10 @@ pc.and = ->
   p0 = parsers.shift()
   (st) ->
     r = p0 st
-    if r.match
+    if r.match != null
       for p1 in parsers
         r1 = p1 st
-        if !r1.match
+        if r1.match == null
           return pc.ret st.fail(), null
       r
     else pc.ret st.fail(), null

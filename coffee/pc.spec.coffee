@@ -1,6 +1,9 @@
 pc = require "./pc"
 
 
+log = (s) -> console.log s
+pp = (s) -> console.log JSON.stringify s, null, '  '
+
 
 describe "Parser Combinator", ->
 
@@ -26,6 +29,9 @@ describe "Parser Combinator", ->
 			(expect (p pc.ps "x").match).toEqual "x"
 			(expect (p pc.ps "xyz").match).toEqual "x" 
 			(expect (p pc.ps "yzx").match).toEqual null
+
+			p = pc.ch("0")
+			(expect (p pc.ps "0").match).toEqual "0"
 
 		it "match 1 of charter arguments", ->
 			p = pc.ch("xyz")
@@ -115,8 +121,8 @@ describe "Parser Combinator", ->
 	describe "seq", ->
 
 		it "match patterns sequence", ->
-			p = pc.seq pc.tok("abc"), pc.space(), pc.ch("xyz"), pc.range("1","3")
-			(expect (p pc.ps "abc y1").match).toEqual ["abc"," ","y","1"]
+			p = pc.seq pc.tok("abc"), pc.space(), pc.ch("xyz"), pc.range("0","3")
+			(expect (p pc.ps "abc y0").match).toEqual ["abc"," ","y","0"]
 			(expect (p pc.ps "abc y").match).toEqual null
 			(expect (p pc.ps "0abc y1").match).toEqual null
 

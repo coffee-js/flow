@@ -43,6 +43,8 @@ buildinWords = {
   'or':   bw 2, (ctx, a, b) -> [a||b]
 
   'if':   bw 3, (ctx, cond, whenTrue, whenFals) ->
+    if typeof(cond) != 'boolean'
+      throw "cond is not a boolean: #{pp cond}"
     if !(whenTrue instanceof ast.NodeBlock)
       throw "whenTrue is not a block: #{pp whenTrue}"
     if !(whenFals instanceof ast.NodeBlock)
@@ -67,30 +69,20 @@ class Context
     word = @words[name]
     if word != undefined
       word
-    else if @parent
+    else if @parent != null
       @parent.getWord name
-    else if buildinWords[name]
+    else if buildinWords[name] != undefined
       buildinWords[name]
     else
       null
 
 
 elemEval = (node, ctx) ->
-  nodeEval node.val, ctx
-
-
-nodeEval = (node, ctx) ->
-  if      node instanceof ast.NodeValue
-    valueEval node, ctx
-  else if node instanceof ast.NodeWord
-    wordEval  node, ctx
-  else if node instanceof ast.NodeBlock
-    node
+  v = node.val
+  if v instanceof ast.NodeWord
+    wordEval v, ctx
   else
-    throw "unsupport node:\n#{pp node}"
-
-
-valueEval = (node) -> node.val
+    v
 
 
 wordEval = (node, ctx) ->
@@ -98,8 +90,8 @@ wordEval = (node, ctx) ->
 
   if      word instanceof ast.NodeBlock
     v = blockEval word, ctx
-  else if word instanceof ast.Node
-    v = nodeEval word, ctx
+  else if word instanceof ast.NodeWord
+    v = wordEval  word, ctx
   else if word instanceof BuildinWord
     v = word.eval ctx
   else if word != null
@@ -107,7 +99,7 @@ wordEval = (node, ctx) ->
   else
     args = []
     for v in ctx.values
-      if typeof(v)=='string'
+      if typeof(v) == 'string'
         args.push "\"" + v + "\""
       else
         args.push v
@@ -121,7 +113,7 @@ blockEval = (node, parentCtx) ->
   ctx = new Context parentCtx
 
   if node.args.length > 0
-    if !parentCtx
+    if parentCtx == null
       throw "no enough args #{pp name}"
     else
       l = parentCtx.values.length
@@ -135,8 +127,8 @@ blockEval = (node, parentCtx) ->
       parentCtx.values.length = l - node.args.length
 
   for e in node.seq
-    if e.name
-      if ctx.getWord e.name
+    if e.name != null
+      if (ctx.getWord e.name) != null
         throw "redefined: #{e.name}"
       ctx.setWord e.name, e.val
 

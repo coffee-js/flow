@@ -7,7 +7,7 @@ log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
-describe "Fn Interp", ->
+describe "Flow Interp", ->
 
   describe "buildin words", ->
 
@@ -27,7 +27,9 @@ describe "Fn Interp", ->
       (expect (interp.eval seq)).toEqual [7]
 
 
-    it "word call", ->
+  describe "word call", ->
+
+    it "basic", ->
       seq = (parser.parse "add: [ a b >> a b + ] ; 1 2 add").match
       (expect (interp.eval seq)).toEqual [3]
 

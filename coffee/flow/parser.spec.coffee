@@ -5,17 +5,17 @@ ast = require "./ast"
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
-describe "Fn Parser", ->
+describe "Flow Parser", ->
 
   describe "combinator number", ->
 
     it "match number", ->
       p = parser.number
-      (expect (p pc.ps "123").match.val).toEqual 123
+      (expect (p pc.ps "123").match).toEqual 123
       (expect (p pc.ps " ").match).toEqual null
-      (expect (p pc.ps "-123").match.val).toEqual -123
+      (expect (p pc.ps "-123").match).toEqual -123
       (expect (p pc.ps "abc").match).toEqual null
-      (expect (p pc.ps "000").match.val).toEqual 0
+      (expect (p pc.ps "000").match).toEqual 0
       (expect (p pc.ps "000").state.pos).toEqual 3
 
 
@@ -23,10 +23,10 @@ describe "Fn Parser", ->
 
     it "match string", ->
       p = parser.string
-      (expect (p pc.ps "\" hello ! \" abc").match.val).toEqual " hello ! "
+      (expect (p pc.ps "\" hello ! \" abc").match).toEqual " hello ! "
       (expect (p pc.ps "abc").match).toEqual null
       (expect (p pc.ps "123").match).toEqual null
-      (expect (p pc.ps "\"\"").match.val).toEqual ""
+      (expect (p pc.ps "\"\"").match).toEqual ""
       (expect (p pc.ps "\"abc").match).toEqual null
 
 
@@ -93,8 +93,7 @@ describe "Fn Parser", ->
         }
         {
           name: null
-          val:
-            val: 435
+          val: 435
         }
         {
           name: null
@@ -110,8 +109,7 @@ describe "Fn Parser", ->
         }
         {
           name: null
-          val:
-            val: 465
+          val: 465
         }
         {
           name: null
@@ -120,8 +118,7 @@ describe "Fn Parser", ->
             seq: [
               {
                 name: null
-                val:
-                  val: 564
+                val: 564
               }
             ]
         }
@@ -143,8 +140,7 @@ describe "Fn Parser", ->
               seq: [
                 {
                   name: "sd"
-                  val:
-                    val: 45
+                  val: 45
                 }
                 {
                   name: null
@@ -181,8 +177,7 @@ describe "Fn Parser", ->
               seq: [
                 {
                   name: "sd"
-                  val:
-                    val: 45
+                  val: 45
                 }
                 {
                   name: null

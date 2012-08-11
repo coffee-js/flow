@@ -6,10 +6,6 @@ pc = require "../pc"
 class ast.Node
 
 
-class ast.NodeValue extends ast.Node
-  constructor: (@val) ->
-
-
 class ast.NodeWord extends ast.Node
   constructor: (@name) ->
 

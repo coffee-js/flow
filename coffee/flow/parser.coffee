@@ -8,10 +8,10 @@ combinator = do ->
 
   int10 = pc.map pc.rep1(pc.range '0','9'), (n)->n.reduce (t,s)->t.concat(s)
   number = pc.map pc.seq(pc.optional(pc.tok '-'), int10, endToken),
-    (n) -> new ast.NodeValue parseInt(if n[0]=='-' then n[0].concat(n[1]) else n[1])
+    (n) -> parseInt(if n[0]=='-' then n[0].concat(n[1]) else n[1])
 
   string = pc.map pc.seq(pc.tok('"'), pc.rep0(pc.choice pc.tok('\\"'), pc.neg(pc.tok('"'))), pc.tok('"'), endToken),
-    (n) -> new ast.NodeValue if n[1].length > 0 then n[1].reduce (t,s)->t.concat(s) else ""
+    (n) -> if n[1].length > 0 then n[1].reduce (t,s)->t.concat(s) else ""
 
   colon = pc.tok ':'
   negws = pc.neg pc.space()
