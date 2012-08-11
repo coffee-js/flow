@@ -145,7 +145,7 @@ blockEval = (node, parentCtx) ->
 
 
 interp.eval = (seq) ->
-  elems = blockEval (new ast.NodeBlock [], seq), null
-  elems.map (e)-> e.val
+  a = blockEval (new ast.NodeBlock [], seq), null
+  a.map (e)-> e.val
 
 
