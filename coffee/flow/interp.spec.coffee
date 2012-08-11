@@ -12,6 +12,9 @@ describe "Flow Interp", ->
   describe "buildin words", ->
 
     it "math OPs", ->
+      seq = (parser.parse "1 2 -").match
+      (expect (interp.eval seq)).toEqual [-1]
+
       seq = (parser.parse "1 2 - 3 - 20").match
       (expect (interp.eval seq)).toEqual [-4, 20]
 

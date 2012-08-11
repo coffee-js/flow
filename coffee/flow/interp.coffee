@@ -18,8 +18,9 @@ class BuildinWord
   constructor: (@numArgs, @fn) ->
 
   eval: (ctx) ->
-    args = [ctx].concat getArgs @numArgs, ctx
-    @fn args...
+    args = (getArgs @numArgs, ctx).map (e)-> e.val
+    a = [ctx].concat args
+    @fn a...
 
 
 bw = ->
@@ -27,20 +28,20 @@ bw = ->
 
 
 buildinWords = {
-  "+":    bw 2, (ctx, a, b) -> [a+b]
-  "-":    bw 2, (ctx, a, b) -> [a-b]
-  "*":    bw 2, (ctx, a, b) -> [a*b]
-  "/":    bw 2, (ctx, a, b) -> [a/b]
+  "+":    bw 2, (ctx, a, b) -> a+b
+  "-":    bw 2, (ctx, a, b) -> a-b
+  "*":    bw 2, (ctx, a, b) -> a*b
+  "/":    bw 2, (ctx, a, b) -> a/b
 
-  '=':    bw 2, (ctx, a, b) -> [a==b]
-  '<':    bw 2, (ctx, a, b) -> [a<b]
-  '>':    bw 2, (ctx, a, b) -> [a>b]
-  '<=':   bw 2, (ctx, a, b) -> [a<=b]
-  '>=':   bw 2, (ctx, a, b) -> [a>=b]
+  '=':    bw 2, (ctx, a, b) -> a==b
+  '<':    bw 2, (ctx, a, b) -> a<b
+  '>':    bw 2, (ctx, a, b) -> a>b
+  '<=':   bw 2, (ctx, a, b) -> a<=b
+  '>=':   bw 2, (ctx, a, b) -> a>=b
 
-  'not':  bw 1, (ctx, a)    -> [!a]
-  'and':  bw 2, (ctx, a, b) -> [a&&b]
-  'or':   bw 2, (ctx, a, b) -> [a||b]
+  'not':  bw 1, (ctx, a)    -> !a
+  'and':  bw 2, (ctx, a, b) -> a&&b
+  'or':   bw 2, (ctx, a, b) -> a||b
 
   'if':   bw 3, (ctx, cond, whenTrue, whenFals) ->
     if typeof(cond) != 'boolean'
@@ -77,36 +78,30 @@ class Context
       null
 
 
-elemEval = (node, ctx) ->
-  v = node.val
-  if v instanceof ast.NodeWord
-    wordEval v, ctx
-  else
-    v
-
-
 wordEval = (node, ctx) ->
   word = ctx.getWord node.name
 
-  if      word instanceof ast.NodeBlock
-    v = blockEval word, ctx
-  else if word instanceof ast.NodeWord
-    v = wordEval  word, ctx
-  else if word instanceof BuildinWord
-    v = word.eval ctx
-  else if word != null
-    v = word
+  if      word instanceof BuildinWord
+    word.eval ctx
+  else if word instanceof ast.NodeElem
+    v = word.val
+    if      v instanceof ast.NodeBlock
+      blockEval v, ctx
+    else if v instanceof ast.NodeWord
+      wordEval  v, ctx
+    else if v != null
+      v
   else
     args = []
-    for v in ctx.values
+    for e in ctx.values
+      v = e.val
       if typeof(v) == 'string'
         args.push "\"" + v + "\""
       else
         args.push v
     a = args.join ","
     jsCode = node.name + "(" + a + ")"
-    v = eval jsCode
-  v
+    eval jsCode
 
 
 blockEval = (node, parentCtx) ->
@@ -130,25 +125,28 @@ blockEval = (node, parentCtx) ->
     if e.name != null
       if (ctx.getWord e.name) != null
         throw "redefined: #{e.name}"
-      ctx.setWord e.name, e.val
+      ctx.setWord e.name, e
 
   for e in node.seq
     if (e.val instanceof ast.NodeWord) && (e.val.name == ";")
       ctx.values.length = 0
     else
-      v = elemEval e, ctx
+      v = e.val
+      if v instanceof ast.NodeWord
+        v = wordEval v, ctx
+
       if v instanceof Array
         for ve in v
           ctx.values.push ve
       else
-        ctx.values.push v
+        ctx.values.push new ast.NodeElem null, v
 
   ctx.values
 
 
 
 interp.eval = (seq) ->
-  blockEval (new ast.NodeBlock [], seq), null
-
+  elems = blockEval (new ast.NodeBlock [], seq), null
+  elems.map (e)-> e.val
 
 
