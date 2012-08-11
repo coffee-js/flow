@@ -1,4 +1,4 @@
 FLOW
 ====
 
-FLOW programming language
+flow programming language
