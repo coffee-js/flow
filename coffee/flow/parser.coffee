@@ -57,7 +57,7 @@ for k, v of combinator
 class Source
   constructor: (@txt, @path) ->
 
-  pos2lineCol: (pos)->
+  lineCol: (pos)->
     line = 1
     lastLinePos = 0
     while lastLinePos = 1+@txt[0...pos].indexOf("\n",lastLinePos)
@@ -71,7 +71,7 @@ parser.parse = (txt, file) ->
   p = pc.map pc.seq(parser.seq, pc.end()), (n) -> n[0]
   r = p pc.ps txt
   if r.match == null
-    [line, col] = src.pos2lineCol r.state.lastFailPos
+    [line, col] = src.lineCol r.state.lastFailPos
     log "parse error: pos:#{line}:#{col}"
   r
 

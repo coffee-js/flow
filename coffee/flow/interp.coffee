@@ -18,9 +18,9 @@ getArgs = (n, ctx) ->
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (ctx) ->
+  eval: (node, ctx) ->
     args = (getArgs @numArgs, ctx).map (e)-> e.val
-    a = [ctx].concat args
+    a = [node, ctx].concat args
     @fn a...
 
 
@@ -32,30 +32,33 @@ ne = (a) ->
 
 
 buildinWords = {
-  ";":    bw 0, (ctx) -> ctx.values.length = 0; []
+  ";":    bw 0, (n, ctx) -> ctx.values.length = 0; []
 
-  "+":    bw 2, (ctx, a, b) -> ne [a+b]
-  "-":    bw 2, (ctx, a, b) -> ne [a-b]
-  "*":    bw 2, (ctx, a, b) -> ne [a*b]
-  "/":    bw 2, (ctx, a, b) -> ne [a/b]
+  "+":    bw 2, (n, ctx, a, b) -> ne [a+b]
+  "-":    bw 2, (n, ctx, a, b) -> ne [a-b]
+  "*":    bw 2, (n, ctx, a, b) -> ne [a*b]
+  "/":    bw 2, (n, ctx, a, b) -> ne [a/b]
 
-  '=':    bw 2, (ctx, a, b) -> ne [a==b]
-  '<':    bw 2, (ctx, a, b) -> ne [a<b]
-  '>':    bw 2, (ctx, a, b) -> ne [a>b]
-  '<=':   bw 2, (ctx, a, b) -> ne [a<=b]
-  '>=':   bw 2, (ctx, a, b) -> ne [a>=b]
+  '=':    bw 2, (n, ctx, a, b) -> ne [a==b]
+  '<':    bw 2, (n, ctx, a, b) -> ne [a<b]
+  '>':    bw 2, (n, ctx, a, b) -> ne [a>b]
+  '<=':   bw 2, (n, ctx, a, b) -> ne [a<=b]
+  '>=':   bw 2, (n, ctx, a, b) -> ne [a>=b]
 
-  'not':  bw 1, (ctx, a)    -> ne [!a]
-  'and':  bw 2, (ctx, a, b) -> ne [a&&b]
-  'or':   bw 2, (ctx, a, b) -> ne [a||b]
+  'not':  bw 1, (n, ctx, a)    -> ne [!a]
+  'and':  bw 2, (n, ctx, a, b) -> ne [a&&b]
+  'or':   bw 2, (n, ctx, a, b) -> ne [a||b]
 
-  'if':   bw 3, (ctx, cond, whenTrue, whenFals) ->
+  'if':   bw 3, (n, ctx, cond, whenTrue, whenFals) ->
     if typeof(cond) != 'boolean'
-      throw "cond is not a boolean: #{pp cond}"
+      [line, col] = ctx.lineCol n.pos
+      throw "#{line}:#{col} cond is not a boolean: #{pp cond}"
     if !(whenTrue instanceof ast.NodeBlock)
-      throw "whenTrue is not a block: #{pp whenTrue}"
+      [line, col] = ctx.lineCol n.pos
+      throw "#{line}:#{col} whenTrue is not a block: #{pp whenTrue}"
     if !(whenFals instanceof ast.NodeBlock)
-      throw "whenFals is not a block: #{pp whenFals}"
+      [line, col] = ctx.lineCol n.pos
+      throw "#{line}:#{col} whenFals is not a block: #{pp whenFals}"
 
     if cond
       blockEval whenTrue, ctx
@@ -65,9 +68,16 @@ buildinWords = {
 
 
 class Context
-  constructor: (@parent) ->
+  constructor: (@parent, @src=null) ->
     @values = []
     @words = {}
+
+  source: ->
+    if @src != null
+      @parent.source()
+
+  lineCol: (pos)->
+    source().lineCol pos
 
   setWord: (name, word) ->
     @words[name] = word
@@ -92,7 +102,7 @@ wordEval = (node, ctx) ->
   else if word instanceof ast.NodeWord
     wordEval  word, ctx
   else if word instanceof BuildinWord
-    word.eval ctx
+    word.eval node, ctx
   else if word != null
     word
   else
@@ -128,7 +138,8 @@ blockEval = (node, parentCtx) ->
   for e in node.seq
     if e.name != null
       if (ctx.getWord e.name) != null
-        throw "redefined: #{e.name}"
+        [line, col] = ctx.lineCol e.pos
+        throw "#{line}:#{col} redefined: #{e.name}"
       ctx.setWord e.name, e.val
 
   for e in node.seq
@@ -146,8 +157,9 @@ blockEval = (node, parentCtx) ->
 
 
 
-interp.eval = (seq) ->
-  a = blockEval (new ast.NodeBlock [], seq), null
+interp.eval = (seq, src) ->
+  ctx = new Context null, src
+  a = blockEval (new ast.NodeBlock [], seq), ctx
   a.map (e)-> e.val
 
 
