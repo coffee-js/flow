@@ -18,6 +18,16 @@ class ast.NodeElem extends ast.Node
 
 
 
+class ast.Source
+  constructor: (@txt, @path) ->
+
+  lineCol: (pos)->
+    line = 1
+    lastLinePos = 0
+    while lastLinePos = 1+@txt[0...pos].indexOf("\n",lastLinePos)
+      ++line
+    col = pos - lastLinePos + 1
+    return [line, col]
 
 
 

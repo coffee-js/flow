@@ -221,7 +221,8 @@ describe "Flow Parser", ->
 
     it "print error info", ->
 
-      parser.parse "1 2 ["
+      src = new ast.Source "1 2 [", null
+      parser.parse src
 
 
 
