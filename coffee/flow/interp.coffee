@@ -51,14 +51,14 @@ buildinWords = {
 
   'if':   bw 3, (n, ctx, cond, whenTrue, whenFals) ->
     if typeof(cond) != 'boolean'
-      [line, col] = ctx.lineCol n.pos
-      throw "#{line}:#{col} cond is not a boolean: #{pp cond}"
+      [line, col] = ctx.source().lineCol n.pos
+      throw "#{line}:#{col} cond is not a boolean: #{cond}"
     if !(whenTrue instanceof ast.NodeBlock)
-      [line, col] = ctx.lineCol n.pos
-      throw "#{line}:#{col} whenTrue is not a block: #{pp whenTrue}"
+      [line, col] = ctx.source().lineCol n.pos
+      throw "#{line}:#{col} whenTrue is not a block: #{whenTrue}"
     if !(whenFals instanceof ast.NodeBlock)
-      [line, col] = ctx.lineCol n.pos
-      throw "#{line}:#{col} whenFals is not a block: #{pp whenFals}"
+      [line, col] = ctx.source().lineCol n.pos
+      throw "#{line}:#{col} whenFals is not a block: #{whenFals}"
 
     if cond
       blockEval whenTrue, ctx
@@ -73,11 +73,10 @@ class Context
     @words = {}
 
   source: ->
-    if @src != null
+    if @src == null
       @parent.source()
-
-  lineCol: (pos)->
-    source().lineCol pos
+    else
+      @src
 
   setWord: (name, word) ->
     @words[name] = word
@@ -95,7 +94,7 @@ class Context
 
 
 wordEval = (node, ctx) ->
-  word = ctx.getWord node.name
+  word = ctx.getWord node.val.name
 
   if      word instanceof ast.NodeBlock
     blockEval word, ctx
@@ -114,7 +113,7 @@ wordEval = (node, ctx) ->
       else
         args.push v
     a = args.join ","
-    jsCode = node.name + "(" + a + ")"
+    jsCode = node.val.name + "(" + a + ")"
     eval jsCode
 
 
@@ -138,14 +137,14 @@ blockEval = (node, parentCtx) ->
   for e in node.seq
     if e.name != null
       if (ctx.getWord e.name) != null
-        [line, col] = ctx.lineCol e.pos
+        [line, col] = ctx.source().lineCol e.pos
         throw "#{line}:#{col} redefined: #{e.name}"
       ctx.setWord e.name, e.val
 
   for e in node.seq
     v = e.val
     if v instanceof ast.NodeWord
-      v = wordEval v, ctx
+      v = wordEval e, ctx
 
     if v instanceof Array
       for ve in v
