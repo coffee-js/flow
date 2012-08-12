@@ -40,7 +40,7 @@ describe "Flow Interp", ->
 
       s = src("1 [ 1 2 + ] [ 3 4 + ] if")
       seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toThrow "1:23 cond is not a boolean: 1"
+      (expect (-> interp.eval seq, s)).toThrow "1:23 cond is not a boolean: 1"
 
 
   describe "word call", ->

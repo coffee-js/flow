@@ -59,7 +59,7 @@ parser.parse = (src) ->
   r = p pc.ps src.txt
   if r.match == null
     [line, col] = src.lineCol r.state.lastFailPos
-    log "parse error: pos:#{line}:#{col}"
+    throw "parse error: pos:#{line}:#{col}"
   r
 
 

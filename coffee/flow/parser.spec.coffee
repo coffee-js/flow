@@ -222,7 +222,7 @@ describe "Flow Parser", ->
     it "print error info", ->
 
       src = new ast.Source "1 2 [", null
-      parser.parse src
+      (expect (->parser.parse src)).toThrow "parse error: pos:1:5"
 
 
 
