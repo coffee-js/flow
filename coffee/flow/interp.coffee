@@ -27,22 +27,27 @@ class BuildinWord
 bw = ->
   new BuildinWord arguments...
 
+ne = (a) ->
+  a.map (v) -> new ast.NodeElem null, v
+
 
 buildinWords = {
-  "+":    bw 2, (ctx, a, b) -> a+b
-  "-":    bw 2, (ctx, a, b) -> a-b
-  "*":    bw 2, (ctx, a, b) -> a*b
-  "/":    bw 2, (ctx, a, b) -> a/b
+  ";":    bw 0, (ctx) -> ctx.values.length = 0; []
 
-  '=':    bw 2, (ctx, a, b) -> a==b
-  '<':    bw 2, (ctx, a, b) -> a<b
-  '>':    bw 2, (ctx, a, b) -> a>b
-  '<=':   bw 2, (ctx, a, b) -> a<=b
-  '>=':   bw 2, (ctx, a, b) -> a>=b
+  "+":    bw 2, (ctx, a, b) -> ne [a+b]
+  "-":    bw 2, (ctx, a, b) -> ne [a-b]
+  "*":    bw 2, (ctx, a, b) -> ne [a*b]
+  "/":    bw 2, (ctx, a, b) -> ne [a/b]
 
-  'not':  bw 1, (ctx, a)    -> !a
-  'and':  bw 2, (ctx, a, b) -> a&&b
-  'or':   bw 2, (ctx, a, b) -> a||b
+  '=':    bw 2, (ctx, a, b) -> ne [a==b]
+  '<':    bw 2, (ctx, a, b) -> ne [a<b]
+  '>':    bw 2, (ctx, a, b) -> ne [a>b]
+  '<=':   bw 2, (ctx, a, b) -> ne [a<=b]
+  '>=':   bw 2, (ctx, a, b) -> ne [a>=b]
+
+  'not':  bw 1, (ctx, a)    -> ne [!a]
+  'and':  bw 2, (ctx, a, b) -> ne [a&&b]
+  'or':   bw 2, (ctx, a, b) -> ne [a||b]
 
   'if':   bw 3, (ctx, cond, whenTrue, whenFals) ->
     if typeof(cond) != 'boolean'
@@ -127,18 +132,15 @@ blockEval = (node, parentCtx) ->
       ctx.setWord e.name, e.val
 
   for e in node.seq
-    if (e.val instanceof ast.NodeWord) && (e.val.name == ";")
-      ctx.values.length = 0
-    else
-      v = e.val
-      if v instanceof ast.NodeWord
-        v = wordEval v, ctx
+    v = e.val
+    if v instanceof ast.NodeWord
+      v = wordEval v, ctx
 
-      if v instanceof Array
-        for ve in v
-          ctx.values.push ve
-      else
-        ctx.values.push new ast.NodeElem null, v
+    if v instanceof Array
+      for ve in v
+        ctx.values.push ve
+    else
+      ctx.values.push new ast.NodeElem null, v
 
   ctx.values
 
