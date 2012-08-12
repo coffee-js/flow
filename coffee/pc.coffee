@@ -70,11 +70,17 @@ pc.choice = ->
   parsers = (p for p in arguments)
   (st) ->
     r = null
+    a = []
     for p in parsers
       r = p st
       if r.match != null
-        break
-    return r
+        return r
+      a.push r
+    last = r
+    for r in a
+      if last.state.lastFailPos < r.state.lastFailPos
+        last = r
+    return last
 
 pc.seq = ->
   parsers = (p for p in arguments)
@@ -109,7 +115,7 @@ pc.rep1 = (p) ->
   (st) ->
     r = p(st)
     if r.match == null
-      return pc.ret st.fail(), null
+      return pc.ret r.state.fail(), null
     nst = r.state
     a = [r.match]
     while (r = p(nst)).match != null
@@ -131,7 +137,7 @@ pc.map = (p, f) ->
     r = p st
     if r.match != null
       pc.ret r.state, f(r.match, st.pos)
-    else pc.ret st.fail(), null
+    else pc.ret r.state.fail(), null
 
 pc.end = ->
   (st) ->
@@ -152,9 +158,9 @@ pc.and = ->
       for p1 in parsers
         r1 = p1 st
         if r1.match == null
-          return pc.ret st.fail(), null
+          return pc.ret r.state.fail(), null
       r
-    else pc.ret st.fail(), null
+    else pc.ret r.state.fail(), null
 
 
 

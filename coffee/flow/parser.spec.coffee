@@ -2,6 +2,8 @@ pc = require "../pc"
 parser = require "./parser"
 ast = require "./ast"
 
+
+log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
@@ -214,6 +216,15 @@ describe "Flow Parser", ->
           }
         ]
       }
+
+  describe "parse", ->
+
+    it "print error info", ->
+
+      parser.parse "1 2 ["
+
+
+
 
 
 

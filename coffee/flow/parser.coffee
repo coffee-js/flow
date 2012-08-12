@@ -3,6 +3,10 @@ pc = require "../pc"
 ast = require "./ast"
 
 
+log = (s) -> console.log s
+pp = (s) -> console.log JSON.stringify s, null, '  '
+
+
 combinator = do ->
   endToken = pc.choice pc.space(), pc.end()
 
@@ -53,11 +57,23 @@ for k, v of combinator
 class Source
   constructor: (@txt, @path) ->
 
+  pos2lineCol: (pos)->
+    line = 1
+    lastLinePos = 0
+    while lastLinePos = 1+@txt[0...pos].indexOf("\n",lastLinePos)
+      ++line
+    col = pos - lastLinePos + 1
+    return [line, col]
+
 
 parser.parse = (txt, file) ->
-  parser.seq pc.ps txt
-
-
+  src = new Source txt, file
+  p = pc.map pc.seq(parser.seq, pc.end()), (n) -> n[0]
+  r = p pc.ps txt
+  if r.match == null
+    [line, col] = src.pos2lineCol r.state.lastFailPos
+    log "parse error: pos:#{line}:#{col}"
+  r
 
 
 
