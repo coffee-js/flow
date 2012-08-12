@@ -33,14 +33,21 @@ describe "Flow Interp", ->
       (expect (interp.eval seq, s)).toEqual [-1]
 
 
-    it "if function", ->
-      s = src("1 2 > [ 1 2 + ] [ 3 4 + ] if")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [7]
+    describe "if function", ->
 
-      s = src("1 [ 1 2 + ] [ 3 4 + ] if")
-      seq = (parser.parse s).match
-      (expect (-> interp.eval seq, s)).toThrow "1:23 cond is not a boolean: 1"
+      it "basic function", ->
+        s = src("1 2 > [ 1 2 + ] [ 3 4 + ] if")
+        seq = (parser.parse s).match
+        (expect (interp.eval seq, s)).toEqual [7]
+
+      it "type check", ->
+        s = src("1 [ 1 2 + ] [ 3 4 + ] if")
+        seq = (parser.parse s).match
+        (expect (-> interp.eval seq, s)).toThrow "1:23 cond is not a boolean: 1"
+
+        s = src("1 2 > 3 [ 3 4 + ] if")
+        seq = (parser.parse s).match
+        (expect (-> interp.eval seq, s)).toThrow "1:19 whenTrue is not a block: 3"
 
 
   describe "word call", ->
