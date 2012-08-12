@@ -41,7 +41,7 @@ combinator = do ->
   value = pc.choice block, number, string, word
 
   elem = pc.map pc.seq(pc.optional(name), value),
-    (n) -> new ast.NodeElem (if n[0]==true then null else n[0]), n[1]
+    (n, pos) -> new ast.NodeElem (if n[0]==true then null else n[0]), n[1], pos
 
   { int10, number, string, colon, negws, nameChar, name, word, elem, seq, block, value }
 
@@ -50,8 +50,12 @@ for k, v of combinator
   parser[k] = v
 
 
-parser.parse = (src) ->
-  parser.seq pc.ps src
+class Source
+  constructor: (@txt, @path) ->
+
+
+parser.parse = (txt, file) ->
+  parser.seq pc.ps txt
 
 
 

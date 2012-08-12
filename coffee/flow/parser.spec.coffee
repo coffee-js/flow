@@ -90,15 +90,18 @@ describe "Flow Parser", ->
           name: "x"
           val:
             name: "sdf"
+          pos: 0
         }
         {
           name: null
           val: 435
+          pos: 7
         }
         {
           name: null
           val:
             name: "dfg"
+          pos: 11
         }
       ]
       (expect (p pc.ps "sd: serdgd 465 [ 564 ]").match).toEqual [
@@ -106,10 +109,12 @@ describe "Flow Parser", ->
           name: "sd"
           val:
             name: "serdgd"
+          pos: 0
         }
         {
           name: null
           val: 465
+          pos: 11
         }
         {
           name: null
@@ -119,8 +124,10 @@ describe "Flow Parser", ->
               {
                 name: null
                 val: 564
+                pos: 17
               }
             ]
+          pos: 15
         }
       ]
 
@@ -141,18 +148,22 @@ describe "Flow Parser", ->
                 {
                   name: "sd"
                   val: 45
+                  pos: 4
                 }
                 {
                   name: null
                   val:
                     name: "[]"
+                  pos: 11
                 }
               ]
+            pos: 2
           }
           {
             name: null
             val:
               name: "-"
+            pos: 16
           }
         ]
       }
@@ -178,23 +189,28 @@ describe "Flow Parser", ->
                 {
                   name: "sd"
                   val: 45
+                  pos: 19
                 }
                 {
                   name: null
                   val:
                     name: "[]"
+                  pos: 26
                 }
               ]
+            pos: 11
           }
           {
             name: null
             val:
               name: "-"
+            pos: 31
           }
           {
             name: null
             val:
               name: "aa"
+            pos: 33
           }
         ]
       }

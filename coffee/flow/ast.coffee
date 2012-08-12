@@ -2,7 +2,6 @@ ast = exports
 pc = require "../pc"
 
 
-
 class ast.Node
 
 
@@ -15,7 +14,7 @@ class ast.NodeBlock extends ast.Node
 
 
 class ast.NodeElem extends ast.Node
-  constructor: (@name, @val) ->
+  constructor: (@name, @val, @pos) ->
 
 
 
