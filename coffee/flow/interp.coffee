@@ -16,9 +16,7 @@ getArgs = (node, n, ctx) ->
       throw "#{line}:#{col} no enough args in context:#{p ctx}"
     else
       args0 = getArgs node, n-l, ctx.parent
-  p = l-n
-  if p < 0
-    p = 0
+  p = if l-n < 0 then 0 else l-n
   args = ctx.values.slice p
   if args0 != undefined
     args = args0.concat args
