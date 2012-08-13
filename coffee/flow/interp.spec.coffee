@@ -67,7 +67,8 @@ describe "Flow Interp", ->
 
 
     it "concatnative", ->
-
+        expect(run "a: [ 2 + ] ; 1 a").toEqual [3]
+        expect(run "a: [ + ] ; 1 2 a").toEqual [3]
 
 
 
