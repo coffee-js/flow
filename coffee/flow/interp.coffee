@@ -3,15 +3,26 @@ ast = require "./ast"
 
 
 log = (s) -> console.log s
-pp = (s) -> console.log JSON.stringify s, null, '  '
+p = (s) -> JSON.stringify s, null, '  '
+pp = (s) -> console.log p s
 
 
-getArgs = (n, ctx) ->
+
+getArgs = (node, n, ctx) ->
   l = ctx.values.length
   if l < n
-    throw "no enough args #{ctx}"
-  args = ctx.values.slice l-n
-  ctx.values.length = l-n
+    if ctx.parent == null
+      [line, col] = ctx.source().lineCol node.pos
+      throw "#{line}:#{col} no enough args in context:#{p ctx}"
+    else
+      args0 = getArgs node, n-l, ctx.parent
+  p = l-n
+  if p < 0
+    p = 0
+  args = ctx.values.slice p
+  if args0 != undefined
+    args = args0.concat args
+  ctx.values.length = p
   args
 
 
@@ -19,7 +30,7 @@ class BuildinWord
   constructor: (@numArgs, @fn) ->
 
   eval: (node, ctx) ->
-    args = (getArgs @numArgs, ctx).map (e)-> e.val
+    args = (getArgs node, @numArgs, ctx).map (e)-> e.val
     a = [node, ctx].concat args
     @fn a...
 
@@ -64,6 +75,12 @@ buildinWords = {
       blockEval whenTrue, ctx
     else
       blockEval whenFals, ctx
+
+  'do':   bw 1, (n, ctx, blk) ->
+    if !(blk instanceof ast.NodeBlock)
+      [line, col] = ctx.source().lineCol n.pos
+      throw "#{line}:#{col} #{blk} is not a block"
+    blockEval blk, ctx
 }
 
 

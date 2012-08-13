@@ -7,90 +7,66 @@ log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
-src = (s) ->
-  new ast.Source s, null
+run = (txt) ->
+  src = new ast.Source txt, null
+  seq = (parser.parse src).match
+  interp.eval seq, src
 
 
 describe "Flow Interp", ->
 
   describe "buildin words", ->
 
-    it "math OPs", ->
-      s = src("1 2 -")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [-1]
+    describe "math OPs", ->
 
-      s = src("1 2 - 3 - 20")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [-4, 20]
-
-      s = src("1 2 + 3 4 - *")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [-3]
-
-      s = src("n: 1 ; n 2 -")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [-1]
+      it "basic", ->
+        expect(run "1 2 -").toEqual [-1]
+        expect(run "1 2 - 3 - 20").toEqual [-4, 20]
+        expect(run "1 2 + 3 4 - *").toEqual [-3]
+        expect(run "n: 1 ; n 2 -").toEqual [-1]
 
 
     describe "if function", ->
 
-      it "basic function", ->
-        s = src("1 2 > [ 1 2 + ] [ 3 4 + ] if")
-        seq = (parser.parse s).match
-        (expect (interp.eval seq, s)).toEqual [7]
+      it "basic", ->
+        expect(run "1 2 > [ 1 2 + ] [ 3 4 + ] if").toEqual [7]
 
       it "type check", ->
-        s = src("1 [ 1 2 + ] [ 3 4 + ] if")
-        seq = (parser.parse s).match
-        (expect (-> interp.eval seq, s)).toThrow "1:23 cond is not a boolean: 1"
+        expect(-> run "1 [ 1 2 + ] [ 3 4 + ] if").toThrow "1:23 cond is not a boolean: 1"
+        expect(-> run "1 2 > 3 [ 3 4 + ] if").toThrow "1:19 whenTrue is not a block: 3"
 
-        s = src("1 2 > 3 [ 3 4 + ] if")
-        seq = (parser.parse s).match
-        (expect (-> interp.eval seq, s)).toThrow "1:19 whenTrue is not a block: 3"
+
+    describe "do block", ->
+
+      it "basic", ->
+        expect(run "[ 1 2 + ] do").toEqual [3]
+
+
+      it "concatnative", ->
+        expect(run "1 [ 2 + ] do").toEqual [3]
+        expect(run "1 2 [ + ] do").toEqual [3]
 
 
   describe "word call", ->
 
     it "basic", ->
-      s = src("add: [ a b >> a b + ] ; 1 2 add")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [3]
-
-      s = src("fib: [ n >> n 1 = n 0 = or ] ; 2 fib 1 fib")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [false, true]
-
-      s = src("x: 2 y: 3 x y *")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [2, 3, 6]
-
-      s = src("x: [ n >> n 1 + ] ; 0 x")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [1]
-
-      s = src("x: [ n >> n 1 + ] ; n: 1 0 x")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [1, 1]
+      expect(run "add: [ a b >> a b + ] ; 1 2 add").toEqual [3]
+      expect(run "fib: [ n >> n 1 = n 0 = or ] ; 2 fib 1 fib").toEqual [false, true]
+      expect(run "x: 2 y: 3 x y *").toEqual [2, 3, 6]
+      expect(run "x: [ n >> n 1 + ] ; 0 x").toEqual [1]
+      expect(run "x: [ n >> n 1 + ] ; n: 1 0 x").toEqual [1, 1]
 
 
     it "recursion call", ->
-      s = src("fib: [ n >> n 2 < [ n ] [ n 1 - fib n 2 - fib + ] if ] ; 10 fib")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [55]
-
-      s = src("fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - fib + ] if ] ; 10 fib")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual [89]
+      expect(run "fib: [ n >> n 2 < [ n ] [ n 1 - fib n 2 - fib + ] if ] ; 10 fib").toEqual [55]
+      expect(run "fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - fib + ] if ] ; 10 fib").toEqual [89]
 
 
     it "external call", ->
-      s = src("\"hello world!\" console.log ;")
-      seq = (parser.parse s).match
-      (expect (interp.eval seq, s)).toEqual []
+      expect(run "\"hello world!\" console.log ;").toEqual []
 
 
-
+    it "concatnative", ->
 
 
 
