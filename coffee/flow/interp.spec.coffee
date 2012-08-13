@@ -45,6 +45,7 @@ describe "Flow Interp", ->
       it "concatnative", ->
         expect(run "1 [ 2 + ] do").toEqual [3]
         expect(run "1 2 [ + ] do").toEqual [3]
+        expect(run "1 2 [ n >> n 2 + - ] do").toEqual [-3]
 
 
   describe "word call", ->
@@ -69,7 +70,7 @@ describe "Flow Interp", ->
     it "concatnative", ->
       expect(run "a: [ 2 + ] ; 1 a").toEqual [3]
       expect(run "a: [ + ] ; 1 2 a").toEqual [3]
-
+      expect(run "a: [ n >> n 2 + - ] ; 1 2 a").toEqual [-3]
 
 
 
