@@ -9,8 +9,7 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 run = (txt) ->
   src = new ast.Source txt, null
-  seq = (parser.parse src).match
-  interp.eval seq, src
+  interp.eval (parser.parse src), src
 
 
 describe "Flow Interp", ->

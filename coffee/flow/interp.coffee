@@ -174,8 +174,7 @@ blockEval = (node, parentCtx) ->
 
 
 
-interp.eval = (seq, src) ->
-  blk = new ast.NodeBlock [], seq
+interp.eval = (blk, src) ->
   ctx = new Context null, blk, src
   a = blockEval blk, ctx
   a.map (e)-> e.val

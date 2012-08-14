@@ -60,8 +60,10 @@ parser.parse = (src) ->
   if r.match == null
     [line, col] = src.lineCol r.state.lastFailPos
     throw "parse error: pos:#{line}:#{col}"
-  r
 
+  b = new ast.NodeBlock [], r.match
+  b.init src
+  b
 
 
 

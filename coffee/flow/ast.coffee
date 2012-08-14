@@ -19,6 +19,8 @@ class ast.NodeElem extends ast.Node
 
 class ast.NodeBlock extends ast.Node
   constructor: (@args, @seq) ->
+
+  init: (@src) ->
     inWords = {}
     for a in @args
       inWords[a.name] = null
@@ -28,9 +30,11 @@ class ast.NodeBlock extends ast.Node
       v = e.val
       if e.name != null
         if (@words[e.name] != undefined) or (inWords[e.name] != undefined)
-          throw "#{e.pos} redefined: #{e.name}"
+          [line, col] = @src.lineCol e.pos
+          throw "#{line}:#{col} redefined: #{e.name}"
         @words[e.name] = v
       if v instanceof ast.NodeBlock
+        v.init src
         v.parent = @
     @parent = null
 

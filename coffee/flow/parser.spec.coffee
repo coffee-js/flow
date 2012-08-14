@@ -123,8 +123,19 @@ describe "Flow Parser", ->
       (expect (p pc.ps "[]").match).toEqual null
 
       a = (p pc.ps "[ [ sd: 45 [] ] - ]").match
-      (expect a.seq[0].val.words.sd).toEqual 45
-
+      (expect a.seq[0].val.seq).toEqual [
+        {
+          name: "sd"
+          val: 45
+          pos: 4
+        }
+        {
+          name: null
+          val:
+            name: "[]"
+          pos: 11
+        }
+      ]
       a = (p pc.ps "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match
       (expect a.args).toEqual [
         {
@@ -156,8 +167,8 @@ describe "Flow Parser", ->
       src = new ast.Source "1 2 [", null
       (expect (->parser.parse src)).toThrow "parse error: pos:1:5"
 
-
-
+      src = new ast.Source "a: [ n >> n: 1 2 + ] ; a", null
+      (expect (->parser.parse src)).toThrow "1:11 redefined: n"
 
 
 
