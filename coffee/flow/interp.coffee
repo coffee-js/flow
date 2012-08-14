@@ -102,11 +102,16 @@ class Context
         word = @inWords[name]
       else if @block.words[name] != undefined
         word = @block.words[name]
+      else
+        upBlk = @block.parent
 
     if word != undefined
       word
     else if @parent
-      @parent.getWord name, @block.parent
+      if upBlk != undefined
+        @parent.getWord name, upBlk
+      else
+        @parent.getWord name, blk
     else if buildinWords[name] != undefined
       buildinWords[name]
     else
