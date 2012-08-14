@@ -19,29 +19,20 @@ class ast.NodeElem extends ast.Node
 
 class ast.NodeBlock extends ast.Node
   constructor: (@args, @seq) ->
+    inWords = {}
+    for a in @args
+      inWords[a.name] = null
+
     @words = {}
     for e in @seq
       v = e.val
       if e.name != null
-        if @words[e.name] != undefined
+        if (@words[e.name] != undefined) or (inWords[e.name] != undefined)
           throw "#{e.pos} redefined: #{e.name}"
         @words[e.name] = v
       if v instanceof ast.NodeBlock
         v.parent = @
     @parent = null
-    if @args.length > 0
-      @in = true
-    else
-      @in = undefined
-
-  getWord: (name) ->
-    word = @words[name]
-    if word != undefined
-      word
-    else if @parent != null
-      @parent.getWord name
-    else
-      null
 
 
 class ast.Source

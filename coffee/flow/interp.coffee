@@ -96,16 +96,17 @@ class Context
   setInWord: (name, word) ->
     @inWords[name] = word
 
-  getWord: (name) ->
-    if @inWords[name] != undefined
-      word = @inWords[name]
-    else
-      word = @block.getWord name
+  getWord: (name, blk) ->
+    if blk == @block
+      if @inWords[name] != undefined
+        word = @inWords[name]
+      else if @block.words[name] != undefined
+        word = @block.words[name]
 
-    if word != null
+    if word != undefined
       word
     else if @parent
-      @parent.getWord name
+      @parent.getWord name, @block.parent
     else if buildinWords[name] != undefined
       buildinWords[name]
     else
@@ -113,7 +114,7 @@ class Context
 
 
 wordEval = (node, ctx) ->
-  word = ctx.getWord node.val.name
+  word = ctx.getWord node.val.name, ctx.block
 
   if      word instanceof ast.NodeBlock
     blockEval word, ctx
