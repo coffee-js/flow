@@ -83,9 +83,9 @@ buildinWords = {
 
 
 class Context
-  constructor: (@parent, @src=null) ->
+  constructor: (@parent, @block, @src=null) ->
     @values = []
-    @words = {}
+    @inWords = {}
 
   source: ->
     if @src == null
@@ -93,14 +93,18 @@ class Context
     else
       @src
 
-  setWord: (name, word) ->
-    @words[name] = word
+  setInWord: (name, word) ->
+    @inWords[name] = word
 
   getWord: (name) ->
-    word = @words[name]
-    if word != undefined
+    if @inWords[name] != undefined
+      word = @inWords[name]
+    else
+      word = @block.getWord name
+
+    if word != null
       word
-    else if @parent != null
+    else if @parent
       @parent.getWord name
     else if buildinWords[name] != undefined
       buildinWords[name]
@@ -133,7 +137,7 @@ wordEval = (node, ctx) ->
 
 
 blockEval = (node, parentCtx) ->
-  ctx = new Context parentCtx
+  ctx = new Context parentCtx, node
 
   if node.args.length > 0
     if parentCtx == null
@@ -146,15 +150,8 @@ blockEval = (node, parentCtx) ->
       for i in [0..node.args.length-1]
         a = node.args[i]
         v = parentCtx.values[l-i-1]
-        ctx.setWord a.name, v.val
+        ctx.setInWord a.name, v.val
       parentCtx.values.length = l - node.args.length
-
-  for e in node.seq
-    if e.name != null
-      if (ctx.getWord e.name) != null
-        [line, col] = ctx.source().lineCol e.pos
-        throw "#{line}:#{col} redefined: #{e.name}"
-      ctx.setWord e.name, e.val
 
   for e in node.seq
     v = e.val
@@ -172,8 +169,9 @@ blockEval = (node, parentCtx) ->
 
 
 interp.eval = (seq, src) ->
-  ctx = new Context null, src
-  a = blockEval (new ast.NodeBlock [], seq), ctx
+  blk = new ast.NodeBlock [], seq
+  ctx = new Context null, blk, src
+  a = blockEval blk, ctx
   a.map (e)-> e.val
 
 
