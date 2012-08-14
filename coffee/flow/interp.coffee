@@ -8,14 +8,14 @@ pp = (s) -> console.log p s
 
 
 
-getArgs = (node, n, ctx) ->
+getArgs = (e, n, ctx) ->
   l = ctx.values.length
   if l < n
     if ctx.parent == null
-      [line, col] = ctx.source().lineCol node.pos
+      [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} no enough args in context:#{p ctx}"
     else
-      args0 = getArgs node, n-l, ctx.parent
+      args0 = getArgs e, n-l, ctx.parent
   p = if l-n < 0 then 0 else l-n
   args = ctx.values.slice p
   if args0 != undefined
@@ -27,9 +27,9 @@ getArgs = (node, n, ctx) ->
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (node, ctx) ->
-    args = (getArgs node, @numArgs, ctx).map (e)-> e.val
-    a = [node, ctx].concat args
+  eval: (e, ctx) ->
+    args = (getArgs e, @numArgs, ctx).map (a)-> a.val
+    a = [e, ctx].concat args
     @fn a...
 
 
@@ -41,32 +41,32 @@ ne = (a) ->
 
 
 buildinWords = {
-  ";":    bw 0, (n, ctx) -> ctx.values.length = 0; []
+  ";":    bw 0, (e, ctx) -> ctx.values.length = 0; []
 
-  "+":    bw 2, (n, ctx, a, b) -> ne [a+b]
-  "-":    bw 2, (n, ctx, a, b) -> ne [a-b]
-  "*":    bw 2, (n, ctx, a, b) -> ne [a*b]
-  "/":    bw 2, (n, ctx, a, b) -> ne [a/b]
+  "+":    bw 2, (e, ctx, a, b) -> ne [a+b]
+  "-":    bw 2, (e, ctx, a, b) -> ne [a-b]
+  "*":    bw 2, (e, ctx, a, b) -> ne [a*b]
+  "/":    bw 2, (e, ctx, a, b) -> ne [a/b]
 
-  '=':    bw 2, (n, ctx, a, b) -> ne [a==b]
-  '<':    bw 2, (n, ctx, a, b) -> ne [a<b]
-  '>':    bw 2, (n, ctx, a, b) -> ne [a>b]
-  '<=':   bw 2, (n, ctx, a, b) -> ne [a<=b]
-  '>=':   bw 2, (n, ctx, a, b) -> ne [a>=b]
+  '=':    bw 2, (e, ctx, a, b) -> ne [a==b]
+  '<':    bw 2, (e, ctx, a, b) -> ne [a<b]
+  '>':    bw 2, (e, ctx, a, b) -> ne [a>b]
+  '<=':   bw 2, (e, ctx, a, b) -> ne [a<=b]
+  '>=':   bw 2, (e, ctx, a, b) -> ne [a>=b]
 
-  'not':  bw 1, (n, ctx, a)    -> ne [!a]
-  'and':  bw 2, (n, ctx, a, b) -> ne [a&&b]
-  'or':   bw 2, (n, ctx, a, b) -> ne [a||b]
+  'not':  bw 1, (e, ctx, a)    -> ne [!a]
+  'and':  bw 2, (e, ctx, a, b) -> ne [a&&b]
+  'or':   bw 2, (e, ctx, a, b) -> ne [a||b]
 
-  'if':   bw 3, (n, ctx, cond, whenTrue, whenFals) ->
+  'if':   bw 3, (e, ctx, cond, whenTrue, whenFals) ->
     if typeof(cond) != 'boolean'
-      [line, col] = ctx.source().lineCol n.pos
+      [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} cond is not a boolean: #{cond}"
     if !(whenTrue instanceof ast.NodeBlock)
-      [line, col] = ctx.source().lineCol n.pos
+      [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} whenTrue is not a block: #{whenTrue}"
     if !(whenFals instanceof ast.NodeBlock)
-      [line, col] = ctx.source().lineCol n.pos
+      [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} whenFals is not a block: #{whenFals}"
 
     if cond
@@ -74,9 +74,9 @@ buildinWords = {
     else
       blockEval whenFals, ctx
 
-  'do':   bw 1, (n, ctx, blk) ->
+  'do':   bw 1, (e, ctx, blk) ->
     if !(blk instanceof ast.NodeBlock)
-      [line, col] = ctx.source().lineCol n.pos
+      [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} #{blk} is not a block"
     blockEval blk, ctx
 }

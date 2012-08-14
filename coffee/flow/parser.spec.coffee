@@ -106,30 +106,11 @@ describe "Flow Parser", ->
           pos: 11
         }
       ]
-      (expect (p pc.ps "sd: serdgd 465 [ 564 ]").match).toEqual [
-        {
-          name: "sd"
-          val:
-            name: "serdgd"
-          pos: 0
-        }
+      (expect (p pc.ps "sd: serdgd 465 [ 564 ]").match[2].val.seq).toEqual [
         {
           name: null
-          val: 465
-          pos: 11
-        }
-        {
-          name: null
-          val:
-            args: []
-            seq: [
-              {
-                name: null
-                val: 564
-                pos: 17
-              }
-            ]
-          pos: 15
+          val: 564
+          pos: 17
         }
       ]
 
@@ -138,84 +119,35 @@ describe "Flow Parser", ->
 
     it "match block", ->
       p = parser.block
+
       (expect (p pc.ps "[]").match).toEqual null
-      (expect (p pc.ps "[ [ sd: 45 [] ] - ]").match).toEqual {
-        args: []
-        seq: [
-          {
-            name: null
-            val:
-              args: []
-              seq: [
-                {
-                  name: "sd"
-                  val: 45
-                  pos: 4
-                }
-                {
-                  name: null
-                  val:
-                    name: "[]"
-                  pos: 11
-                }
-              ]
-            pos: 2
-          }
-          {
-            name: null
-            val:
-              name: "-"
-            pos: 16
-          }
-        ]
-      }
-      (expect (p pc.ps "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match).toEqual {
-        args: [
-          {
-            name: "aa"
-          }
-          {
-            name: "bb"
-          }
-        ]
-        seq: [
-          {
-            name: null
-            val:
-              args: [
-                {
-                  name: "cc"
-                }
-              ]
-              seq: [
-                {
-                  name: "sd"
-                  val: 45
-                  pos: 19
-                }
-                {
-                  name: null
-                  val:
-                    name: "[]"
-                  pos: 26
-                }
-              ]
-            pos: 11
-          }
-          {
-            name: null
-            val:
-              name: "-"
-            pos: 31
-          }
-          {
-            name: null
-            val:
-              name: "aa"
-            pos: 33
-          }
-        ]
-      }
+
+      a = (p pc.ps "[ [ sd: 45 [] ] - ]").match
+      (expect a.seq[0].val.words.sd).toEqual 45
+
+      a = (p pc.ps "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match
+      (expect a.args).toEqual [
+        {
+          name: "aa"
+        }
+        {
+          name: "bb"
+        }
+      ]
+      (expect a.seq[0].val.seq).toEqual [
+        {
+          name: "sd"
+          val: 45
+          pos: 19
+        }
+        {
+          name: null
+          val:
+            name: "[]"
+          pos: 26
+        }
+      ]
+
 
   describe "parse", ->
 
