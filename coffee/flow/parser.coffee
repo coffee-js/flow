@@ -38,10 +38,10 @@ combinator = do ->
   seq = pc.rep1 _elem
 
   block = pc.map pc.seq(pc.tok('['), pc.space(), pc.optional(args), pc.optional(seq), pc.tok(']'), endToken),
-    (n) ->
+    (n, pos, src) ->
       args = if n[2]==true then [] else n[2]
       seq = if n[3]==true then [] else n[3]
-      new ast.Block args, seq
+      new ast.Block args, seq, pos, src
   value = pc.choice block, number, string, word
 
   elem = pc.map pc.seq(pc.optional(name), value),
@@ -56,13 +56,12 @@ for k, v of combinator
 
 parser.parse = (src) ->
   p = pc.map pc.seq(parser.seq, pc.end()), (n) -> n[0]
-  r = p pc.ps src.txt
+  r = p pc.ps src
   if r.match == null
     [line, col] = src.lineCol r.state.lastFailPos
     throw "parse error: pos:#{line}:#{col}"
 
-  b = new ast.Block [], r.match
-  b.init src
+  b = new ast.Block [], r.match, 0, src
   b
 
 

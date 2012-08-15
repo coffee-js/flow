@@ -19,9 +19,9 @@ describe "Flow Interp", ->
     describe "math OPs", ->
 
       it "basic", ->
-        expect(run "1 2 -").toEqual [-1]
-        expect(run "1 2 - 3 - 20").toEqual [-4, 20]
-        expect(run "1 2 + 3 4 - *").toEqual [-3]
+        # expect(run "1 2 -").toEqual [-1]
+        # expect(run "1 2 - 3 - 20").toEqual [-4, 20]
+        # expect(run "1 2 + 3 4 - *").toEqual [-3]
   #       expect(run "n: 1 ; n 2 -").toEqual [-1]
 
 

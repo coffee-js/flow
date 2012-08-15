@@ -18,10 +18,8 @@ class ast.Elem extends ast.Node
 
 
 class ast.Block extends ast.Node
-  constructor: (@args, @seq) ->
+  constructor: (@args, @seq, @pos=null, @src=null) ->
     @words = {}
-
-  init: (@src=null) ->
     argWords = {}
     for a in @args
       argWords[a.name] = null
@@ -34,32 +32,20 @@ class ast.Block extends ast.Node
             [line, col] = @src.lineCol e.pos
             throw "#{line}:#{col} redefined: #{e.name}"
           else
-            throw "#{@} redefined: #{e.name}"
+            throw "#{e} redefined: #{e.name}"
         @words[e.name] = v
-      if v instanceof ast.Block
-        v.init @src
 
   curry: (argWords) ->
-    b = new ast.Block [], @seq
+    b = new ast.Block [], @seq, @pos, @src
     for a in @args
       if argWords[a.name] != undefined
         b.words[a.name] = argWords[a.name]
       else
         b.args.push a
-    b.init @src
     b
 
 
-class ast.Source
-  constructor: (@txt, @path) ->
 
-  lineCol: (pos)->
-    line = 1
-    lastLinePos = 0
-    while lastLinePos = 1+@txt[0...pos].indexOf("\n",lastLinePos)
-      ++line
-    col = pos - lastLinePos + 1
-    return [line, col]
 
 
 
