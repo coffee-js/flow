@@ -3,6 +3,7 @@ pc = require "../pc"
 
 
 log = (s) -> console.log s
+p = (s) -> JSON.stringify s, null, '  '
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
@@ -32,7 +33,7 @@ class ast.Block extends ast.Node
             [line, col] = @src.lineCol e.pos
             throw "#{line}:#{col} redefined: #{e.name}"
           else
-            throw "#{e} redefined: #{e.name}"
+            throw "#{p e} redefined: #{e.name}"
         @words[e.name] = v
 
   curry: (argWords) ->
