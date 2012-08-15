@@ -139,24 +139,26 @@ wordEval = (node, ctx) ->
     eval jsCode
 
 
-blockEval = (node, parentCtx) ->
-  ctx = new Context parentCtx, node
+curryBlock = (e, ctx, l) ->
+  blk = e.val
+  if l > blk.args.length
+    [line, col] = ctx.source().lineCol e.pos
+    throw "#{line}:#{col} l > blk.args.length"
+  args = getArgs e, l, ctx
+  argWords = {}
 
-  if node.args.length > 0
-    if parentCtx == null
-      throw "no enough args #{pp name}"
-    else
-      l = parentCtx.values.length
-      if l < node.args.length
-        throw "no enough args #{pp name}"
+  for i in [0..l-1]
+    a = blk.args[i]
+    v = ctx.values[l-i-1]
+    argWords[a.name] = v.val
+  b = blk.curry argWords
+  b
 
-      for i in [0..node.args.length-1]
-        a = node.args[i]
-        v = parentCtx.values[l-i-1]
-        ctx.setInWord a.name, v.val
-      parentCtx.values.length = l - node.args.length
 
-  for e in node.seq
+blockEval = (e, parentContext) ->
+  ctx = new Context parentContext, e
+
+  for e in ctx.block.seq
     v = e.val
     if v instanceof ast.Word
       v = wordEval e, ctx
