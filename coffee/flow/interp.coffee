@@ -100,17 +100,17 @@ class Context
       [null, null]
 
 
-wordEval = (e, ctx) ->
-  [word, wordCtx] = ctx.getWord e.val.name, ctx.block
-
-  if      word.val instanceof ast.Block
-    blockEval word, wordCtx
-  else if word.val instanceof ast.Word
-    wordEval  word, wordCtx
-  else if word instanceof BuildinWord
-    word.eval e, ctx
-  else if word.val != null
-    word.val
+wordEval = (wordElem, ctx) ->
+  [word, wordCtx] = ctx.getWord wordElem.val.name, ctx.block
+  if word instanceof BuildinWord
+    word.eval wordElem, ctx
+  else if word != null && word.val != null
+    if      word.val instanceof ast.Block
+      blockEval word, ctx
+    else if word.val instanceof ast.Word
+      wordEval  word, ctx
+    else
+      word.val
   else
     args = []
     for e in ctx.values
@@ -120,18 +120,18 @@ wordEval = (e, ctx) ->
       else
         args.push v
     a = args.join ","
-    jsCode = e.val.name + "(" + a + ")"
+    jsCode = wordElem.val.name + "(" + a + ")"
     eval jsCode
 
 
-seqCurryBlock = (e, ctx, l) ->
+seqCurryBlock = (blkElem, ctx, l) ->
   if l < 1
-    return e.val
-  blk = e.val
+    return blkElem.val
+  blk = blkElem.val
   if l > blk.args.length
-    [line, col] = ctx.source().lineCol e.pos
+    [line, col] = ctx.source().lineCol blkElem.pos
     throw "#{line}:#{col} l > blk.args.length"
-  args = getArgs e, l, ctx
+  args = getArgs blkElem, l, ctx
   argWords = {}
 
   for i in [0..l-1]
@@ -142,8 +142,8 @@ seqCurryBlock = (e, ctx, l) ->
   b
 
 
-blockEval = (e, parentContext) ->
-  b = seqCurryBlock e, parentContext, e.val.args.length
+blockEval = (blkElem, parentContext) ->
+  b = seqCurryBlock blkElem, parentContext, blkElem.val.args.length
   ctx = new Context parentContext, b
 
   for e in ctx.block.seq
