@@ -3,8 +3,6 @@ ast = require "./ast"
 
 
 log = (s) -> console.log s
-p = (s) -> JSON.stringify s, null, '  '
-pp = (s) -> console.log p s
 
 
 
@@ -13,7 +11,7 @@ getArgs = (e, n, ctx) ->
   if l < n
     if ctx.parent == null
       [line, col] = ctx.source().lineCol e.pos
-      throw "#{line}:#{col} no enough args in context:#{p ctx}"
+      throw "#{line}:#{col} no enough args in context:#{ctx}"
     else
       args0 = getArgs e, n-l, ctx.parent
   p = if l-n < 0 then 0 else l-n
@@ -28,7 +26,7 @@ class BuildinWord
   constructor: (@numArgs, @fn) ->
 
   eval: (e, ctx) ->
-    args = (getArgs e, @numArgs, ctx).map (a)-> a.val
+    args = getArgs e, @numArgs, ctx
     a = [e, ctx].concat args
     @fn a...
 
@@ -43,41 +41,41 @@ ne = (a) ->
 buildinWords = {
   ";":    bw 0, (e, ctx) -> ctx.values.length = 0; []
 
-  "+":    bw 2, (e, ctx, a, b) -> ne [a+b]
-  "-":    bw 2, (e, ctx, a, b) -> ne [a-b]
-  "*":    bw 2, (e, ctx, a, b) -> ne [a*b]
-  "/":    bw 2, (e, ctx, a, b) -> ne [a/b]
+  "+":    bw 2, (e, ctx, a, b) -> ne [a.val+b.val]
+  "-":    bw 2, (e, ctx, a, b) -> ne [a.val-b.val]
+  "*":    bw 2, (e, ctx, a, b) -> ne [a.val*b.val]
+  "/":    bw 2, (e, ctx, a, b) -> ne [a.val/b.val]
 
-  '=':    bw 2, (e, ctx, a, b) -> ne [a==b]
-  '<':    bw 2, (e, ctx, a, b) -> ne [a<b]
-  '>':    bw 2, (e, ctx, a, b) -> ne [a>b]
-  '<=':   bw 2, (e, ctx, a, b) -> ne [a<=b]
-  '>=':   bw 2, (e, ctx, a, b) -> ne [a>=b]
+  '=':    bw 2, (e, ctx, a, b) -> ne [a.val==b.val]
+  '<':    bw 2, (e, ctx, a, b) -> ne [a.val<b.val]
+  '>':    bw 2, (e, ctx, a, b) -> ne [a.val>b.val]
+  '<=':   bw 2, (e, ctx, a, b) -> ne [a.val<=b.val]
+  '>=':   bw 2, (e, ctx, a, b) -> ne [a.val>=b.val]
 
-  'not':  bw 1, (e, ctx, a)    -> ne [!a]
-  'and':  bw 2, (e, ctx, a, b) -> ne [a&&b]
-  'or':   bw 2, (e, ctx, a, b) -> ne [a||b]
+  'not':  bw 1, (e, ctx, a)    -> ne [!a.val]
+  'and':  bw 2, (e, ctx, a, b) -> ne [a.val&&b.val]
+  'or':   bw 2, (e, ctx, a, b) -> ne [a.val||b.val]
 
   'if':   bw 3, (e, ctx, cond, whenTrue, whenFals) ->
-    if typeof(cond) != 'boolean'
-      [line, col] = ctx.source().lineCol e.pos
-      throw "#{line}:#{col} cond is not a boolean: #{cond}"
-    if !(whenTrue instanceof ast.Block)
-      [line, col] = ctx.source().lineCol e.pos
-      throw "#{line}:#{col} whenTrue is not a block: #{whenTrue}"
-    if !(whenFals instanceof ast.Block)
-      [line, col] = ctx.source().lineCol e.pos
-      throw "#{line}:#{col} whenFals is not a block: #{whenFals}"
+    if typeof(cond.val) != 'boolean'
+      [line, col] = ctx.source().lineCol cond.pos
+      throw "#{line}:#{col} cond is not a boolean: #{cond.val}"
+    if !(whenTrue.val instanceof ast.Block)
+      [line, col] = ctx.source().lineCol whenTrue.pos
+      throw "#{line}:#{col} whenTrue is not a block: #{whenTrue.val}"
+    if !(whenFals.val instanceof ast.Block)
+      [line, col] = ctx.source().lineCol whenFals.pos
+      throw "#{line}:#{col} whenFals is not a block: #{whenFals.val}"
 
-    if cond
+    if cond.val
       blockEval whenTrue, ctx
     else
       blockEval whenFals, ctx
 
   'do':   bw 1, (e, ctx, blk) ->
-    if !(blk instanceof ast.Block)
+    if !(blk.val instanceof ast.Block)
       [line, col] = ctx.source().lineCol e.pos
-      throw "#{line}:#{col} #{blk} is not a block"
+      throw "#{line}:#{col} #{blk.val} is not a block"
     blockEval blk, ctx
 }
 
@@ -85,47 +83,34 @@ buildinWords = {
 class Context
   constructor: (@parent, @block) ->
     @values = []
-    @inWords = {}
 
   source: ->
     @block.src
 
-  setInWord: (name, word) ->
-    @inWords[name] = word
-
-  getWord: (name, blk) ->
-    if blk == @block
-      if @inWords[name] != undefined
-        word = @inWords[name]
-      else if @block.words[name] != undefined
-        word = @block.words[name]
-      else
-        upBlk = @block.parent
+  getWord: (name) ->
+    word = @block.words[name]
 
     if word != undefined
-      word
+      [word, @]
     else if @parent
-      if upBlk != undefined
-        @parent.getWord name, upBlk
-      else
-        @parent.getWord name, blk
+      @parent.getWord name
     else if buildinWords[name] != undefined
-      buildinWords[name]
+      [buildinWords[name], null]
     else
-      null
+      [null, null]
 
 
-wordEval = (node, ctx) ->
-  word = ctx.getWord node.val.name, ctx.block
+wordEval = (e, ctx) ->
+  [word, wordCtx] = ctx.getWord e.val.name, ctx.block
 
-  if      word instanceof ast.Block
-    blockEval word, ctx
-  else if word instanceof ast.Word
-    wordEval  word, ctx
+  if      word.val instanceof ast.Block
+    blockEval word, wordCtx
+  else if word.val instanceof ast.Word
+    wordEval  word, wordCtx
   else if word instanceof BuildinWord
-    word.eval node, ctx
-  else if word != null
-    word
+    word.eval e, ctx
+  else if word.val != null
+    word.val
   else
     args = []
     for e in ctx.values
@@ -135,11 +120,13 @@ wordEval = (node, ctx) ->
       else
         args.push v
     a = args.join ","
-    jsCode = node.val.name + "(" + a + ")"
+    jsCode = e.val.name + "(" + a + ")"
     eval jsCode
 
 
-curryBlock = (e, ctx, l) ->
+seqCurryBlock = (e, ctx, l) ->
+  if l < 1
+    return e.val
   blk = e.val
   if l > blk.args.length
     [line, col] = ctx.source().lineCol e.pos
@@ -149,32 +136,31 @@ curryBlock = (e, ctx, l) ->
 
   for i in [0..l-1]
     a = blk.args[i]
-    v = ctx.values[l-i-1]
-    argWords[a.name] = v.val
+    v = args[l-i-1]
+    argWords[a.name] = v
   b = blk.curry argWords
   b
 
 
 blockEval = (e, parentContext) ->
-  ctx = new Context parentContext, e
+  b = seqCurryBlock e, parentContext, e.val.args.length
+  ctx = new Context parentContext, b
 
   for e in ctx.block.seq
-    v = e.val
-    if v instanceof ast.Word
+    if e.val instanceof ast.Word
       v = wordEval e, ctx
-
-    if v instanceof Array
-      for ve in v
-        ctx.values.push ve
+      if v instanceof Array
+        for ve in v
+          ctx.values.push ve
+      else
+        ctx.values.push new ast.Elem null, v
     else
-      ctx.values.push new ast.Elem null, v
-
+      ctx.values.push e
   ctx.values
 
 
-
 interp.eval = (blk) ->
-  ctx = new Context null, blk
+  ctx = new Context null, blk.val
   a = blockEval blk, ctx
   a.map (e)-> e.val
 

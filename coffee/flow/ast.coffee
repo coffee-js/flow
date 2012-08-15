@@ -26,7 +26,6 @@ class ast.Block extends ast.Node
       argWords[a.name] = null
 
     for e in @seq
-      v = e.val
       if e.name != null
         if (@words[e.name] != undefined) or (argWords[e.name] != undefined)
           if (e.pos != null) && (@src != null)
@@ -34,7 +33,7 @@ class ast.Block extends ast.Node
             throw "#{line}:#{col} redefined: #{e.name}"
           else
             throw "#{p e} redefined: #{e.name}"
-        @words[e.name] = v
+        @words[e.name] = e
 
   curry: (argWords) ->
     b = new ast.Block [], @seq, @pos, @src
