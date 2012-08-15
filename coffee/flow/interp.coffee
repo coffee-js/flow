@@ -37,7 +37,7 @@ bw = ->
   new BuildinWord arguments...
 
 ne = (a) ->
-  a.map (v) -> new ast.NodeElem null, v
+  a.map (v) -> new ast.Elem null, v
 
 
 buildinWords = {
@@ -62,10 +62,10 @@ buildinWords = {
     if typeof(cond) != 'boolean'
       [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} cond is not a boolean: #{cond}"
-    if !(whenTrue instanceof ast.NodeBlock)
+    if !(whenTrue instanceof ast.Block)
       [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} whenTrue is not a block: #{whenTrue}"
-    if !(whenFals instanceof ast.NodeBlock)
+    if !(whenFals instanceof ast.Block)
       [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} whenFals is not a block: #{whenFals}"
 
@@ -75,7 +75,7 @@ buildinWords = {
       blockEval whenFals, ctx
 
   'do':   bw 1, (e, ctx, blk) ->
-    if !(blk instanceof ast.NodeBlock)
+    if !(blk instanceof ast.Block)
       [line, col] = ctx.source().lineCol e.pos
       throw "#{line}:#{col} #{blk} is not a block"
     blockEval blk, ctx
@@ -83,15 +83,12 @@ buildinWords = {
 
 
 class Context
-  constructor: (@parent, @block, @src=null) ->
+  constructor: (@parent, @block) ->
     @values = []
     @inWords = {}
 
   source: ->
-    if @src == null
-      @parent.source()
-    else
-      @src
+    @block.src
 
   setInWord: (name, word) ->
     @inWords[name] = word
@@ -121,9 +118,9 @@ class Context
 wordEval = (node, ctx) ->
   word = ctx.getWord node.val.name, ctx.block
 
-  if      word instanceof ast.NodeBlock
+  if      word instanceof ast.Block
     blockEval word, ctx
-  else if word instanceof ast.NodeWord
+  else if word instanceof ast.Word
     wordEval  word, ctx
   else if word instanceof BuildinWord
     word.eval node, ctx
@@ -161,21 +158,21 @@ blockEval = (node, parentCtx) ->
 
   for e in node.seq
     v = e.val
-    if v instanceof ast.NodeWord
+    if v instanceof ast.Word
       v = wordEval e, ctx
 
     if v instanceof Array
       for ve in v
         ctx.values.push ve
     else
-      ctx.values.push new ast.NodeElem null, v
+      ctx.values.push new ast.Elem null, v
 
   ctx.values
 
 
 
-interp.eval = (blk, src) ->
-  ctx = new Context null, blk, src
+interp.eval = (blk) ->
+  ctx = new Context null, blk
   a = blockEval blk, ctx
   a.map (e)-> e.val
 

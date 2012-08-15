@@ -28,7 +28,7 @@ combinator = do ->
       pc.neg(pc.seq pc.ch('[]'), endToken),
       pc.neg(pc.seq pc.tok('>>'), endToken),
       pc.neg(name)), endToken),
-    (n) -> new ast.NodeWord n[0].reduce (t,s)->t.concat(s)
+    (n) -> new ast.Word n[0].reduce (t,s)->t.concat(s)
 
   elem = null
   _elem = pc.lazy ->elem
@@ -41,11 +41,11 @@ combinator = do ->
     (n) ->
       args = if n[2]==true then [] else n[2]
       seq = if n[3]==true then [] else n[3]
-      new ast.NodeBlock args, seq
+      new ast.Block args, seq
   value = pc.choice block, number, string, word
 
   elem = pc.map pc.seq(pc.optional(name), value),
-    (n, pos) -> new ast.NodeElem (if n[0]==true then null else n[0]), n[1], pos
+    (n, pos) -> new ast.Elem (if n[0]==true then null else n[0]), n[1], pos
 
   { int10, number, string, colon, negws, nameChar, name, word, elem, seq, block, value }
 
@@ -61,7 +61,7 @@ parser.parse = (src) ->
     [line, col] = src.lineCol r.state.lastFailPos
     throw "parse error: pos:#{line}:#{col}"
 
-  b = new ast.NodeBlock [], r.match
+  b = new ast.Block [], r.match
   b.init src
   b
 
