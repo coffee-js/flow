@@ -125,19 +125,19 @@ wordEval = (wordElem, seqCtx, wordCtx) ->
     eval jsCode
 
 
-seqCurryBlock = (blkElem, seqCtx, l) ->
-  if l < 1
+seqCurryBlock = (blkElem, seqCtx, n) ->
+  if n < 1
     return blkElem.val
   blk = blkElem.val
-  if l > blk.args.length
+  if n > blk.args.length
     [line, col] = blk.src.lineCol blkElem.pos
-    throw "#{line}:#{col} l > blk.args.length"
-  args = getArgs blkElem, l, seqCtx
+    throw "#{line}:#{col} n > blk.args.length"
+  args = getArgs blkElem, n, seqCtx
   argWords = {}
 
-  for i in [0..l-1]
+  for i in [0..n-1]
     a = blk.args[i]
-    v = args[l-i-1]
+    v = args[n-i-1]
     argWords[a.name] = v
   b = blk.curry argWords
   b
