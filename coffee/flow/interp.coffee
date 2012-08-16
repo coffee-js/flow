@@ -5,14 +5,14 @@ ast = require "./ast"
 log = (s) -> console.log s
 
 
-getArgs = (e, n, seqCtx, blk) ->
+getArgs = (elem, n, seqCtx, blk) ->
   l = seqCtx.retBlk.seq.length
   if l < n
     if seqCtx.parent == null
-      [line, col] = blk.src.lineCol e.pos
+      [line, col] = blk.src.lineCol elem.pos
       throw "#{line}:#{col} no enough args in context:#{seqCtx}"
     else
-      args0 = getArgs e, n-l, seqCtx.parent
+      args0 = getArgs elem, n-l, seqCtx.parent
   p = if l-n < 0 then 0 else l-n
   args = seqCtx.retBlk.seq.slice p
   if args0 != undefined
@@ -24,8 +24,8 @@ getArgs = (e, n, seqCtx, blk) ->
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (e, seqCtx, wordCtx) ->
-    args = getArgs e, @numArgs, seqCtx, wordCtx
+  eval: (elem, seqCtx, wordCtx) ->
+    args = getArgs elem, @numArgs, seqCtx, wordCtx
     a = [seqCtx, wordCtx].concat args
     @fn a...
 
