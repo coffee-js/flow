@@ -10,7 +10,8 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 run = (txt) ->
   src = new pc.Source txt, null
-  interp.eval (parser.parse src)
+  b = interp.eval (parser.parse src)
+  b.seq.map (e) -> e.val
 
 
 describe "Flow Interp", ->

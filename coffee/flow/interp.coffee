@@ -159,9 +159,9 @@ blockEval = (blkElem, parentContext) ->
 
 
 interp.eval = (blk) ->
-  ctx = new Context null, blk.val
-  a = blockEval blk, ctx
-  a.seq.map (e) -> e.val
+  blockEval blk, null
+
+
 
 
 
