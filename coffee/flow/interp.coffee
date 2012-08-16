@@ -139,8 +139,7 @@ seqCurryBlock = (blkElem, seqCtx, n) ->
     a = blk.args[i]
     v = args[n-i-1]
     argWords[a.name] = v
-  b = blk.curry argWords
-  b
+  blk.curry argWords
 
 
 blockEval = (blkElem, parentSeqCtx, parentWordCtx) ->
