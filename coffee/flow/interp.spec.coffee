@@ -87,6 +87,7 @@ describe "Flow Interp", ->
 
       it "word call word or block can only up block level", ->
         expect(run "b: [ c ] c: 100 d: [ a: b c: 10 ; a ] ; d").toEqual [100]
+        expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: 10 ; a ] ; d").toEqual [3]
 
 
   describe "block data access", ->
