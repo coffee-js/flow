@@ -5,9 +5,8 @@ ast = require "./ast"
 log = (s) -> console.log s
 
 
-
 getArgs = (e, n, ctx) ->
-  l = ctx.values.length
+  l = ctx.retBlk.seq.length
   if l < n
     if ctx.parent == null
       [line, col] = ctx.source().lineCol e.pos
@@ -15,10 +14,10 @@ getArgs = (e, n, ctx) ->
     else
       args0 = getArgs e, n-l, ctx.parent
   p = if l-n < 0 then 0 else l-n
-  args = ctx.values.slice p
+  args = ctx.retBlk.seq.slice p
   if args0 != undefined
     args = args0.concat args
-  ctx.values.length = p
+  ctx.retBlk.seq.length = p
   args
 
 
@@ -35,26 +34,26 @@ bw = ->
   new BuildinWord arguments...
 
 ne = (a) ->
-  a.map (v) -> new ast.Elem null, v
+  new ast.Block [], (a.map (v) -> new ast.Elem null, v)
 
 
 buildinWords = {
-  ";":    bw 0, (e, ctx) -> ctx.values.length = 0; []
+  ";":    bw 0, (e, ctx) -> ctx.retBlk.seq.length = 0; ne []
 
-  "+":    bw 2, (e, ctx, a, b) -> ne [a.val+b.val]
-  "-":    bw 2, (e, ctx, a, b) -> ne [a.val-b.val]
-  "*":    bw 2, (e, ctx, a, b) -> ne [a.val*b.val]
-  "/":    bw 2, (e, ctx, a, b) -> ne [a.val/b.val]
+  "+":    bw 2, (e, ctx, a, b) -> a.val+b.val
+  "-":    bw 2, (e, ctx, a, b) -> a.val-b.val
+  "*":    bw 2, (e, ctx, a, b) -> a.val*b.val
+  "/":    bw 2, (e, ctx, a, b) -> a.val/b.val
 
-  '=':    bw 2, (e, ctx, a, b) -> ne [a.val==b.val]
-  '<':    bw 2, (e, ctx, a, b) -> ne [a.val<b.val]
-  '>':    bw 2, (e, ctx, a, b) -> ne [a.val>b.val]
-  '<=':   bw 2, (e, ctx, a, b) -> ne [a.val<=b.val]
-  '>=':   bw 2, (e, ctx, a, b) -> ne [a.val>=b.val]
+  '=':    bw 2, (e, ctx, a, b) -> a.val==b.val
+  '<':    bw 2, (e, ctx, a, b) -> a.val<b.val
+  '>':    bw 2, (e, ctx, a, b) -> a.val>b.val
+  '<=':   bw 2, (e, ctx, a, b) -> a.val<=b.val
+  '>=':   bw 2, (e, ctx, a, b) -> a.val>=b.val
 
-  'not':  bw 1, (e, ctx, a)    -> ne [!a.val]
-  'and':  bw 2, (e, ctx, a, b) -> ne [a.val&&b.val]
-  'or':   bw 2, (e, ctx, a, b) -> ne [a.val||b.val]
+  'not':  bw 1, (e, ctx, a)    -> !a.val
+  'and':  bw 2, (e, ctx, a, b) -> a.val&&b.val
+  'or':   bw 2, (e, ctx, a, b) -> a.val||b.val
 
   'if':   bw 3, (e, ctx, cond, whenTrue, whenFals) ->
     if typeof(cond.val) != 'boolean'
@@ -82,7 +81,7 @@ buildinWords = {
 
 class Context
   constructor: (@parent, @block) ->
-    @values = []
+    @retBlk = new ast.Block [], []
 
   source: ->
     @block.src
@@ -113,7 +112,7 @@ wordEval = (wordElem, ctx) ->
       word.val
   else
     args = []
-    for e in ctx.values
+    for e in ctx.retBlk.seq
       v = e.val
       if typeof(v) == 'string'
         args.push "\"" + v + "\""
@@ -149,19 +148,30 @@ blockEval = (blkElem, parentContext) ->
   for e in ctx.block.seq
     if e.val instanceof ast.Word
       v = wordEval e, ctx
-      if v instanceof Array
-        for ve in v
-          ctx.values.push ve
+      if v instanceof ast.Block
+        for ve in v.seq
+          ctx.retBlk.seq.push ve
       else
-        ctx.values.push new ast.Elem null, v
+        ctx.retBlk.seq.push new ast.Elem null, v
     else
-      ctx.values.push e
-  ctx.values
+      ctx.retBlk.seq.push e
+  ctx.retBlk
 
 
 interp.eval = (blk) ->
   ctx = new Context null, blk.val
   a = blockEval blk, ctx
-  a.map (e)-> e.val
+  a.seq.map (e) -> e.val
+
+
+
+
+
+
+
+
+
+
+
 
 
