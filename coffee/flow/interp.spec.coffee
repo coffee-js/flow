@@ -83,6 +83,12 @@ describe "Flow Interp", ->
       expect(run "a: [ n >> n 2 + - ] ; 1 2 a").toEqual [-3]
 
 
+    describe "scopes", ->
+
+      it "word call word or block can only up block level", ->
+        expect(run "b: [ c ] c: 100 d: [ a: b c: 10 ; a ] ; d").toEqual [100]
+
+
   describe "block data access", ->
 
     it "get word in block", ->

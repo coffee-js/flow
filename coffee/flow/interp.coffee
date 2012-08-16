@@ -5,28 +5,28 @@ ast = require "./ast"
 log = (s) -> console.log s
 
 
-getArgs = (e, n, ctx) ->
-  l = ctx.retBlk.seq.length
+getArgs = (e, n, seqCtx, blk) ->
+  l = seqCtx.retBlk.seq.length
   if l < n
-    if ctx.parent == null
-      [line, col] = ctx.source().lineCol e.pos
-      throw "#{line}:#{col} no enough args in context:#{ctx}"
+    if seqCtx.parent == null
+      [line, col] = blk.src.lineCol e.pos
+      throw "#{line}:#{col} no enough args in context:#{seqCtx}"
     else
-      args0 = getArgs e, n-l, ctx.parent
+      args0 = getArgs e, n-l, seqCtx.parent
   p = if l-n < 0 then 0 else l-n
-  args = ctx.retBlk.seq.slice p
+  args = seqCtx.retBlk.seq.slice p
   if args0 != undefined
     args = args0.concat args
-  ctx.retBlk.seq.length = p
+  seqCtx.retBlk.seq.length = p
   args
 
 
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (e, ctx) ->
-    args = getArgs e, @numArgs, ctx
-    a = [e, ctx].concat args
+  eval: (e, seqCtx, wordCtx) ->
+    args = getArgs e, @numArgs, seqCtx, wordCtx
+    a = [e, seqCtx, wordCtx].concat args
     @fn a...
 
 
@@ -38,53 +38,50 @@ ne = (a) ->
 
 
 buildinWords = {
-  ";":    bw 0, (e, ctx) -> ctx.retBlk.seq.length = 0; ne []
+  ";":    bw 0, (e, seqCtx, wordCtx) -> seqCtx.retBlk.seq.length = 0; ne []
 
-  "+":    bw 2, (e, ctx, a, b) -> a.val+b.val
-  "-":    bw 2, (e, ctx, a, b) -> a.val-b.val
-  "*":    bw 2, (e, ctx, a, b) -> a.val*b.val
-  "/":    bw 2, (e, ctx, a, b) -> a.val/b.val
+  "+":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val+b.val
+  "-":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val-b.val
+  "*":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val*b.val
+  "/":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val/b.val
 
-  '=':    bw 2, (e, ctx, a, b) -> a.val==b.val
-  '<':    bw 2, (e, ctx, a, b) -> a.val<b.val
-  '>':    bw 2, (e, ctx, a, b) -> a.val>b.val
-  '<=':   bw 2, (e, ctx, a, b) -> a.val<=b.val
-  '>=':   bw 2, (e, ctx, a, b) -> a.val>=b.val
+  '=':    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val==b.val
+  '<':    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val<b.val
+  '>':    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val>b.val
+  '<=':   bw 2, (e, seqCtx, wordCtx, a, b) -> a.val<=b.val
+  '>=':   bw 2, (e, seqCtx, wordCtx, a, b) -> a.val>=b.val
 
-  'not':  bw 1, (e, ctx, a)    -> !a.val
-  'and':  bw 2, (e, ctx, a, b) -> a.val&&b.val
-  'or':   bw 2, (e, ctx, a, b) -> a.val||b.val
+  'not':  bw 1, (e, seqCtx, wordCtx, a)    -> !a.val
+  'and':  bw 2, (e, seqCtx, wordCtx, a, b) -> a.val&&b.val
+  'or':   bw 2, (e, seqCtx, wordCtx, a, b) -> a.val||b.val
 
-  'if':   bw 3, (e, ctx, cond, whenTrue, whenFals) ->
+  'if':   bw 3, (e, seqCtx, wordCtx, cond, whenTrue, whenFals) ->
+    b = wordCtx.block
     if typeof(cond.val) != 'boolean'
-      [line, col] = ctx.source().lineCol cond.pos
+      [line, col] = b.src.lineCol cond.pos
       throw "#{line}:#{col} cond is not a boolean: #{cond.val}"
     if !(whenTrue.val instanceof ast.Block)
-      [line, col] = ctx.source().lineCol whenTrue.pos
+      [line, col] = b.src.lineCol whenTrue.pos
       throw "#{line}:#{col} whenTrue is not a block: #{whenTrue.val}"
     if !(whenFals.val instanceof ast.Block)
-      [line, col] = ctx.source().lineCol whenFals.pos
+      [line, col] = b.src.lineCol whenFals.pos
       throw "#{line}:#{col} whenFals is not a block: #{whenFals.val}"
 
     if cond.val
-      blockEval whenTrue, ctx
+      blockEval whenTrue, seqCtx, wordCtx
     else
-      blockEval whenFals, ctx
+      blockEval whenFals, seqCtx, wordCtx
 
-  'do':   bw 1, (e, ctx, blk) ->
-    if !(blk.val instanceof ast.Block)
-      [line, col] = ctx.source().lineCol e.pos
-      throw "#{line}:#{col} #{blk.val} is not a block"
-    blockEval blk, ctx
+  'do':   bw 1, (e, seqCtx, wordCtx, b) ->
+    if !(b.val instanceof ast.Block)
+      [line, col] = b.src.lineCol e.pos
+      throw "#{line}:#{col} #{b.val} is not a block"
+    blockEval b, seqCtx, wordCtx
 }
 
 
-class Context
-  constructor: (@parent, @block) ->
-    @retBlk = new ast.Block [], []
-
-  source: ->
-    @block.src
+class WordContext
+  constructor: (@block, @parent) ->
 
   getWord: (name) ->
     word = @block.words[name]
@@ -99,20 +96,25 @@ class Context
       [null, null]
 
 
-wordEval = (wordElem, ctx) ->
-  [word, wordCtx] = ctx.getWord wordElem.val.name, ctx.block
+class SeqContext
+  constructor: (@parent=null) ->
+    @retBlk = new ast.Block [], []
+
+
+wordEval = (wordElem, seqCtx, wordCtx) ->
+  [word, wordCtx1] = wordCtx.getWord wordElem.val.name
   if word instanceof BuildinWord
-    word.eval wordElem, ctx
+    word.eval wordElem, seqCtx, wordCtx
   else if word != null && word.val != null
     if      word.val instanceof ast.Block
-      blockEval word, ctx
+      blockEval word, seqCtx, wordCtx1
     else if word.val instanceof ast.Word
-      wordEval  word, ctx
+      wordEval  word, seqCtx, wordCtx1
     else
       word.val
   else
     args = []
-    for e in ctx.retBlk.seq
+    for e in seqCtx.retBlk.seq
       v = e.val
       if typeof(v) == 'string'
         args.push "\"" + v + "\""
@@ -123,14 +125,14 @@ wordEval = (wordElem, ctx) ->
     eval jsCode
 
 
-seqCurryBlock = (blkElem, ctx, l) ->
+seqCurryBlock = (blkElem, seqCtx, l) ->
   if l < 1
     return blkElem.val
   blk = blkElem.val
   if l > blk.args.length
-    [line, col] = ctx.source().lineCol blkElem.pos
+    [line, col] = blk.src.lineCol blkElem.pos
     throw "#{line}:#{col} l > blk.args.length"
-  args = getArgs blkElem, l, ctx
+  args = getArgs blkElem, l, seqCtx
   argWords = {}
 
   for i in [0..l-1]
@@ -141,25 +143,26 @@ seqCurryBlock = (blkElem, ctx, l) ->
   b
 
 
-blockEval = (blkElem, parentContext) ->
-  b = seqCurryBlock blkElem, parentContext, blkElem.val.args.length
-  ctx = new Context parentContext, b
+blockEval = (blkElem, parentSeqCtx, parentWordCtx) ->
+  b = seqCurryBlock blkElem, parentSeqCtx, blkElem.val.args.length
+  seqCtx = new SeqContext parentSeqCtx
+  wordCtx = new WordContext b, parentWordCtx
 
-  for e in ctx.block.seq
+  for e in b.seq
     if e.val instanceof ast.Word
-      v = wordEval e, ctx
+      v = wordEval e, seqCtx, wordCtx
       if v instanceof ast.Block
         for ve in v.seq
-          ctx.retBlk.seq.push ve
+          seqCtx.retBlk.seq.push ve
       else
-        ctx.retBlk.seq.push new ast.Elem null, v
+        seqCtx.retBlk.seq.push new ast.Elem null, v
     else
-      ctx.retBlk.seq.push e
-  ctx.retBlk
+      seqCtx.retBlk.seq.push e
+  seqCtx.retBlk
 
 
 interp.eval = (blk) ->
-  blockEval blk, null
+  blockEval blk, null, null
 
 
 
