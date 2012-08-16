@@ -26,7 +26,7 @@ class BuildinWord
 
   eval: (e, seqCtx, wordCtx) ->
     args = getArgs e, @numArgs, seqCtx, wordCtx
-    a = [e, seqCtx, wordCtx].concat args
+    a = [seqCtx, wordCtx].concat args
     @fn a...
 
 
@@ -38,24 +38,24 @@ ne = (a) ->
 
 
 buildinWords = {
-  ";":    bw 0, (e, seqCtx, wordCtx) -> seqCtx.retBlk.seq.length = 0; ne []
+  ";":    bw 0, (seqCtx, wordCtx) -> seqCtx.retBlk.seq.length = 0; ne []
 
-  "+":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val+b.val
-  "-":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val-b.val
-  "*":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val*b.val
-  "/":    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val/b.val
+  "+":    bw 2, (seqCtx, wordCtx, a, b) -> a.val+b.val
+  "-":    bw 2, (seqCtx, wordCtx, a, b) -> a.val-b.val
+  "*":    bw 2, (seqCtx, wordCtx, a, b) -> a.val*b.val
+  "/":    bw 2, (seqCtx, wordCtx, a, b) -> a.val/b.val
 
-  '=':    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val==b.val
-  '<':    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val<b.val
-  '>':    bw 2, (e, seqCtx, wordCtx, a, b) -> a.val>b.val
-  '<=':   bw 2, (e, seqCtx, wordCtx, a, b) -> a.val<=b.val
-  '>=':   bw 2, (e, seqCtx, wordCtx, a, b) -> a.val>=b.val
+  '=':    bw 2, (seqCtx, wordCtx, a, b) -> a.val==b.val
+  '<':    bw 2, (seqCtx, wordCtx, a, b) -> a.val<b.val
+  '>':    bw 2, (seqCtx, wordCtx, a, b) -> a.val>b.val
+  '<=':   bw 2, (seqCtx, wordCtx, a, b) -> a.val<=b.val
+  '>=':   bw 2, (seqCtx, wordCtx, a, b) -> a.val>=b.val
 
-  'not':  bw 1, (e, seqCtx, wordCtx, a)    -> !a.val
-  'and':  bw 2, (e, seqCtx, wordCtx, a, b) -> a.val&&b.val
-  'or':   bw 2, (e, seqCtx, wordCtx, a, b) -> a.val||b.val
+  'not':  bw 1, (seqCtx, wordCtx, a)    -> !a.val
+  'and':  bw 2, (seqCtx, wordCtx, a, b) -> a.val&&b.val
+  'or':   bw 2, (seqCtx, wordCtx, a, b) -> a.val||b.val
 
-  'if':   bw 3, (e, seqCtx, wordCtx, cond, whenTrue, whenFals) ->
+  'if':   bw 3, (seqCtx, wordCtx, cond, whenTrue, whenFals) ->
     b = wordCtx.block
     if typeof(cond.val) != 'boolean'
       [line, col] = b.src.lineCol cond.pos
@@ -72,7 +72,7 @@ buildinWords = {
     else
       blockEval whenFals, seqCtx, wordCtx
 
-  'do':   bw 1, (e, seqCtx, wordCtx, b) ->
+  'do':   bw 1, (seqCtx, wordCtx, b) ->
     if !(b.val instanceof ast.Block)
       [line, col] = b.src.lineCol e.pos
       throw "#{line}:#{col} #{b.val} is not a block"
