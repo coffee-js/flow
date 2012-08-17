@@ -82,7 +82,7 @@ buildinWords = {
       err "#{b.val} is not a block", e.pos, b.src
     blockEval b, seqCtx, wordCtx
 
-  "fold-seq": bw 0, (seqCtx, wordCtx) ->
+  "wrap": bw 0, (seqCtx, wordCtx) ->
     b = blockWrap seqCtx.retBlk.seq
     seqCtx.retBlk.seq.length = 0
     b
