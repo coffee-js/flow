@@ -39,8 +39,8 @@ describe "Flow Interp", ->
         expect(run "1 2 > [ 1 2 + ] [ 3 4 + ] if").toEqual [7]
 
       it "type check", ->
-        expect(-> run "1 [ 1 2 + ] [ 3 4 + ] if").toThrow "1:1 cond is not a boolean: 1"
-        expect(-> run "1 2 > 3 [ 3 4 + ] if").toThrow "1:7 whenTrue is not a block: 3"
+        expect(-> run "1 [ 1 2 + ] [ 3 4 + ] if").toThrow "null:1:1 cond is not a boolean: 1"
+        expect(-> run "1 2 > 3 [ 3 4 + ] if").toThrow "null:1:7 whenTrue is not a block: 3"
 
 
     describe "do block", ->
@@ -92,9 +92,18 @@ describe "Flow Interp", ->
 
   describe "block data access", ->
 
-    it "get word in block", ->
-      #expect(run "[ a: 100 ] .a").toEqual [100]
-      #expect(run "[ a: [ b: 10 ] ] .a .b").toEqual [10]
+    it "read word", ->
+      expect(run "[ a: 100 ] a>>").toEqual [100]
+      expect(run "[ a: [ b: 10 ] ] a>> b>>").toEqual [10]
+
+
+    it "write word", ->
+
+
+
+
+
+
 
 
 

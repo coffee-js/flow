@@ -7,6 +7,14 @@ log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
+err = (s, pos=null, src=null) ->
+  if (pos != null) && (src != null)
+    [line, col] = src.lineCol pos
+    throw "#{src.path}:#{line}:#{col} #{s}"
+  else
+    throw s
+
+
 combinator = do ->
   endToken = pc.choice pc.space(), pc.end()
 
@@ -58,8 +66,7 @@ parser.parse = (src) ->
   p = pc.map pc.seq(parser.seq, pc.end()), (n) -> n[0]
   r = p pc.ps src
   if r.match == null
-    [line, col] = src.lineCol r.state.lastFailPos
-    throw "parse error: pos:#{line}:#{col}"
+    err "syntex error", r.state.lastFailPos, src
   
   b = new ast.Block [], r.match, 0, src
   e = new ast.Elem null, b, 0

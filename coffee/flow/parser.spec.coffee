@@ -170,10 +170,10 @@ describe "Flow Parser", ->
     it "print error info", ->
 
       src = new pc.Source "1 2 [", null
-      (expect (->parser.parse src)).toThrow "parse error: pos:1:5"
+      (expect (->parser.parse src)).toThrow "null:1:5 syntex error"
 
       src = new pc.Source "a: [ n >> n: 1 2 + ] ; a", null
-      (expect (->parser.parse src)).toThrow "1:11 redefined: n"
+      (expect (->parser.parse src)).toThrow "null:1:11 redefined: n"
 
 
 

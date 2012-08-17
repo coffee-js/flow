@@ -7,6 +7,14 @@ p = (s) -> JSON.stringify s, null, '  '
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
+err = (s, pos=null, src=null) ->
+  if (pos != null) && (src != null)
+    [line, col] = src.lineCol pos
+    throw "#{src.path}:#{line}:#{col} #{s}"
+  else
+    throw s
+
+
 class ast.Node
 
 
@@ -28,11 +36,7 @@ class ast.Block extends ast.Node
     for e in @seq
       if e.name != null
         if (@words[e.name] != undefined) or (argWords[e.name] != undefined)
-          if (e.pos != null) && (@src != null)
-            [line, col] = @src.lineCol e.pos
-            throw "#{line}:#{col} redefined: #{e.name}"
-          else
-            throw "#{p e} redefined: #{e.name}"
+          err "redefined: #{e.name}", e.pos, @src
         @words[e.name] = e
 
   curry: (argWords) ->

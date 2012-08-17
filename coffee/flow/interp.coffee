@@ -5,12 +5,19 @@ ast = require "./ast"
 log = (s) -> console.log s
 
 
+err = (s, pos=null, src=null) ->
+  if (pos != null) && (src != null)
+    [line, col] = src.lineCol pos
+    throw "#{src.path}:#{line}:#{col} #{s}"
+  else
+    throw s
+
+
 getArgs = (elem, n, seqCtx, blk) ->
   l = seqCtx.retBlk.seq.length
   if l < n
     if seqCtx.parent == null
-      [line, col] = blk.src.lineCol elem.pos
-      throw "#{line}:#{col} no enough args in context:#{seqCtx}"
+      err "no enough args in context:#{seqCtx}", elem.pos, blk.src
     else
       args0 = getArgs elem, n-l, seqCtx.parent
   p = if l-n < 0 then 0 else l-n
@@ -30,15 +37,16 @@ class BuildinWord
     @fn a...
 
 
-bw = ->
-  new BuildinWord arguments...
-
-ne = (a) ->
+blockWrap = (a) ->
   new ast.Block [], (a.map (v) -> new ast.Elem null, v)
 
 
+bw = ->
+  new BuildinWord arguments...
+
+
 buildinWords = {
-  ";":    bw 0, (seqCtx, wordCtx) -> seqCtx.retBlk.seq.length = 0; ne []
+  ";":    bw 0, (seqCtx, wordCtx) -> seqCtx.retBlk.seq.length = 0; blockWrap []
 
   "+":    bw 2, (seqCtx, wordCtx, a, b) -> a.val+b.val
   "-":    bw 2, (seqCtx, wordCtx, a, b) -> a.val-b.val
@@ -58,14 +66,11 @@ buildinWords = {
   'if':   bw 3, (seqCtx, wordCtx, cond, whenTrue, whenFals) ->
     b = wordCtx.block
     if typeof(cond.val) != 'boolean'
-      [line, col] = b.src.lineCol cond.pos
-      throw "#{line}:#{col} cond is not a boolean: #{cond.val}"
+      err "cond is not a boolean: #{cond.val}", cond.pos, b.src
     if !(whenTrue.val instanceof ast.Block)
-      [line, col] = b.src.lineCol whenTrue.pos
-      throw "#{line}:#{col} whenTrue is not a block: #{whenTrue.val}"
+      err "whenTrue is not a block: #{whenTrue.val}", whenTrue.pos, b.src
     if !(whenFals.val instanceof ast.Block)
-      [line, col] = b.src.lineCol whenFals.pos
-      throw "#{line}:#{col} whenFals is not a block: #{whenFals.val}"
+      err "whenFals is not a block: #{whenFals.val}", whenFals.pos, b.src
 
     if cond.val
       blockEval whenTrue, seqCtx, wordCtx
@@ -74,8 +79,7 @@ buildinWords = {
 
   'do':   bw 1, (seqCtx, wordCtx, b) ->
     if !(b.val instanceof ast.Block)
-      [line, col] = b.src.lineCol e.pos
-      throw "#{line}:#{col} #{b.val} is not a block"
+      err "#{b.val} is not a block", e.pos, b.src
     blockEval b, seqCtx, wordCtx
 }
 
@@ -124,7 +128,31 @@ wordEval = (wordElem, seqCtx, wordCtx) ->
     jsCode = wordElem.val.name.slice(3) + "(" + a + ")"
     eval jsCode
   else
-    null
+    err "word:\"#{wordElem.val.name}\" not defined", wordElem.pos, wordCtx.block.src
+
+
+readWordInBlock = (wordElem, seqCtx, wordCtx) ->
+  [b] = getArgs wordElem, 1, seqCtx, wordCtx
+  wordName = wordElem.val.name.slice 0,-2
+  w = b.val.words[wordName]
+  if w == undefined
+    err "no word named:#{wordName} in block #{b}", wordElem.pos, wordCtx.block
+  else
+    blockWrap [w.val]
+
+
+writeWordInBlock = (wordElem, seqCtx, wordCtx) ->
+
+
+
+wordEval1 = (wordElem, seqCtx, wordCtx) ->
+  wordName = wordElem.val.name
+  if      wordName.match />>$/
+    readWordInBlock wordElem, seqCtx, wordCtx
+  else if wordName.match /^>>/
+    writeWordInBlock wordElem, seqCtx, wordCtx
+  else
+    wordEval wordElem, seqCtx, wordCtx
 
 
 seqCurryBlock = (blkElem, seqCtx, n) ->
@@ -132,8 +160,7 @@ seqCurryBlock = (blkElem, seqCtx, n) ->
     return blkElem.val
   blk = blkElem.val
   if n > blk.args.length
-    [line, col] = blk.src.lineCol blkElem.pos
-    throw "#{line}:#{col} n > blk.args.length"
+    err "n > blk.args.length", blkElem.pos, blk.src
   args = getArgs blkElem, n, seqCtx
   argWords = {}
 
@@ -151,7 +178,7 @@ blockEval = (blkElem, parentSeqCtx, parentWordCtx) ->
 
   for e in b.seq
     if e.val instanceof ast.Word
-      v = wordEval e, seqCtx, wordCtx
+      v = wordEval1 e, seqCtx, wordCtx
       if v instanceof ast.Block
         for ve in v.seq
           seqCtx.retBlk.seq.push ve
