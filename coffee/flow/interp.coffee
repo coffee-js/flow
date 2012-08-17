@@ -37,8 +37,8 @@ class BuildinWord
     @fn a...
 
 
-blockWrap = (a) ->
-  new ast.Block [], [], (a.map (v) -> new ast.Elem v)
+blockWrap = (a, wordSeq=[]) ->
+  new ast.Block [], wordSeq, (a.map (v) -> new ast.Elem v)
 
 
 bw = ->
@@ -77,7 +77,7 @@ buildinWords = {
 
   "do":   bw 1, (seqCtx, wordCtx, b) ->
     if !(b.val instanceof ast.Block)
-      err "#{b.val} is not a block", e.pos, b.src
+      err "#{b.val} is not a block", b.val.pos, b.val.src
     blockEval b, seqCtx, wordCtx
 
   ";":    bw 0, (seqCtx, wordCtx) ->
@@ -85,9 +85,17 @@ buildinWords = {
     blockWrap []
 
   "wrap": bw 0, (seqCtx, wordCtx) ->
-    b = blockWrap seqCtx.retBlk.seq
+    a = seqCtx.retBlk.seq.map (e) -> e.val
+    b = blockWrap a, wordCtx.block.wordSeq()
     seqCtx.retBlk.seq.length = 0
-    b
+    blockWrap [b]
+
+  "slice": bw 3, (seqCtx, wordCtx, b, start, end) ->
+    if !(b.val instanceof ast.Block)
+      err "#{b.val} is not a block", b.val.pos, b.val.src
+    a = b.val.seq.slice(start.val-1, end.val).map (e) -> e.val
+    b = blockWrap a, b.val.wordSeq()
+    blockWrap [b]
 }
 
 

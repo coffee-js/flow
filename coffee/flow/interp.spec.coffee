@@ -113,7 +113,7 @@ describe "Flow Interp", ->
       expect(run "[ [ 3 4 ] ] -1>> 5 >>-2 -2>>").toEqual [5]
 
 
-
-
+    it "slice", ->
+      expect(run "[ 1 2 3 4 5 ] 2 -2 slice 1>>").toEqual [2]
 
 
