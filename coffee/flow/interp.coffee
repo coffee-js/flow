@@ -126,34 +126,47 @@ wordEval = (wordElem, seqCtx, wordCtx) ->
         args.push v
     a = args.join ","
     jsCode = wordElem.val.name.slice(3) + "(" + a + ")"
-    eval jsCode
+    v = eval jsCode
+    if v == undefined
+      blockWrap []
+    else
+      v
   else
     err "word:\"#{wordElem.val.name}\" not defined", wordElem.pos, wordCtx.block.src
 
 
-readWordInBlock = (wordElem, seqCtx, wordCtx) ->
+readElemInBlock = (wordElem, seqCtx, wordCtx) ->
   [b] = getArgs wordElem, 1, seqCtx, wordCtx
-  wordName = wordElem.val.name.slice 0,-2
-  w = b.val.words[wordName]
-  if w == undefined
-    err "no word named:#{wordName} in block #{b}", wordElem.pos, wordCtx.block
+  name = wordElem.val.name.slice 0,-2
+  if name.match /\d+/
+    n = parseInt(name)
+    w = b.val.seq[n-1]
+    if w == undefined
+      err "no elem nth:#{n} in block #{b}", wordElem.pos, wordCtx.block.src
   else
-    blockWrap [w.val]
+    w = b.val.words[name]
+    if w == undefined
+      err "no word named:#{name} in block #{b}", wordElem.pos, wordCtx.block.src
+  blockWrap [w.val]
 
 
-writeWordInBlock = (wordElem, seqCtx, wordCtx) ->
+writeElemInBlock = (wordElem, seqCtx, wordCtx) ->
   [b, w] = getArgs wordElem, 2, seqCtx, wordCtx
-  wordName = wordElem.val.name.slice 2
-  b.val.words[wordName] = w
+  name = wordElem.val.name.slice 2
+  if name.match /\d+/
+    n = parseInt(name)
+    b.val.seq[n-1] = w
+  else
+    b.val.words[name] = w
   blockWrap [b.val]
 
 
 wordEval1 = (wordElem, seqCtx, wordCtx) ->
   wordName = wordElem.val.name
-  if      wordName.match />>$/
-    readWordInBlock wordElem, seqCtx, wordCtx
-  else if wordName.match /^>>/
-    writeWordInBlock wordElem, seqCtx, wordCtx
+  if      wordName.match /.+>>$/
+    readElemInBlock wordElem, seqCtx, wordCtx
+  else if wordName.match /^>>.+/
+    writeElemInBlock wordElem, seqCtx, wordCtx
   else
     wordEval wordElem, seqCtx, wordCtx
 

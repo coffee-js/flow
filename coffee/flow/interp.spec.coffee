@@ -92,17 +92,24 @@ describe "Flow Interp", ->
 
   describe "block data access", ->
 
-    it "read word", ->
+    it "read named elem", ->
       expect(run "[ a: 100 ] a>>").toEqual [100]
       expect(run "[ a: [ b: 10 ] ] a>> b>>").toEqual [10]
 
 
-    it "write word", ->
+    it "write named elem", ->
       expect(run "[ ] 5 >>a a>>").toEqual [5]
       expect(run "[ a: [ ] ] a>> 200 >>b b>>").toEqual [200]
 
 
+    it "read nth elem", ->
+      expect(run "[ 100 ] 1>>").toEqual [100]
+      expect(run "[ [ 10 ] ] 1>> 1>>").toEqual [10]
 
+
+    it "write nth elem", ->
+      expect(run "[ ] 5 >>1 1>>").toEqual [5]
+      expect(run "[ [ ] ] 1>> 200 >>1 1>>").toEqual [200]
 
 
 
