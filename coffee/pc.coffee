@@ -44,7 +44,7 @@ pc.ret = ->
 
 pc.tok = (s) ->
   (st) ->
-    if st.txt().length-st.pos >= s.length && st.txt().substring(st.pos, st.pos+s.length) == s
+    if st.txt().length-st.pos >= s.length && st.txt().slice(st.pos, st.pos+s.length) == s
       pc.ret st.forward(s.length), s
     else pc.ret st.fail(), null
 
@@ -69,14 +69,14 @@ pc.range = (lower, upper) ->
 
 pc.space = ->
   (st) ->
-    m = st.txt().substring(st.pos, st.txt().length).match /^\s+/
+    m = st.txt().slice(st.pos, st.txt().length).match /^\s+/
     if m != null
       pc.ret st.forward(m[0].length), m[0]
     else pc.ret st.fail(), null
 
 pc.ws = (p) ->
   (st) ->
-    m = st.txt().substring(st.pos, st.txt().length).match /^\s+/
+    m = st.txt().slice(st.pos, st.txt().length).match /^\s+/
     nst = st
     if m != null
       nst = st.forward m[0].length

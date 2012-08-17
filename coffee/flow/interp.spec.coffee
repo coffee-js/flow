@@ -74,7 +74,7 @@ describe "Flow Interp", ->
 
 
     it "external call", ->
-      expect(run "\"hello world!\" console.log ;").toEqual []
+      expect(run "\"hello world!\" js/console.log ;").toEqual []
 
 
     it "concatnative", ->
@@ -93,8 +93,8 @@ describe "Flow Interp", ->
   describe "block data access", ->
 
     it "get word in block", ->
-      # expect(run "[ a: 100 ] .a").toEqual [100]
-      # expect(run "[ a: [ b: 10 ] ] .a .b").toEqual [10]
+      #expect(run "[ a: 100 ] .a").toEqual [100]
+      #expect(run "[ a: [ b: 10 ] ] .a .b").toEqual [10]
 
 
 

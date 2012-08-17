@@ -112,7 +112,7 @@ wordEval = (wordElem, seqCtx, wordCtx) ->
       wordEval  word, seqCtx, wordCtx1
     else
       word.val
-  else
+  else if wordElem.val.name.match /^js\//i
     args = []
     for e in seqCtx.retBlk.seq
       v = e.val
@@ -121,8 +121,10 @@ wordEval = (wordElem, seqCtx, wordCtx) ->
       else
         args.push v
     a = args.join ","
-    jsCode = wordElem.val.name + "(" + a + ")"
+    jsCode = wordElem.val.name.slice(3) + "(" + a + ")"
     eval jsCode
+  else
+    null
 
 
 seqCurryBlock = (blkElem, seqCtx, n) ->
