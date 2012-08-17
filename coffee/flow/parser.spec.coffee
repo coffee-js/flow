@@ -92,9 +92,9 @@ describe "Flow Parser", ->
 
     it "match seq", ->
       p = parser.seq
-      (expect (parse p, "x: sdf 435 dfg").match).toEqual [
+      (expect (parse p, "sdf 435 dfg").match).toEqual [
         {
-          name: "x"
+          name: null
           val:
             name: "sdf"
           pos: 0
@@ -102,20 +102,20 @@ describe "Flow Parser", ->
         {
           name: null
           val: 435
-          pos: 7
+          pos: 4
         }
         {
           name: null
           val:
             name: "dfg"
-          pos: 11
+          pos: 8
         }
       ]
-      (expect (parse p, "sd: serdgd 465 [ 564 ]").match[2].val.seq).toEqual [
+      (expect (parse p, "serdgd 465 [ 564 ]").match[2].val.seq).toEqual [
         {
           name: null
           val: 564
-          pos: 17
+          pos: 13
         }
       ]
 
@@ -128,12 +128,12 @@ describe "Flow Parser", ->
       (expect (parse p, "[]").match).toEqual null
 
       a = (parse p, "[ [ sd: 45 [] ] - ]").match
+      (expect a.seq[0].val.words["sd"]).toEqual {
+        name: "sd"
+        val: 45
+        pos: 4
+      }
       (expect a.seq[0].val.seq).toEqual [
-        {
-          name: "sd"
-          val: 45
-          pos: 4
-        }
         {
           name: null
           val:
@@ -150,12 +150,12 @@ describe "Flow Parser", ->
           name: "bb"
         }
       ]
+      (expect a.seq[0].val.words["sd"]).toEqual {
+        name: "sd"
+        val: 45
+        pos: 19
+      }
       (expect a.seq[0].val.seq).toEqual [
-        {
-          name: "sd"
-          val: 45
-          pos: 19
-        }
         {
           name: null
           val:
@@ -172,8 +172,8 @@ describe "Flow Parser", ->
       src = new pc.Source "1 2 [", null
       (expect (->parser.parse src)).toThrow "null:1:5 syntex error"
 
-      src = new pc.Source "a: [ n >> n: 1 2 + ] ; a", null
-      (expect (->parser.parse src)).toThrow "null:1:11 redefined: n"
+      src = new pc.Source "a: [ n >> n: 1 2 + ] a", null
+      (expect (->parser.parse src)).toThrow "null:1:11 redefined word:\"n\""
 
 
 

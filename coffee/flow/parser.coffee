@@ -43,19 +43,34 @@ combinator = do ->
 
   args = pc.map pc.seq(pc.rep1(word), pc.tok('>>'), pc.space()),
     (n) -> n[0]
-  seq = pc.rep1 _elem
 
-  block = pc.map pc.seq(pc.tok('['), pc.space(), pc.optional(args), pc.optional(seq), pc.tok(']'), endToken),
+  namedElem = pc.map pc.seq(name, _elem),
+    (n, pos) ->
+      name = n[0]
+      val = n[1]
+      val.name = name
+      val.pos = pos
+      {name, val}
+
+  wordSeq = pc.rep1(namedElem)
+  seq = pc.rep1 _elem
+  body = pc.map pc.seq(pc.optional(wordSeq), pc.optional(seq)),
+    (n) ->
+      wordSeq = if n[0]==true then [] else n[0]
+      seq     = if n[1]==true then [] else n[1]
+      {wordSeq, seq}
+
+  block = pc.map pc.seq(pc.tok('['), pc.space(), pc.optional(args), body, pc.tok(']'), endToken),
     (n, pos, src) ->
       args = if n[2]==true then [] else n[2]
-      seq = if n[3]==true then [] else n[3]
-      new ast.Block args, seq, pos, src
-  value = pc.choice block, number, string, word
+      wordSeq = n[3].wordSeq
+      seq     = n[3].seq
+      new ast.Block args, wordSeq, seq, pos, src
 
-  elem = pc.map pc.seq(pc.optional(name), value),
-    (n, pos) -> new ast.Elem (if n[0]==true then null else n[0]), n[1], pos
+  elem = pc.map pc.choice(block, number, string, word),
+    (n, pos) -> new ast.Elem n, null, pos
 
-  { int10, number, string, colon, negws, nameChar, name, word, elem, seq, block, value }
+  { int10, number, string, colon, negws, nameChar, name, word, elem, wordSeq, seq, body, block }
 
 
 for k, v of combinator
@@ -63,13 +78,13 @@ for k, v of combinator
 
 
 parser.parse = (src) ->
-  p = pc.map pc.seq(parser.seq, pc.end()), (n) -> n[0]
+  p = pc.map pc.seq(parser.body, pc.end()), (n) -> n[0]
   r = p pc.ps src
   if r.match == null
     err "syntex error", r.state.lastFailPos, src
   
-  b = new ast.Block [], r.match, 0, src
-  e = new ast.Elem null, b, 0
+  b = new ast.Block [], r.match.wordSeq, r.match.seq, 0, src
+  e = new ast.Elem b, null, 0
   e
 
 

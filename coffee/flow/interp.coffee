@@ -38,7 +38,7 @@ class BuildinWord
 
 
 blockWrap = (a) ->
-  new ast.Block [], (a.map (v) -> new ast.Elem null, v)
+  new ast.Block [], [], (a.map (v) -> new ast.Elem v)
 
 
 bw = ->
@@ -102,7 +102,7 @@ class WordContext
 
 class SeqContext
   constructor: (@parent=null) ->
-    @retBlk = new ast.Block [], []
+    @retBlk = new ast.Block [], [], []
 
 
 wordEval = (wordElem, seqCtx, wordCtx) ->
@@ -183,7 +183,7 @@ blockEval = (blkElem, parentSeqCtx, parentWordCtx) ->
         for ve in v.seq
           seqCtx.retBlk.seq.push ve
       else
-        seqCtx.retBlk.seq.push new ast.Elem null, v
+        seqCtx.retBlk.seq.push new ast.Elem v
     else
       seqCtx.retBlk.seq.push e
   seqCtx.retBlk

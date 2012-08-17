@@ -3,7 +3,6 @@ pc = require "../pc"
 
 
 log = (s) -> console.log s
-p = (s) -> JSON.stringify s, null, '  '
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
@@ -23,26 +22,30 @@ class ast.Word extends ast.Node
 
 
 class ast.Elem extends ast.Node
-  constructor: (@name, @val, @pos=null) ->
+  constructor: (@val, @name=null, @pos=null) ->
 
 
 class ast.Block extends ast.Node
-  constructor: (@args, @seq, @pos=null, @src=null) ->
-    @words = {}
+  constructor: (@args, wordSeq, @seq, @pos=null, @src=null) ->
     argWords = {}
-    for a in @args
+    for a in args
       argWords[a.name] = null
 
-    for e in @seq
-      if e.name != null
-        if (@words[e.name] != undefined) or (argWords[e.name] != undefined)
-          err "redefined: #{e.name}", e.pos, @src
-        @words[e.name] = e
+    @words = {}
+    for e in wordSeq
+      name = e.name
+      if name != null
+        if (@words[name] != undefined) or (argWords[name] != undefined)
+          err "redefined word:\"#{name}\"", e.val.pos, src
+        @words[name] = e.val
+
 
   curry: (argWords) ->
-    b = new ast.Block [], @seq, @pos, @src
+    b = new ast.Block [], @words, @seq, @pos, @src
     for a in @args
       if argWords[a.name] != undefined
+        if b.words[a.name] != undefined
+          err "redefined word:\"#{a.name}\"", @pos, @src
         b.words[a.name] = argWords[a.name]
       else
         b.args.push a
