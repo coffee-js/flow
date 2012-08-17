@@ -13,27 +13,27 @@ err = (s, pos=null, src=null) ->
     throw s
 
 
-getArgs = (elem, n, retCtx, blk) ->
-  l = retCtx.retBlk.seq.length
+getArgs = (elem, n, seqCtx, blk) ->
+  l = seqCtx.retBlk.seq.length
   if l < n
-    if retCtx.parent == null
-      err "no enough args in context:#{retCtx}", elem.pos, blk.src
+    if seqCtx.parent == null
+      err "no enough args in context:#{seqCtx}", elem.pos, blk.src
     else
-      args0 = getArgs elem, n-l, retCtx.parent
+      args0 = getArgs elem, n-l, seqCtx.parent
   p = if l-n < 0 then 0 else l-n
-  args = retCtx.retBlk.seq.slice p
+  args = seqCtx.retBlk.seq.slice p
   if args0 != undefined
     args = args0.concat args
-  retCtx.retBlk.seq.length = p
+  seqCtx.retBlk.seq.length = p
   args
 
 
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (elem, retCtx, wordCtx) ->
-    args = getArgs elem, @numArgs, retCtx, wordCtx
-    a = [retCtx, wordCtx].concat args
+  eval: (elem, seqCtx, wordCtx) ->
+    args = getArgs elem, @numArgs, seqCtx, wordCtx
+    a = [seqCtx, wordCtx].concat args
     @fn a...
 
 
@@ -46,22 +46,22 @@ bw = ->
 
 
 buildinWords = {
-  "+":    bw 2, (retCtx, wordCtx, a, b) -> a.val+b.val
-  "-":    bw 2, (retCtx, wordCtx, a, b) -> a.val-b.val
-  "*":    bw 2, (retCtx, wordCtx, a, b) -> a.val*b.val
-  "/":    bw 2, (retCtx, wordCtx, a, b) -> a.val/b.val
+  "+":    bw 2, (seqCtx, wordCtx, a, b) -> a.val+b.val
+  "-":    bw 2, (seqCtx, wordCtx, a, b) -> a.val-b.val
+  "*":    bw 2, (seqCtx, wordCtx, a, b) -> a.val*b.val
+  "/":    bw 2, (seqCtx, wordCtx, a, b) -> a.val/b.val
 
-  "=":    bw 2, (retCtx, wordCtx, a, b) -> a.val==b.val
-  "<":    bw 2, (retCtx, wordCtx, a, b) -> a.val<b.val
-  ">":    bw 2, (retCtx, wordCtx, a, b) -> a.val>b.val
-  "<=":   bw 2, (retCtx, wordCtx, a, b) -> a.val<=b.val
-  ">=":   bw 2, (retCtx, wordCtx, a, b) -> a.val>=b.val
+  "=":    bw 2, (seqCtx, wordCtx, a, b) -> a.val==b.val
+  "<":    bw 2, (seqCtx, wordCtx, a, b) -> a.val<b.val
+  ">":    bw 2, (seqCtx, wordCtx, a, b) -> a.val>b.val
+  "<=":   bw 2, (seqCtx, wordCtx, a, b) -> a.val<=b.val
+  ">=":   bw 2, (seqCtx, wordCtx, a, b) -> a.val>=b.val
 
-  "not":  bw 1, (retCtx, wordCtx, a)    -> !a.val
-  "and":  bw 2, (retCtx, wordCtx, a, b) -> a.val&&b.val
-  "or":   bw 2, (retCtx, wordCtx, a, b) -> a.val||b.val
+  "not":  bw 1, (seqCtx, wordCtx, a)    -> !a.val
+  "and":  bw 2, (seqCtx, wordCtx, a, b) -> a.val&&b.val
+  "or":   bw 2, (seqCtx, wordCtx, a, b) -> a.val||b.val
 
-  "if":   bw 3, (retCtx, wordCtx, cond, whenTrue, whenFals) ->
+  "if":   bw 3, (seqCtx, wordCtx, cond, whenTrue, whenFals) ->
     b = wordCtx.block
     if typeof(cond.val) != 'boolean'
       err "cond is not a boolean: #{cond.val}", cond.pos, b.src
@@ -71,22 +71,22 @@ buildinWords = {
       err "whenFals is not a block: #{whenFals.val}", whenFals.pos, b.src
 
     if cond.val
-      blockEval whenTrue, retCtx, wordCtx
+      blockEval whenTrue, seqCtx, wordCtx
     else
-      blockEval whenFals, retCtx, wordCtx
+      blockEval whenFals, seqCtx, wordCtx
 
-  "do":   bw 1, (retCtx, wordCtx, b) ->
+  "do":   bw 1, (seqCtx, wordCtx, b) ->
     if !(b.val instanceof ast.Block)
       err "#{b.val} is not a block", e.pos, b.src
-    blockEval b, retCtx, wordCtx
+    blockEval b, seqCtx, wordCtx
 
-  ";":    bw 0, (retCtx, wordCtx) ->
-    retCtx.retBlk.seq.length = 0
+  ";":    bw 0, (seqCtx, wordCtx) ->
+    seqCtx.retBlk.seq.length = 0
     blockWrap []
 
-  "wrap": bw 0, (retCtx, wordCtx) ->
-    b = blockWrap retCtx.retBlk.seq
-    retCtx.retBlk.seq.length = 0
+  "wrap": bw 0, (seqCtx, wordCtx) ->
+    b = blockWrap seqCtx.retBlk.seq
+    seqCtx.retBlk.seq.length = 0
     b
 }
 
@@ -107,25 +107,25 @@ class WordContext
       [null, null]
 
 
-class RetContext
-  constructor: (wordSeq, @parent=null) ->
-    @retBlk = new ast.Block [], wordSeq, []
+class SeqContext
+  constructor: (@parent=null) ->
+    @retBlk = new ast.Block [], [], []
 
 
-wordEval = (wordElem, retCtx, wordCtx) ->
+wordEval = (wordElem, seqCtx, wordCtx) ->
   [word, wordCtx1] = wordCtx.getWord wordElem.val.name
   if word instanceof BuildinWord
-    word.eval wordElem, retCtx, wordCtx
+    word.eval wordElem, seqCtx, wordCtx
   else if word != null && word.val != null
     if      word.val instanceof ast.Block
-      blockEval word, retCtx, wordCtx1
+      blockEval word, seqCtx, wordCtx1
     else if word.val instanceof ast.Word
-      wordEval  word, retCtx, wordCtx1
+      wordEval  word, seqCtx, wordCtx1
     else
       word.val
   else if wordElem.val.name.match /^js\//i
     args = []
-    for e in retCtx.retBlk.seq
+    for e in seqCtx.retBlk.seq
       v = e.val
       if typeof(v) == 'string'
         args.push "\"" + v + "\""
@@ -142,8 +142,8 @@ wordEval = (wordElem, retCtx, wordCtx) ->
     err "word:\"#{wordElem.val.name}\" not defined", wordElem.pos, wordCtx.block.src
 
 
-readElemInBlock = (wordElem, retCtx, wordCtx) ->
-  [b] = getArgs wordElem, 1, retCtx, wordCtx
+readElemInBlock = (wordElem, seqCtx, wordCtx) ->
+  [b] = getArgs wordElem, 1, seqCtx, wordCtx
   name = wordElem.val.name.slice 0,-2
   if name.match /\d+/
     n = parseInt name
@@ -158,8 +158,8 @@ readElemInBlock = (wordElem, retCtx, wordCtx) ->
   blockWrap [w.val]
 
 
-writeElemInBlock = (wordElem, retCtx, wordCtx) ->
-  [b, w] = getArgs wordElem, 2, retCtx, wordCtx
+writeElemInBlock = (wordElem, seqCtx, wordCtx) ->
+  [b, w] = getArgs wordElem, 2, seqCtx, wordCtx
   name = wordElem.val.name.slice 2
   if name.match /\d+/
     n = parseInt(name)
@@ -170,23 +170,23 @@ writeElemInBlock = (wordElem, retCtx, wordCtx) ->
   blockWrap [b.val]
 
 
-wordEval1 = (wordElem, retCtx, wordCtx) ->
+wordEval1 = (wordElem, seqCtx, wordCtx) ->
   wordName = wordElem.val.name
   if      wordName.match /.+>>$/
-    readElemInBlock wordElem, retCtx, wordCtx
+    readElemInBlock wordElem, seqCtx, wordCtx
   else if wordName.match /^>>.+/
-    writeElemInBlock wordElem, retCtx, wordCtx
+    writeElemInBlock wordElem, seqCtx, wordCtx
   else
-    wordEval wordElem, retCtx, wordCtx
+    wordEval wordElem, seqCtx, wordCtx
 
 
-seqCurryBlock = (blkElem, retCtx, n) ->
+seqCurryBlock = (blkElem, seqCtx, n) ->
   if n < 1
     return blkElem.val
   blk = blkElem.val
   if n > blk.args.length
     err "n > blk.args.length", blkElem.pos, blk.src
-  args = getArgs blkElem, n, retCtx
+  args = getArgs blkElem, n, seqCtx
   argWords = {}
 
   for i in [0..n-1]
@@ -198,20 +198,20 @@ seqCurryBlock = (blkElem, retCtx, n) ->
 
 blockEval = (blkElem, parentSeqCtx, parentWordCtx) ->
   b = seqCurryBlock blkElem, parentSeqCtx, blkElem.val.args.length
-  retCtx = new RetContext b.wordSeq(), parentSeqCtx
+  seqCtx = new SeqContext parentSeqCtx
   wordCtx = new WordContext b, parentWordCtx
 
   for e in b.seq
     if e.val instanceof ast.Word
-      v = wordEval1 e, retCtx, wordCtx
+      v = wordEval1 e, seqCtx, wordCtx
       if v instanceof ast.Block
         for ve in v.seq
-          retCtx.retBlk.seq.push ve
+          seqCtx.retBlk.seq.push ve
       else
-        retCtx.retBlk.seq.push new ast.Elem v
+        seqCtx.retBlk.seq.push new ast.Elem v
     else
-      retCtx.retBlk.seq.push e
-  retCtx.retBlk
+      seqCtx.retBlk.seq.push e
+  seqCtx.retBlk
 
 
 interp.eval = (blk) ->
