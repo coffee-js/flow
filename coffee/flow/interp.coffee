@@ -46,8 +46,6 @@ bw = ->
 
 
 buildinWords = {
-  ";":    bw 0, (seqCtx, wordCtx) -> seqCtx.retBlk.seq.length = 0; blockWrap []
-
   "+":    bw 2, (seqCtx, wordCtx, a, b) -> a.val+b.val
   "-":    bw 2, (seqCtx, wordCtx, a, b) -> a.val-b.val
   "*":    bw 2, (seqCtx, wordCtx, a, b) -> a.val*b.val
@@ -81,6 +79,10 @@ buildinWords = {
     if !(b.val instanceof ast.Block)
       err "#{b.val} is not a block", e.pos, b.src
     blockEval b, seqCtx, wordCtx
+
+  ";":    bw 0, (seqCtx, wordCtx) ->
+    seqCtx.retBlk.seq.length = 0
+    blockWrap []
 
   "wrap": bw 0, (seqCtx, wordCtx) ->
     b = blockWrap seqCtx.retBlk.seq
