@@ -103,14 +103,14 @@ describe "Flow Interp", ->
 
 
     it "read nth elem", ->
-      expect(run "[ 100 ] 1>>").toEqual [100]
+      expect(run "[ 100 ] -1>>").toEqual [100]
       expect(run "[ [ 10 ] ] 1>> 1>>").toEqual [10]
 
 
     it "write nth elem", ->
       expect(run "[ ] 5 >>1 1>>").toEqual [5]
       expect(run "[ [ ] ] 1>> 200 >>1 1>>").toEqual [200]
-
+      expect(run "[ [ 3 4 ] ] -1>> 5 >>-2 -2>>").toEqual [5]
 
 
 

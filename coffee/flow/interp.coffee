@@ -53,17 +53,17 @@ buildinWords = {
   "*":    bw 2, (seqCtx, wordCtx, a, b) -> a.val*b.val
   "/":    bw 2, (seqCtx, wordCtx, a, b) -> a.val/b.val
 
-  '=':    bw 2, (seqCtx, wordCtx, a, b) -> a.val==b.val
-  '<':    bw 2, (seqCtx, wordCtx, a, b) -> a.val<b.val
-  '>':    bw 2, (seqCtx, wordCtx, a, b) -> a.val>b.val
-  '<=':   bw 2, (seqCtx, wordCtx, a, b) -> a.val<=b.val
-  '>=':   bw 2, (seqCtx, wordCtx, a, b) -> a.val>=b.val
+  "=":    bw 2, (seqCtx, wordCtx, a, b) -> a.val==b.val
+  "<":    bw 2, (seqCtx, wordCtx, a, b) -> a.val<b.val
+  ">":    bw 2, (seqCtx, wordCtx, a, b) -> a.val>b.val
+  "<=":   bw 2, (seqCtx, wordCtx, a, b) -> a.val<=b.val
+  ">=":   bw 2, (seqCtx, wordCtx, a, b) -> a.val>=b.val
 
-  'not':  bw 1, (seqCtx, wordCtx, a)    -> !a.val
-  'and':  bw 2, (seqCtx, wordCtx, a, b) -> a.val&&b.val
-  'or':   bw 2, (seqCtx, wordCtx, a, b) -> a.val||b.val
+  "not":  bw 1, (seqCtx, wordCtx, a)    -> !a.val
+  "and":  bw 2, (seqCtx, wordCtx, a, b) -> a.val&&b.val
+  "or":   bw 2, (seqCtx, wordCtx, a, b) -> a.val||b.val
 
-  'if':   bw 3, (seqCtx, wordCtx, cond, whenTrue, whenFals) ->
+  "if":   bw 3, (seqCtx, wordCtx, cond, whenTrue, whenFals) ->
     b = wordCtx.block
     if typeof(cond.val) != 'boolean'
       err "cond is not a boolean: #{cond.val}", cond.pos, b.src
@@ -77,10 +77,15 @@ buildinWords = {
     else
       blockEval whenFals, seqCtx, wordCtx
 
-  'do':   bw 1, (seqCtx, wordCtx, b) ->
+  "do":   bw 1, (seqCtx, wordCtx, b) ->
     if !(b.val instanceof ast.Block)
       err "#{b.val} is not a block", e.pos, b.src
     blockEval b, seqCtx, wordCtx
+
+  "fold-seq": bw 0, (seqCtx, wordCtx) ->
+    b = blockWrap seqCtx.retBlk.seq
+    seqCtx.retBlk.seq.length = 0
+    b
 }
 
 
@@ -139,7 +144,8 @@ readElemInBlock = (wordElem, seqCtx, wordCtx) ->
   [b] = getArgs wordElem, 1, seqCtx, wordCtx
   name = wordElem.val.name.slice 0,-2
   if name.match /\d+/
-    n = parseInt(name)
+    n = parseInt name
+    if n<0 then n = b.val.seq.length+n+1
     w = b.val.seq[n-1]
     if w == undefined
       err "no elem nth:#{n} in block #{b}", wordElem.pos, wordCtx.block.src
@@ -155,6 +161,7 @@ writeElemInBlock = (wordElem, seqCtx, wordCtx) ->
   name = wordElem.val.name.slice 2
   if name.match /\d+/
     n = parseInt(name)
+    if n<0 then n = b.val.seq.length+n+1
     b.val.seq[n-1] = w
   else
     b.val.words[name] = w
