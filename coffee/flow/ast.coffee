@@ -39,7 +39,6 @@ class ast.Block extends ast.Node
           err "redefined word:\"#{name}\"", e.val.pos, src
         @words[name] = e.val
 
-
   curry: (argWords) ->
     b = new ast.Block [], @words, @seq, @pos, @src
     for a in @args
@@ -51,9 +50,12 @@ class ast.Block extends ast.Node
         b.args.push a
     b
 
-
-
-
+  wordSeq: ->
+    wordSeq = []
+    for name in @words
+      val = @words[name]
+      wordSeq.push {name, val}
+    wordSeq
 
 
 
