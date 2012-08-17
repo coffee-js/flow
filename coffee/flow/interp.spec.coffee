@@ -98,8 +98,8 @@ describe "Flow Interp", ->
 
 
     it "write word", ->
-
-
+      expect(run "[ ] 5 >>a a>>").toEqual [5]
+      expect(run "[ a: [ ] ] a>> 200 >>b b>>").toEqual [200]
 
 
 

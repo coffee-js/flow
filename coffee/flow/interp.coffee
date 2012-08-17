@@ -142,7 +142,10 @@ readWordInBlock = (wordElem, seqCtx, wordCtx) ->
 
 
 writeWordInBlock = (wordElem, seqCtx, wordCtx) ->
-
+  [b, w] = getArgs wordElem, 2, seqCtx, wordCtx
+  wordName = wordElem.val.name.slice 2
+  b.val.words[wordName] = w
+  blockWrap [b.val]
 
 
 wordEval1 = (wordElem, seqCtx, wordCtx) ->
