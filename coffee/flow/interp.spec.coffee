@@ -74,7 +74,7 @@ describe "Flow Interp", ->
 
 
     it "external call", ->
-      expect(run "\"hello world!\" js/console.log ;").toEqual []
+      expect(run "\"hello world!\" js/console.log").toEqual ["hello world!"]
 
 
     it "concatnative", ->
