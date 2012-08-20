@@ -14,7 +14,6 @@ err = (s, pos=null, src=null) ->
     throw s
 
 
-
 class ast.SrcInfo
   constructor: (@pos=null, @src=null) ->
 

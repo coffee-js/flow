@@ -136,19 +136,19 @@ blockEval = (blkElem, parentCtx) ->
   blk = seqCurryBlock blkElem, parentCtx, blkElem.val.args.length
   ctx = new Context blk, parentCtx
   retSeq = ctx.ret.seq
+
   for e in blk.seq
-    v = e.val
     if e.val instanceof ast.Word
-      v = wordEval e, ctx
-    if v instanceof ast.Block
-      if v.elemType == "EVAL"
-        v = blockEval (new ast.Elem v, null, v.srcInfo), ctx
-        for ve in v.seq
-          retSeq.push ve
-      else
-        retSeq.push (new ast.Elem v, null, v.srcInfo)
+      val = wordEval e, ctx
     else
-      retSeq.push (new ast.Elem v, null, e.srcInfo)
+      val = e.val
+    
+    if (val instanceof ast.Block) && (val.elemType == "EVAL")
+      val = blockEval (new ast.Elem val, null, val.srcInfo), ctx
+      for ve in val.seq
+        retSeq.push ve
+    else
+      retSeq.push (new ast.Elem val, null, e.srcInfo)
   ctx.ret
 
 

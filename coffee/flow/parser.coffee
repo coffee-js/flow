@@ -99,7 +99,7 @@ parser.parse = (src) ->
     err "syntex error", r.state.lastFailPos, src
   
   b = new ast.Block [], r.match.wordSeq, r.match.seq, new ast.SrcInfo(0, src)
-  e = new ast.Elem b, null, 0
+  e = new ast.Elem b, null, new ast.SrcInfo(0)
   e
 
 
