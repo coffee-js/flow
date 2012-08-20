@@ -32,7 +32,7 @@ seqCurryBlock = (blkElem, ctx, n) ->
     a = blk.args[i]
     v = args[i]
     argWords[a.name] = v
-  blk.curry argWords
+  blk.specialize argWords
 
 
 blockEval = (blkElem, parentCtx) ->
@@ -42,7 +42,7 @@ blockEval = (blkElem, parentCtx) ->
   for e in b.seq
     if e.val instanceof ast.Word
       v = wordEval1 e, ctx, wordCtx
-      if v instanceof ast.Block && v.type=="EVAL"
+      if v instanceof ast.Block
         for ve in v.seq
           retSeq.push ve
       else
