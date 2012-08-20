@@ -48,7 +48,8 @@ describe "Flow Interp", ->
 
       it "basic", ->
         expect(run "{ 1 2 + } do").toEqual [3]
-
+        expect(run "a: [ 2 + ] 1 { a } [ f >> f ] do").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] do").toEqual [3]
 
       it "concatnative", ->
         expect(run "1 { 2 + } do").toEqual [3]
@@ -91,8 +92,7 @@ describe "Flow Interp", ->
         expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
 
 
-    it "not eval data block", ->
-      expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] do").toEqual [3]
+
 
 
 
