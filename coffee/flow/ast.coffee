@@ -14,6 +14,10 @@ err = (s, pos=null, src=null) ->
     throw s
 
 
+class ast.SrcInfo
+  constructor: (@pos=null, @src=null) ->
+
+
 class ast.Node
 
 
@@ -22,11 +26,11 @@ class ast.Word extends ast.Node
 
 
 class ast.Elem extends ast.Node
-  constructor: (@val, @name=null, @pos=null) ->
+  constructor: (@val, @name=null, @srcInfo=null) ->
 
 
 class ast.Block extends ast.Node
-  constructor: (@args, wordSeq, @seq, @pos=null, @src=null) ->
+  constructor: (@args, wordSeq, @seq, @srcInfo=null) ->
     argWords = {}
     for a in args
       argWords[a.name] = null
@@ -36,16 +40,17 @@ class ast.Block extends ast.Node
     for e in wordSeq
       name = e.name
       if (@words[name] != undefined) or (argWords[name] != undefined)
-        err "redefined word:\"#{name}\"", e.val.pos, src
+        err "redefined word:\"#{name}\"", e.val.srcInfo.pos, @srcInfo.src
       @words[name] = e.val
       @numWords += 1
+    @elemType = "EVAL"
 
-  curry: (argWords) ->
-    b = new ast.Block [], @wordSeq(), @seq, @pos, @src
+  specialize: (argWords) ->
+    b = new ast.Block [], @wordSeq(), @seq, @srcInfo
     for a in @args
       if argWords[a.name] != undefined
         if b.words[a.name] != undefined
-          err "redefined word:\"#{a.name}\"", @pos, @src
+          err "redefined word:\"#{a.name}\"", @srcInfo.pos, @srcInfo.src
         b.words[a.name] = argWords[a.name]
         b.numWords += 1
       else
@@ -60,7 +65,7 @@ class ast.Block extends ast.Node
     wordSeq
 
   clone: ->
-    new ast.Block @args.slice(0), @wordSeq(), @seq.slice(0), @pos, @src
+    new ast.Block @args.slice(0), @wordSeq(), @seq.slice(0), @srcInfo
 
 
 

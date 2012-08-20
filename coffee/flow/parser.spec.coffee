@@ -97,25 +97,33 @@ describe "Flow Parser", ->
           name: null
           val:
             name: "sdf"
-          pos: 0
+          srcInfo:
+            pos: 0
+            src: null
         }
         {
           name: null
           val: 435
-          pos: 4
+          srcInfo:
+            pos: 4
+            src: null
         }
         {
           name: null
           val:
             name: "dfg"
-          pos: 8
+          srcInfo:
+            pos: 8
+            src: null
         }
       ]
       (expect (parse p, "serdgd 465 [ 564 ]").match[2].val.seq).toEqual [
         {
           name: null
           val: 564
-          pos: 13
+          srcInfo:
+            pos: 13
+            src: null
         }
       ]
 
@@ -123,7 +131,7 @@ describe "Flow Parser", ->
   describe "combinator block", ->
 
     it "match block", ->
-      p = parser.block
+      p = parser.evalBlock
 
       (expect (parse p, "[]").match).toEqual null
 
@@ -131,14 +139,18 @@ describe "Flow Parser", ->
       (expect a.seq[0].val.words["sd"]).toEqual {
         name: "sd"
         val: 45
-        pos: 4
+        srcInfo:
+          pos: 4
+          src: null
       }
       (expect a.seq[0].val.seq).toEqual [
         {
           name: null
           val:
             name: "[]"
-          pos: 11
+          srcInfo:
+            pos: 11
+            src: null
         }
       ]
       a = (parse p, "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match
@@ -153,14 +165,18 @@ describe "Flow Parser", ->
       (expect a.seq[0].val.words["sd"]).toEqual {
         name: "sd"
         val: 45
-        pos: 19
+        srcInfo:
+          pos: 19
+          src: null
       }
       (expect a.seq[0].val.seq).toEqual [
         {
           name: null
           val:
             name: "[]"
-          pos: 26
+          srcInfo:
+            pos: 26
+            src: null
         }
       ]
 

@@ -49,28 +49,42 @@ combinator = do ->
       name = n[0]
       val = n[1]
       val.name = name
-      val.pos = pos
+      val.srcInfo.pos = pos
       {name, val}
 
-  wordSeq = pc.rep1(namedElem)
+  wordMap = pc.rep1(namedElem)
   seq = pc.rep1 _elem
-  body = pc.map pc.seq(pc.optional(wordSeq), pc.optional(seq)),
+  body = pc.map pc.seq(pc.optional(wordMap), pc.optional(seq)),
     (n) ->
       wordSeq = if n[0]==true then [] else n[0]
       seq     = if n[1]==true then [] else n[1]
       {wordSeq, seq}
 
-  block = pc.map pc.seq(pc.tok('['), pc.space(), pc.optional(args), body, pc.tok(']'), endToken),
+  block = pc.map pc.seq(pc.optional(args), body),
     (n, pos, src) ->
-      args = if n[2]==true then [] else n[2]
-      wordSeq = n[3].wordSeq
-      seq     = n[3].seq
-      new ast.Block args, wordSeq, seq, pos, src
+      args = if n[0]==true then [] else n[0]
+      wordSeq = n[1].wordSeq
+      seq     = n[1].seq
+      new ast.Block args, wordSeq, seq, new ast.SrcInfo(pos, src)
 
-  elem = pc.map pc.choice(block, number, string, word),
-    (n, pos) -> new ast.Elem n, null, pos
+  evalBlock = pc.map pc.seq(pc.tok('['), pc.space(), block, pc.tok(']'), endToken),
+    (n, pos) ->
+      blk = n[2]
+      blk.srcInfo.pos = pos
+      blk.elemType = "EVAL"
+      blk
 
-  { int10, number, string, colon, negws, nameChar, name, word, elem, wordSeq, seq, body, block }
+  valBlock = pc.map pc.seq(pc.tok('{'), pc.space(), block, pc.tok('}'), endToken),
+    (n, pos) ->
+      blk = n[2]
+      blk.srcInfo.pos = pos
+      blk.elemType = "VAL"
+      blk
+
+  elem = pc.map pc.choice(evalBlock, number, string, word),
+    (n, pos) -> new ast.Elem n, null, new ast.SrcInfo(pos)
+
+  { int10, number, string, colon, negws, nameChar, name, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
 
 
 for k, v of combinator
@@ -83,7 +97,7 @@ parser.parse = (src) ->
   if r.match == null
     err "syntex error", r.state.lastFailPos, src
   
-  b = new ast.Block [], r.match.wordSeq, r.match.seq, 0, src
+  b = new ast.Block [], r.match.wordSeq, r.match.seq, new ast.SrcInfo(0, src)
   e = new ast.Elem b, null, 0
   e
 
