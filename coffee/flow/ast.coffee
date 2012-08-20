@@ -27,7 +27,11 @@ class ast.Word extends ast.Node
 
 
 class ast.Elem extends ast.Node
-  constructor: (@val, @name=null, @srcInfo=null) ->
+  constructor: (@val, @name=null, srcInfo=null) ->
+    if srcInfo == null
+      @srcInfo = new ast.SrcInfo null, null
+    else
+      @srcInfo = srcInfo
 
   clone: ->
     if @val instanceof ast.Block
@@ -38,7 +42,12 @@ class ast.Elem extends ast.Node
 
 
 class ast.Block extends ast.Node
-  constructor: (@args, wordSeq, @seq, @srcInfo=null) ->
+  constructor: (@args, wordSeq, @seq, srcInfo=null) ->
+    if srcInfo == null
+      @srcInfo = new ast.SrcInfo null, null
+    else
+      @srcInfo = srcInfo
+
     argWords = {}
     for a in args
       argWords[a.name] = null
@@ -81,6 +90,7 @@ class ast.Block extends ast.Node
 
     b = new ast.Block args, wordSeq, seq, @srcInfo
     b.parent = @parent
+    b.elemType = @elemType
     b
 
 
@@ -110,6 +120,7 @@ class ast.Block extends ast.Node
     seq = @seq.map (e) -> e.clone()
     b = new ast.Block @args.slice(0), wordSeq, seq, @srcInfo
     b.parent = @parent
+    b.elemType = @elemType
     b
 
 

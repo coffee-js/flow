@@ -37,23 +37,23 @@ describe "Flow Interp", ->
     describe "if function", ->
 
       it "basic", ->
-        expect(run "1 2 > [ 1 2 + ] [ 3 4 + ] if").toEqual [7]
+        expect(run "1 2 > { 1 2 + } { 3 4 + } if").toEqual [7]
 
       it "type check", ->
-        expect(-> run "1 [ 1 2 + ] [ 3 4 + ] if").toThrow "null:1:1 cond is not a boolean: 1"
-        expect(-> run "1 2 > 3 [ 3 4 + ] if").toThrow "null:1:7 whenTrue is not a block: 3"
+        expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 cond is not a boolean: 1"
+        expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 whenTrue is not a block: 3"
 
 
     describe "do block", ->
 
       it "basic", ->
-        expect(run "[ 1 2 + ] do").toEqual [3]
+        expect(run "{ 1 2 + } do").toEqual [3]
 
 
       it "concatnative", ->
-        expect(run "1 [ 2 + ] do").toEqual [3]
-        expect(run "1 2 [ + ] do").toEqual [3]
-        expect(run "1 2 [ n >> n 2 + - ] do").toEqual [-3]
+        expect(run "1 { 2 + } do").toEqual [3]
+        expect(run "1 2 { + } do").toEqual [3]
+        expect(run "1 2 { n >> n 2 + - } do").toEqual [-3]
 
 
   describe "word call", ->
@@ -68,10 +68,10 @@ describe "Flow Interp", ->
 
 
     it "recursion call", ->
-      expect(run "fib: [ n >> n 2 < [ n ] [ n 1 - fib n 2 - fib + ] if ] 1 fib").toEqual [1]
-      expect(run "fib: [ n >> n 2 < [ n ] [ n 1 - fib n 2 - fib + ] if ] 2 fib").toEqual [1]
-      expect(run "fib: [ n >> n 2 < [ n ] [ n 1 - fib n 2 - fib + ] if ] 10 fib").toEqual [55]
-      expect(run "fib: [ n >> n 1 = n 0 = or [ 1 ] [ n 1 - fib n 2 - fib + ] if ] 10 fib").toEqual [89]
+      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
+      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
+      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
+      expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
 
 
     it "external call", ->
@@ -91,6 +91,8 @@ describe "Flow Interp", ->
         expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
 
 
+    it "not eval data block", ->
+      expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] do").toEqual [3]
 
 
 

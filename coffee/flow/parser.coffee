@@ -34,6 +34,7 @@ combinator = do ->
   word = pc.map pc.seq( pc.and(
       pc.rep1(pc.neg pc.space()),
       pc.neg(pc.seq pc.ch('[]'), endToken),
+      pc.neg(pc.seq pc.ch('{}'), endToken),
       pc.neg(pc.seq pc.tok('>>'), endToken),
       pc.neg(name)), endToken),
     (n) -> new ast.Word n[0].reduce (t,s)->t.concat(s)
@@ -81,7 +82,7 @@ combinator = do ->
       blk.elemType = "VAL"
       blk
 
-  elem = pc.map pc.choice(evalBlock, number, string, word),
+  elem = pc.map pc.choice(evalBlock, valBlock, number, string, word),
     (n, pos) -> new ast.Elem n, null, new ast.SrcInfo(pos)
 
   { int10, number, string, colon, negws, nameChar, name, word, elem, wordMap, seq, body, block, evalBlock, valBlock }

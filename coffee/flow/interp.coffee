@@ -92,12 +92,7 @@ wordEval = (wordElem, ctx) ->
   elem = ctx.block.getWord name
 
   if elem != null
-    if elem.val instanceof ast.Block
-      if elem.val.elemType == "EVAL"
-        blockEval elem, ctx
-      else
-        blockWrap [elem]
-    else if elem.val instanceof ast.Word
+    if elem.val instanceof ast.Word
       wordEval elem, ctx
     else
       elem.val
@@ -142,15 +137,18 @@ blockEval = (blkElem, parentCtx) ->
   ctx = new Context blk, parentCtx
   retSeq = ctx.ret.seq
   for e in blk.seq
+    v = e.val
     if e.val instanceof ast.Word
       v = wordEval e, ctx
-      if v instanceof ast.Block
+    if v instanceof ast.Block
+      if v.elemType == "EVAL"
+        v = blockEval (new ast.Elem v, null, v.srcInfo), ctx
         for ve in v.seq
           retSeq.push ve
       else
-        retSeq.push new ast.Elem v
+        retSeq.push (new ast.Elem v, null, v.srcInfo)
     else
-      retSeq.push e
+      retSeq.push (new ast.Elem v, null, e.srcInfo)
   ctx.ret
 
 
