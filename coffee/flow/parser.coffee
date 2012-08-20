@@ -47,10 +47,10 @@ combinator = do ->
   namedElem = pc.map pc.seq(name, _elem),
     (n, pos) ->
       name = n[0]
-      val = n[1]
-      val.name = name
-      val.srcInfo.pos = pos
-      {name, val}
+      word = n[1]
+      word.name = name
+      word.srcInfo.pos = pos
+      {name, word}
 
   wordMap = pc.rep1(namedElem)
   seq = pc.rep1 _elem

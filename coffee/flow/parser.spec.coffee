@@ -92,40 +92,23 @@ describe "Flow Parser", ->
 
     it "match seq", ->
       p = parser.seq
-      (expect (parse p, "sdf 435 dfg").match).toEqual [
-        {
-          name: null
-          val:
-            name: "sdf"
-          srcInfo:
-            pos: 0
-            src: null
-        }
-        {
-          name: null
-          val: 435
-          srcInfo:
-            pos: 4
-            src: null
-        }
-        {
-          name: null
-          val:
-            name: "dfg"
-          srcInfo:
-            pos: 8
-            src: null
-        }
-      ]
-      (expect (parse p, "serdgd 465 [ 564 ]").match[2].val.seq).toEqual [
-        {
-          name: null
-          val: 564
-          srcInfo:
-            pos: 13
-            src: null
-        }
-      ]
+      t = (parse p, "sdf 435 dfg").match
+      (expect t[0].val.name).toEqual "sdf"
+      (expect t[0].srcInfo).toEqual {
+        pos: 0
+        src: null
+      }
+      (expect t[1].val).toEqual 435
+      (expect t[1].srcInfo).toEqual {
+        pos: 4
+        src: null
+      }
+      t = (parse p, "serdgd 465 [ 564 ]").match[2].val.seq[0]
+      (expect t.val).toEqual 564
+      (expect t.srcInfo).toEqual {
+        pos: 13
+        src: null
+      }
 
 
   describe "combinator block", ->
@@ -136,23 +119,9 @@ describe "Flow Parser", ->
       (expect (parse p, "[]").match).toEqual null
 
       a = (parse p, "[ [ sd: 45 [] ] - ]").match
-      (expect a.seq[0].val.words["sd"]).toEqual {
-        name: "sd"
-        val: 45
-        srcInfo:
-          pos: 4
-          src: null
-      }
-      (expect a.seq[0].val.seq).toEqual [
-        {
-          name: null
-          val:
-            name: "[]"
-          srcInfo:
-            pos: 11
-            src: null
-        }
-      ]
+      (expect a.seq[0].val.words["sd"].name).toEqual "sd"
+      (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
+
       a = (parse p, "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match
       (expect a.args).toEqual [
         {
@@ -162,23 +131,8 @@ describe "Flow Parser", ->
           name: "bb"
         }
       ]
-      (expect a.seq[0].val.words["sd"]).toEqual {
-        name: "sd"
-        val: 45
-        srcInfo:
-          pos: 19
-          src: null
-      }
-      (expect a.seq[0].val.seq).toEqual [
-        {
-          name: null
-          val:
-            name: "[]"
-          srcInfo:
-            pos: 26
-            src: null
-        }
-      ]
+      (expect a.seq[0].val.words["sd"].val).toEqual 45
+      (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
 
 
   describe "parse", ->
