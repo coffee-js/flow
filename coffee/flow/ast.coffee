@@ -48,9 +48,8 @@ class ast.Block extends ast.Node
     for e in wordSeq
       name = e.name
       if (@words[name] != undefined) or (argWords[name] != undefined)
-        err "redefined word:\"#{name}\"", e.word.srcInfo.pos, @srcInfo.src
-      w = @words[name] = e.word
-      log w
+        err "redefined word:\"#{name}\"", e.elem.srcInfo.pos, @srcInfo.src
+      w = @words[name] = e.elem
       @numWords += 1
       if w.val instanceof ast.Block
         w.val.parent = @
@@ -66,24 +65,29 @@ class ast.Block extends ast.Node
   curry: (argWords) ->
     args = []
 
-    wordSeq = @wordSeq().map (w) -> w.clone()
+    wordSeq = @wordSeq().map (w) ->
+      name = e.name
+      elem = e.elem.clone()
+      {name, elem}
     seq = @seq.map (e) -> e.clone()
 
     for a in @args
       if argWords[a.name] != undefined
         name = a.name
-        word = argWords[a.name].clone()
-        wordSeq.push {name, word}
+        elem = argWords[a.name].clone()
+        wordSeq.push {name, elem}
       else
         args.push a
 
-    new ast.Block args, wordSeq, seq, @srcInfo
+    b = new ast.Block args, wordSeq, seq, @srcInfo
+    b.parent = @parent
+    b
 
 
   getWord: (name) ->
-    word = @words[name]
-    if word != undefined
-      word
+    elem = @words[name]
+    if elem != undefined
+      elem
     else if @parent
       @parent.getWord name
     else
@@ -93,16 +97,20 @@ class ast.Block extends ast.Node
   wordSeq: ->
     wordSeq = []
     for name of @words
-      word = @words[name]
-      wordSeq.push {name, word}
+      elem = @words[name]
+      wordSeq.push {name, elem}
     wordSeq
 
 
   clone: ->
-    wordSeq = @wordSeq().map (w) -> w.clone()
+    wordSeq = @wordSeq().map (e) ->
+      name = e.name
+      elem = e.elem.clone()
+      {name, elem}
     seq = @seq.map (e) -> e.clone()
-    new ast.Block @args.slice(0), wordSeq, seq, @srcInfo
-
+    b = new ast.Block @args.slice(0), wordSeq, seq, @srcInfo
+    b.parent = @parent
+    b
 
 
 

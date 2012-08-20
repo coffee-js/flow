@@ -15,11 +15,12 @@ err = (s, pos=null, src=null) ->
 
 
 class Context
-  constructor: (@parent=null) ->
+  constructor: (@block, @parent=null) ->
     @ret = new ast.Block [], [], []
 
 
-getArgs = (elem, n, ctx, blk) ->
+getArgs = (elem, n, ctx) ->
+  blk = ctx.block
   l = ctx.ret.seq.length
   if l < n
     if ctx.parent == null
@@ -34,25 +35,77 @@ getArgs = (elem, n, ctx, blk) ->
   args
 
 
-wordEval = (wordElem, block, ctx) ->
-  name = wordElem.val.name
+class BuildinWord
+  constructor: (@numArgs, @fn) ->
 
-  [word, wordCtx1] = wordCtx.getWord name
-  if word instanceof BuildinWord
-    word.eval wordElem, retCtx, wordCtx
-  else if word != null && word.val != null
-    if      word.val instanceof ast.Block
-      if evalBlock
-        blockEval word, retCtx, wordCtx1
-      else
-        blockWrap [new ast.Elem word.val, null, word.srcInfo.pos]
-    else if word.val instanceof ast.Word
-      wordEval  word, retCtx, wordCtx1
+  eval: (elem, ctx) ->
+    args = getArgs elem, @numArgs, ctx
+    a = [ctx].concat args
+    @fn a...
+
+blockWrap = (seq, wordSeq=[]) ->
+  new ast.Block [], wordSeq, seq
+
+bw = ->
+  new BuildinWord arguments...
+
+
+buildinWords = {
+  "+":    bw 2, (ctx, a, b) -> a.val+b.val
+  "-":    bw 2, (ctx, a, b) -> a.val-b.val
+  "*":    bw 2, (ctx, a, b) -> a.val*b.val
+  "/":    bw 2, (ctx, a, b) -> a.val/b.val
+
+  "=":    bw 2, (ctx, a, b) -> a.val==b.val
+  "<":    bw 2, (ctx, a, b) -> a.val<b.val
+  ">":    bw 2, (ctx, a, b) -> a.val>b.val
+  "<=":   bw 2, (ctx, a, b) -> a.val<=b.val
+  ">=":   bw 2, (ctx, a, b) -> a.val>=b.val
+
+  "not":  bw 1, (ctx, a)    -> !a.val
+  "and":  bw 2, (ctx, a, b) -> a.val&&b.val
+  "or":   bw 2, (ctx, a, b) -> a.val||b.val
+
+  "if":   bw 3, (ctx, cond, whenTrue, whenFals) ->
+    blk = ctx.block
+    if typeof(cond.val) != 'boolean'
+      err "cond is not a boolean: #{cond.val}", cond.srcInfo.pos, blk.srcInfo.src
+    if !(whenTrue.val instanceof ast.Block)
+      err "whenTrue is not a block: #{whenTrue.val}", whenTrue.srcInfo.pos, blk.srcInfo.src
+    if !(whenFals.val instanceof ast.Block)
+      err "whenFals is not a block: #{whenFals.val}", whenFals.srcInfo.pos, blk.srcInfo.src
+
+    if cond.val
+      blockEval whenTrue, ctx
     else
-      word.val
+      blockEval whenFals, ctx
+
+  "do":   bw 1, (ctx, blk) ->
+    if !(blk.val instanceof ast.Block)
+      err "#{blk.val} is not a block", blk.val.srcInfo.pos, blk.val.srcInfo.src
+    blockEval blk, ctx
+}
+
+
+wordEval = (wordElem, ctx) ->
+  name = wordElem.val.name
+  elem = ctx.block.getWord name
+
+  if elem != null
+    if elem.val instanceof ast.Block
+      if elem.val.elemType == "EVAL"
+        blockEval elem, ctx
+      else
+        blockWrap [elem]
+    else if elem.val instanceof ast.Word
+      wordEval elem, ctx
+    else
+      elem.val
+  else if buildinWords[name] != undefined
+    buildinWords[name].eval wordElem, ctx
   else if name.match /^js\//i
     args = []
-    for e in retCtx.retBlk.seq
+    for e in ctx.ret.seq
       v = e.val
       if typeof(v) == 'string'
         args.push "\"" + v + "\""
@@ -66,7 +119,7 @@ wordEval = (wordElem, block, ctx) ->
     else
       v
   else
-    err "word:\"#{name}\" not defined", wordElem.srcInfo.pos, wordCtx.block.srcInfo.src
+    err "word:\"#{name}\" not defined", wordElem.srcInfo.pos, ctx.block.srcInfo.src
 
 
 seqCurryBlock = (blkElem, ctx, n) ->
@@ -85,12 +138,12 @@ seqCurryBlock = (blkElem, ctx, n) ->
 
 
 blockEval = (blkElem, parentCtx) ->
-  b = seqCurryBlock blkElem, parentCtx, blkElem.val.args.length
-  ctx = new Context parentCtx
+  blk = seqCurryBlock blkElem, parentCtx, blkElem.val.args.length
+  ctx = new Context blk, parentCtx
   retSeq = ctx.ret.seq
-  for e in b.seq
+  for e in blk.seq
     if e.val instanceof ast.Word
-      v = wordEval e, b, ctx
+      v = wordEval e, ctx
       if v instanceof ast.Block
         for ve in v.seq
           retSeq.push ve
@@ -102,7 +155,7 @@ blockEval = (blkElem, parentCtx) ->
 
 
 interp.eval = (blk) ->
-  blockEval blk, new Context(null)
+  blockEval blk, new Context(blk, null)
 
 
 
