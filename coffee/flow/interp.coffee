@@ -43,11 +43,11 @@ class BuildinWord
     a = [ctx].concat args
     @fn a...
 
-blockWrap = (wordSeq, seq, parent=null, orig=[]) ->
+blockWrap = (wordSeq, seq, parent=null, origs=[]) ->
   b = new ast.Block [], wordSeq, seq
   if parent != null
     b.parent = parent
-  for o in orig
+  for o in origs
     b.updateElemBlockParent o
   b
 
@@ -95,7 +95,16 @@ buildinWords = {
     if !(blk instanceof ast.Block)
       err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
     wordSeq = blk.wordSeq()
-    seq = blk.seq.slice start.val-1, end.val
+
+    p1 = start.val
+    if p1 > 0 then p1 -= 1
+    p2 = end.val
+    if p2 < -1
+      p2 += 1
+    else if p2 == -1
+      p2 = undefined
+
+    seq = blk.seq.slice p1, p2
     b = blockWrap wordSeq, seq, ctx.block, [blk]
     b.elemType = "VAL"
     b
