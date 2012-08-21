@@ -93,6 +93,93 @@ describe "Flow Interp", ->
 
 
 
+  describe "block data access", ->
+
+    it "read named elem", ->
+      expect(run "{ a: 100 } a>").toEqual [100]
+      expect(run "{ a: { b: 10 } } a> b>").toEqual [10]
+
+
+    it "write named elem", ->
+      expect(run "{ } 5 >a a>").toEqual [5]
+      expect(run "{ a: { } } a> 200 >b b>").toEqual [200]
+
+
+    it "read nth elem", ->
+      expect(run "{ 100 } -1>").toEqual [100]
+      expect(run "{ { 10 } } 1> 1>").toEqual [10]
+
+
+    it "write nth elem", ->
+      expect(run "{ } 5 >1 1>").toEqual [5]
+      expect(run "{ { } } 1> 200 >1 1>").toEqual [200]
+      expect(run "{ { 3 4 } } -1> 5 >-2 -2>").toEqual [5]
+
+
+    it "slice", ->
+      expect(run "{ 1 2 3 4 5 } 2 -2 slice 1>").toEqual [2]
+
+
+    it "num-words", ->
+      expect(run "{ 1 2 3 4 5 } num-words").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 } num-words").toEqual [3]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } num-words").toEqual [3]
+
+
+    it "len", ->
+      expect(run "{ 1 2 3 4 5 } len").toEqual [5]
+      expect(run "{ a: 1 b: 2 c: 3 } len").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } len").toEqual [3]
+
+
+    it "num-elems", ->
+      expect(run "{ 1 2 3 4 5 } num-elems").toEqual [5]
+      expect(run "{ a: 1 b: 2 c: 3 } num-elems").toEqual [3]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } num-elems").toEqual [6]
+
+
+    it "join", ->
+      expect(run "{ 1 2 3 4 5 } { 6 7 8 9 10 } join num-elems").toEqual [10]
+      expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join num-elems").toEqual [8]
+
+
+    it "unshift", ->
+      expect(run "{ 1 2 3 4 5 } 100 unshift 1>").toEqual [100]
+
+
+  describe "simple function impl", ->
+
+    filterFn = \
+      "filter: [ a p >>
+        x:  [ a 1> ]
+        xs: [ a 2 -1 slice ]
+        a len 1 < {
+          { }
+        } {
+          x p do {
+            xs p filter x unshift
+          } {
+            xs p filter
+          } if
+        } if
+      ]"
+    qsortFn = \
+      "qsort: [ a >>
+        qivot: [ a 1> ]
+        less:     [ a { qivot <= } filter qsort ]
+        greater:  [ a { qivot >  } filter qsort ]
+        less greater join
+      ]"
+
+    it "filter impl", ->
+      expect(run "#{filterFn} { 1 2 3 4 5 } { 3 < } filter len").toEqual [2]
+      expect(run "#{filterFn} { 1 2 3 4 5 } { 3 <= } filter 3>").toEqual [3]
+
+
+    it "qsort impl", ->
+      expect(run "#{filterFn} #{qsortFn} { 3 5 6 7 8 0 } qsort 1>").toEqual [0]
+
+
 
 
 

@@ -80,10 +80,57 @@ buildinWords = {
     else
       blockEval whenFals, ctx
 
-  "do":   bw 1, (ctx, blk) ->
-    if !(blk.val instanceof ast.Block)
-      err "#{blk.val} is not a block", blk.val.srcInfo.pos, blk.val.srcInfo.src
-    blockEval blk, ctx
+  "do":   bw 1, (ctx, blkElem) ->
+    if !(blkElem.val instanceof ast.Block)
+      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+    blockEval blkElem, ctx
+
+  "slice": bw 3, (ctx, blkElem, start, end) ->
+    blk = blkElem.val
+    if !(blk instanceof ast.Block)
+      err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
+    seq = blk.seq.slice start.val-1, end.val
+    wordSeq = blk.wordSeq()
+    b = blockWrap seq, wordSeq
+    b.elemType = "VAL"
+    b
+
+  "num-words": bw 1, (ctx, blkElem) ->
+    if !(blkElem.val instanceof ast.Block)
+      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+    blkElem.val.numWords
+
+  "len": bw 1, (ctx, blkElem) ->
+    if !(blkElem.val instanceof ast.Block)
+      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+    blkElem.val.seq.length
+
+  "num-elems": bw 1, (ctx, blkElem) ->
+    if !(blkElem.val instanceof ast.Block)
+      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+    blkElem.val.numWords + blkElem.val.seq.length
+
+  "join": bw 2, (ctx, a, b) ->
+    if !(a.val instanceof ast.Block)
+      err "#{a.val} is not a block", a.val.srcInfo.pos, a.val.srcInfo.src
+    if !(b.val instanceof ast.Block)
+      err "#{b.val} is not a block", b.val.srcInfo.pos, b.val.srcInfo.src
+    seq = a.val.seq.concat b.val.seq
+    wordSeq = a.val.wordSeq().concat b.val.wordSeq()
+    r = blockWrap seq, wordSeq
+    r.elemType = "VAL"
+    r
+
+  "unshift": bw 2, (ctx, blkElem, elem) ->
+    blk = blkElem.val
+    if !(blk instanceof ast.Block)
+      err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
+    seq = blk.seq.slice 0
+    seq.unshift elem
+    wordSeq = blk.wordSeq()
+    b = blockWrap seq, wordSeq
+    b.elemType = "VAL"
+    b
 }
 
 
@@ -117,6 +164,53 @@ wordEval = (wordElem, ctx) ->
     err "word:\"#{name}\" not defined", wordElem.srcInfo.pos, ctx.block.srcInfo.src
 
 
+readElemInBlock = (wordElem, ctx) ->
+  [blkElem] = getArgs wordElem, 1, ctx
+  blk = blkElem.val
+  if !(blk instanceof ast.Block)
+    err "expect a block: #{blk}", blkElem.srcInfo.pos, ctx.block.srcInfo.src
+
+  name = wordElem.val.name.slice 0,-1
+  if name.match /\d+$/
+    n = parseInt name
+    if n<0 then n = blk.seq.length+n+1
+    elem = blk.seq[n-1]
+    if elem == undefined
+      err "no elem nth:#{n} in block #{blk}", wordElem.srcInfo.pos, ctx.block.srcInfo.src
+  else
+    elem = blk.words[name]
+    if elem == undefined
+      err "no word named:#{name} in block #{blk}", wordElem.srcInfo.pos, ctx.block.srcInfo.src
+  elem.val
+
+
+writeElemInBlock = (wordElem, ctx) ->
+  [blkElem, elem] = getArgs wordElem, 2, ctx
+  blk = blkElem.val
+  if !(blk instanceof ast.Block)
+    err "expect a block: #{blk}", blkElem.srcInfo.pos, ctx.block.srcInfo.src
+
+  blk = blkElem.val.clone()
+  name = wordElem.val.name.slice 1
+  if name.match /\d+$/
+    n = parseInt name
+    if n<0 then n = blk.seq.length+n+1
+    blk.seq[n-1] = elem.clone()
+  else
+    blk.words[name] = elem.clone()
+  blk
+
+
+wordEval1 = (wordElem, ctx) ->
+  name = wordElem.val.name
+  if      name.match /.+>$/
+    readElemInBlock  wordElem, ctx
+  else if name.match /^>.+/
+    writeElemInBlock wordElem, ctx
+  else
+    wordEval wordElem, ctx
+
+
 seqCurryBlock = (blkElem, ctx, n) ->
   if n < 1
     return blkElem.val.clone()
@@ -139,7 +233,7 @@ blockEval = (blkElem, parentCtx) ->
 
   for e in blk.seq
     if e.val instanceof ast.Word
-      val = wordEval e, ctx
+      val = wordEval1 e, ctx
     else
       val = e.val
     
@@ -154,6 +248,18 @@ blockEval = (blkElem, parentCtx) ->
 
 interp.eval = (blk) ->
   blockEval blk, new Context(blk, null)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

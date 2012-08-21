@@ -73,7 +73,7 @@ class ast.Block extends ast.Node
   curry: (argWords) ->
     args = []
 
-    wordSeq = @wordSeq().map (w) ->
+    wordSeq = @wordSeq().map (e) ->
       name = e.name
       elem = e.elem.clone()
       {name, elem}
