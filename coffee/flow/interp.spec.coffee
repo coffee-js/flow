@@ -60,7 +60,7 @@ describe "Flow Interp", ->
   #       expect(run "1 2 { n >> n 2 + - } do").toEqual [-3]
 
 
-  # describe "word call", ->
+  describe "word call", ->
 
   #   it "basic", ->
   #     expect(run "a: 20 a").toEqual [20]
@@ -71,11 +71,11 @@ describe "Flow Interp", ->
   #     expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
 
 
-  #   it "recursion call", ->
+    it "recursion call", ->
   #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
   #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
-  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
-  #     expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
+      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
+      expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
 
 
   #   it "external call", ->
@@ -191,7 +191,8 @@ describe "Flow Interp", ->
         } if
       ]"
     it "qsort impl", ->
-      expect(run "#{filterFn} #{qsortFn} { 12 100 5 34 27 10 -50 0 } qsort").toEqual [5]
+      expect(run "#{filterFn} #{qsortFn} { 1 } qsort 1>").toEqual [1]
+      #expect(run "#{filterFn} #{qsortFn} { 12 100 5 34 27 10 -50 0 } qsort").toEqual [5]
 
 
 
