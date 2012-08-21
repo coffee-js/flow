@@ -70,15 +70,16 @@ class ast.Block extends ast.Node
     @elemType = "EVAL"
 
 
-  updateElemBlockParent: (orig) ->
-    for name of @words
-      v = @words[name].val
-      if (v instanceof ast.Block) && (v.parent == orig)
-        v.parent = @
-    for e in @seq
-      v = e.val
-      if (v instanceof ast.Block) && (v.parent == orig)
-        v.parent = @
+  updateElemBlockParent: (origs) ->
+    for o in origs
+      for name of @words
+        v = @words[name].val
+        if (v instanceof ast.Block) && (v.parent == o)
+          v.parent = @
+      for e in @seq
+        v = e.val
+        if (v instanceof ast.Block) && (v.parent == o)
+          v.parent = @
 
 
   curry: (argWords) ->
@@ -99,7 +100,7 @@ class ast.Block extends ast.Node
         args.push a
 
     b = new ast.Block args, wordSeq, seq, @srcInfo
-    b.updateElemBlockParent @
+    b.updateElemBlockParent [@]
     b.parent = @parent
     b.elemType = @elemType
     b
@@ -130,7 +131,7 @@ class ast.Block extends ast.Node
       {name, elem}
     seq = @seq.map (e) -> e.clone()
     b = new ast.Block @args.slice(0), wordSeq, seq, @srcInfo
-    b.updateElemBlockParent @
+    b.updateElemBlockParent [@]
     b.parent = @parent
     b.elemType = @elemType
     b

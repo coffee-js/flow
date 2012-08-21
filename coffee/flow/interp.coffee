@@ -47,8 +47,7 @@ blockWrap = (wordSeq, seq, parent=null, origs=[]) ->
   b = new ast.Block [], wordSeq, seq
   if parent != null
     b.parent = parent
-  for o in origs
-    b.updateElemBlockParent o
+  b.updateElemBlockParent origs
   b
 
 bw = ->
@@ -97,14 +96,11 @@ buildinWords = {
     wordSeq = blk.wordSeq()
 
     p1 = start.val
-    if p1 > 0 then p1 -= 1
+    if p1 < 0 then p1 = blk.seq.length+p1+1
     p2 = end.val
-    if p2 < -1
-      p2 += 1
-    else if p2 == -1
-      p2 = undefined
+    if p2 < 0 then p2 = blk.seq.length+p2+2
 
-    seq = blk.seq.slice p1, p2
+    seq = blk.seq.slice p1-1, p2-1
     b = blockWrap wordSeq, seq, ctx.block, [blk]
     b.elemType = "VAL"
     b
@@ -131,7 +127,7 @@ buildinWords = {
       err "#{b.val} is not a block", b.val.srcInfo.pos, b.val.srcInfo.src
     wordSeq = a.val.wordSeq().concat b.val.wordSeq()
     seq = a.val.seq.concat b.val.seq
-    r = blockWrap wordSeq, seq, ctx.block, [a,b]
+    r = blockWrap wordSeq, seq, ctx.block, [a.val,b.val]
     r.elemType = "VAL"
     r
 
