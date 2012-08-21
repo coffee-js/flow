@@ -43,8 +43,13 @@ class BuildinWord
     a = [ctx].concat args
     @fn a...
 
-blockWrap = (seq, wordSeq=[]) ->
-  new ast.Block [], wordSeq, seq
+blockWrap = (wordSeq, seq, parent=null, orig=[]) ->
+  b = new ast.Block [], wordSeq, seq
+  if parent != null
+    b.parent = parent
+  for o in orig
+    b.updateElemBlockParent o
+  b
 
 bw = ->
   new BuildinWord arguments...
@@ -89,9 +94,9 @@ buildinWords = {
     blk = blkElem.val
     if !(blk instanceof ast.Block)
       err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
-    seq = blk.seq.slice start.val-1, end.val
     wordSeq = blk.wordSeq()
-    b = blockWrap seq, wordSeq
+    seq = blk.seq.slice start.val-1, end.val
+    b = blockWrap wordSeq, seq, ctx.block, [blk]
     b.elemType = "VAL"
     b
 
@@ -115,9 +120,9 @@ buildinWords = {
       err "#{a.val} is not a block", a.val.srcInfo.pos, a.val.srcInfo.src
     if !(b.val instanceof ast.Block)
       err "#{b.val} is not a block", b.val.srcInfo.pos, b.val.srcInfo.src
-    seq = a.val.seq.concat b.val.seq
     wordSeq = a.val.wordSeq().concat b.val.wordSeq()
-    r = blockWrap seq, wordSeq
+    seq = a.val.seq.concat b.val.seq
+    r = blockWrap wordSeq, seq, ctx.block, [a,b]
     r.elemType = "VAL"
     r
 
@@ -125,10 +130,10 @@ buildinWords = {
     blk = blkElem.val
     if !(blk instanceof ast.Block)
       err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
+    wordSeq = blk.wordSeq()
     seq = blk.seq.slice 0
     seq.unshift elem
-    wordSeq = blk.wordSeq()
-    b = blockWrap seq, wordSeq
+    b = blockWrap wordSeq, seq, ctx.block, [blk]
     b.elemType = "VAL"
     b
 }
@@ -157,7 +162,7 @@ wordEval = (wordElem, ctx) ->
     jsCode = name.slice(3) + "(" + a + ")"
     v = eval jsCode
     if v == undefined
-      blockWrap []
+      blockWrap [], []
     else
       v
   else

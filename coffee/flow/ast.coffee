@@ -59,15 +59,26 @@ class ast.Block extends ast.Node
         err "redefined word:\"#{name}\"", e.elem.srcInfo.pos, @srcInfo.src
       w = @words[name] = e.elem
       @numWords += 1
-      if w.val instanceof ast.Block
+      if (w.val instanceof ast.Block) && (w.val.parent == null)
         w.val.parent = @
 
     for e in @seq
-      if e.val instanceof ast.Block
+      if (e.val instanceof ast.Block) && (e.val.parent == null)
         e.val.parent = @
 
     @parent = null
     @elemType = "EVAL"
+
+
+  updateElemBlockParent: (orig) ->
+    for name of @words
+      v = @words[name].val
+      if (v instanceof ast.Block) && (v.parent == orig)
+        v.parent = orig
+    for e in @seq
+      v = e.val
+      if (v instanceof ast.Block) && (v.parent == undefined)
+        v.parent = orig
 
 
   curry: (argWords) ->
@@ -88,6 +99,7 @@ class ast.Block extends ast.Node
         args.push a
 
     b = new ast.Block args, wordSeq, seq, @srcInfo
+    @updateElemBlockParent @
     b.parent = @parent
     b.elemType = @elemType
     b
@@ -118,6 +130,7 @@ class ast.Block extends ast.Node
       {name, elem}
     seq = @seq.map (e) -> e.clone()
     b = new ast.Block @args.slice(0), wordSeq, seq, @srcInfo
+    @updateElemBlockParent @
     b.parent = @parent
     b.elemType = @elemType
     b
