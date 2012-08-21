@@ -169,9 +169,9 @@ describe "Flow Interp", ->
   #   qsortFn = \
   #     "qsort: [ a >>
   #       qivot: [ a 1> ]
-  #       less:     [ a { qivot <= } filter qsort ]
-  #       greater:  [ a { qivot >  } filter qsort ]
-  #       less greater join
+  #       less: [ a { qivot <= } filter qsort ]
+  #       more: [ a { qivot >  } filter qsort ]
+  #       less more join
   #     ]"
 
   #   it "filter impl", ->
