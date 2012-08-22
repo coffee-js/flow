@@ -215,11 +215,11 @@ describe "Flow Interp", ->
       # expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 7>").toEqual [34]
       expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 8>").toEqual [100]
 
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort len").toEqual [8]
+      # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort len").toEqual [8]
       # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 1>").toEqual [-50]
       # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 2>").toEqual [0]
       # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 3>").toEqual [5]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 4>").toEqual [10]
+      # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 4>").toEqual [10]
       # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 5>").toEqual [12]
       # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 6>").toEqual [27]
       # expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 7>").toEqual [34]
