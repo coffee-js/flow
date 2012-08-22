@@ -137,4 +137,52 @@ class ast.Block extends ast.Node
     b
 
 
+  join: (other, parent) ->
+    args = @args.concat other.args
+    wordSeq = @wordSeq().concat other.wordSeq()
+    seq = @seq.concat other.seq
+    b = new ast.Block args, wordSeq, seq
+    if parent != null
+      b.parent = parent
+    b.updateElemBlockParent [@, other]
+    b.elemType = "VAL"
+    b
+
+
+  unshift: (elem) ->
+    wordSeq = @wordSeq()
+    seq = @seq.slice 0
+    seq.unshift elem
+    b = new ast.Block @args, wordSeq, seq
+    b.updateElemBlockParent [@]
+    b.parent = @parent
+    b.elemType = @elemType
+    b
+
+
+  slice: (p1, p2) ->
+    if p1 < 0 then p1 = @seq.length + p1 + 1
+    if p2 < 0 then p2 = @seq.length + p2 + 2
+    wordSeq = @wordSeq()
+    seq = @seq.slice p1-1, p2
+    b = new ast.Block @args, wordSeq, seq
+    b.updateElemBlockParent [@]
+    b.parent = @parent
+    b.elemType = @elemType
+    b
+
+
+  numElems: ->
+    @numWords + @seq.length
+
+
+
+
+
+
+
+
+
+
+
 

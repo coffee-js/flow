@@ -43,13 +43,6 @@ class BuildinWord
     a = [ctx].concat args
     @fn a...
 
-blockWrap = (wordSeq, seq, parent=null, origs=[]) ->
-  b = new ast.Block [], wordSeq, seq
-  if parent != null
-    b.parent = parent
-  b.updateElemBlockParent origs
-  b
-
 bw = ->
   new BuildinWord arguments...
 
@@ -93,17 +86,7 @@ buildinWords = {
     blk = blkElem.val
     if !(blk instanceof ast.Block)
       err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
-    wordSeq = blk.wordSeq()
-
-    p1 = start.val
-    if p1 < 0 then p1 = blk.seq.length+p1+1
-    p2 = end.val
-    if p2 < 0 then p2 = blk.seq.length+p2+2
-
-    seq = blk.seq.slice p1-1, p2
-    b = blockWrap wordSeq, seq, ctx.block, [blk]
-    b.elemType = "VAL"
-    b
+    blk.slice start.val, end.val
 
   "num-words": bw 1, (ctx, blkElem) ->
     if !(blkElem.val instanceof ast.Block)
@@ -118,29 +101,20 @@ buildinWords = {
   "num-elems": bw 1, (ctx, blkElem) ->
     if !(blkElem.val instanceof ast.Block)
       err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
-    blkElem.val.numWords + blkElem.val.seq.length
+    blkElem.val.numElems()
 
   "join": bw 2, (ctx, a, b) ->
     if !(a.val instanceof ast.Block)
       err "#{a.val} is not a block", a.val.srcInfo.pos, a.val.srcInfo.src
     if !(b.val instanceof ast.Block)
       err "#{b.val} is not a block", b.val.srcInfo.pos, b.val.srcInfo.src
-    wordSeq = a.val.wordSeq().concat b.val.wordSeq()
-    seq = a.val.seq.concat b.val.seq
-    r = blockWrap wordSeq, seq, ctx.block, [a.val,b.val]
-    r.elemType = "VAL"
-    r
+    a.val.join b.val, ctx.block
 
   "unshift": bw 2, (ctx, blkElem, elem) ->
     blk = blkElem.val
     if !(blk instanceof ast.Block)
       err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
-    wordSeq = blk.wordSeq()
-    seq = blk.seq.slice 0
-    seq.unshift elem
-    b = blockWrap wordSeq, seq, ctx.block, [blk]
-    b.elemType = "VAL"
-    b
+    blk.unshift elem
 }
 
 
@@ -167,7 +141,7 @@ wordEval = (wordElem, ctx) ->
     jsCode = name.slice(3) + "(" + a + ")"
     v = eval jsCode
     if v == undefined
-      blockWrap [], []
+      new ast.Block [], [], []
     else
       v
   else
