@@ -100,7 +100,7 @@ buildinWords = {
     p2 = end.val
     if p2 < 0 then p2 = blk.seq.length+p2+2
 
-    seq = blk.seq.slice p1-1, p2-1
+    seq = blk.seq.slice p1-1, p2
     b = blockWrap wordSeq, seq, ctx.block, [blk]
     b.elemType = "VAL"
     b
