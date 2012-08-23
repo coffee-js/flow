@@ -197,7 +197,7 @@ wordEval1 = (wordElem, ctx) ->
 
 seqCurryBlock = (blkElem, ctx, n) ->
   if n < 1
-    return blkElem.val.clone()
+    return blkElem.val
   blk = blkElem.val
   if n > blk.args.length
     err "n > blk.args.length", blkElem.srcInfo.pos, blk.srcInfo.src

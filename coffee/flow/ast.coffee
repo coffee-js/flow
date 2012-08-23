@@ -85,10 +85,7 @@ class ast.Block extends ast.Node
   curry: (argWords) ->
     args = []
 
-    wordSeq = @wordSeq().map (e) ->
-      name = e.name
-      elem = e.elem.clone()
-      {name, elem}
+    wordSeq = @wordSeqClone @wordSeq()
     seq = @seq.map (e) -> e.clone()
 
     for a in @args
@@ -124,11 +121,15 @@ class ast.Block extends ast.Node
     wordSeq
 
 
-  clone: ->
-    wordSeq = @wordSeq().map (e) ->
+  wordSeqClone: (wordSeq) ->
+    wordSeq.map (e) ->
       name = e.name
       elem = e.elem.clone()
       {name, elem}
+
+
+  clone: ->
+    wordSeq = @wordSeqClone @wordSeq()
     seq = @seq.map (e) -> e.clone()
     b = new ast.Block @args.slice(0), wordSeq, seq, @srcInfo
     b.updateElemBlockParent [@]
@@ -139,19 +140,19 @@ class ast.Block extends ast.Node
 
   join: (other, parent) ->
     args = @args.concat other.args
-    wordSeq = @wordSeq().concat other.wordSeq()
-    seq = @seq.concat other.seq
+    wordSeq = @wordSeqClone @wordSeq().concat other.wordSeq()
+    seq = (@seq.concat other.seq).map (e) -> e.clone()
     b = new ast.Block args, wordSeq, seq
+    b.updateElemBlockParent [@, other]
     if parent != null
       b.parent = parent
-    b.updateElemBlockParent [@, other]
     b.elemType = "VAL"
     b
 
 
   unshift: (elem) ->
-    wordSeq = @wordSeq()
-    seq = @seq.slice 0
+    wordSeq = @wordSeqClone @wordSeq()
+    seq = @seq.map (e) -> e.clone()
     seq.unshift elem
     b = new ast.Block @args, wordSeq, seq
     b.updateElemBlockParent [@]
@@ -163,8 +164,8 @@ class ast.Block extends ast.Node
   slice: (p1, p2) ->
     if p1 < 0 then p1 = @seq.length + p1 + 1
     if p2 < 0 then p2 = @seq.length + p2 + 2
-    wordSeq = @wordSeq()
-    seq = @seq.slice p1-1, p2
+    wordSeq = @wordSeqClone @wordSeq()
+    seq = (@seq.slice p1-1, p2).map (e) -> e.clone()
     b = new ast.Block @args, wordSeq, seq
     b.updateElemBlockParent [@]
     b.parent = @parent
