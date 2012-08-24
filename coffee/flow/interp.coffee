@@ -153,19 +153,12 @@ readElemInBlock = (wordElem, ctx) ->
   blk = blkElem.val
   if !(blk instanceof ast.Block)
     err "expect a block: #{blk}", blkElem.srcInfo.pos, ctx.block.srcInfo.src
-
   name = wordElem.val.name.slice 0,-1
-  if name.match /\d+$/
-    n = parseInt name
-    if n<0 then n = blk.seq.length+n+1
-    elem = blk.seq[n-1]
-    if elem == undefined
-      err "no elem nth:#{n} in block #{blk}", wordElem.srcInfo.pos, ctx.block.srcInfo.src
+  [found, elem] = blk.getElem name
+  if found
+    elem.val
   else
-    elem = blk.words[name]
-    if elem == undefined
-      err "no word named:#{name} in block #{blk}", wordElem.srcInfo.pos, ctx.block.srcInfo.src
-  elem.val
+    err "no elem named:#{n} in block #{blk}", wordElem.srcInfo.pos, ctx.block.srcInfo.src
 
 
 writeElemInBlock = (wordElem, ctx) ->
@@ -173,16 +166,8 @@ writeElemInBlock = (wordElem, ctx) ->
   blk = blkElem.val
   if !(blk instanceof ast.Block)
     err "expect a block: #{blk}", blkElem.srcInfo.pos, ctx.block.srcInfo.src
-
-  blk = blkElem.val.clone()
   name = wordElem.val.name.slice 1
-  if name.match /\d+$/
-    n = parseInt name
-    if n<0 then n = blk.seq.length+n+1
-    blk.seq[n-1] = elem.clone()
-  else
-    blk.words[name] = elem.clone()
-  blk
+  blk.setElem name, elem
 
 
 wordEval1 = (wordElem, ctx) ->

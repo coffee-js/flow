@@ -177,11 +177,34 @@ class ast.Block extends ast.Node
     @numWords + @seq.length
 
 
+  getElem: (name) ->
+    found = false
+    if name.match /\d+$/
+      n = parseInt name
+      if n<0 then n = @seq.length+n+1
+      elem = @seq[n-1]
+      if elem != undefined
+        found = true
+      else
+        elem = null
+    else
+      elem = @words[name]
+      if elem != undefined
+        found = true
+      else
+        elem = null
+    [found, elem]
 
 
-
-
-
+  setElem: (name, elem) ->
+    blk = @clone()
+    if name.match /\d+$/
+      n = parseInt name
+      if n<0 then n = blk.seq.length+n+1
+      blk.seq[n-1] = elem.clone()
+    else
+      blk.words[name] = elem.clone()
+    blk
 
 
 
