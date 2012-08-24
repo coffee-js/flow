@@ -63,15 +63,6 @@ describe "Flow Parser", ->
       (expect (parse p, ": ").match).toEqual null
 
 
-  describe "combinator symbol", ->
-
-    it "match symbol", ->
-      p = parser.symbol
-      (expect (parse p, " ").match).toEqual null
-      (expect (parse p, ":aa").match).toEqual "aa"
-      (expect (parse p, ":").match).toEqual null
-
-
   describe "combinator name", ->
 
     it "match name", ->
@@ -135,9 +126,11 @@ describe "Flow Parser", ->
       (expect a.args).toEqual [
         {
           name: "aa"
+          val: null
         }
         {
           name: "bb"
+          val: null
         }
       ]
       (expect a.seq[0].val.words["sd"].val).toEqual 45

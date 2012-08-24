@@ -23,6 +23,7 @@ class ast.Node
 
 class ast.Word extends ast.Node
   constructor: (@name) ->
+    @val = null
 
 
 class ast.Elem extends ast.Node
@@ -35,6 +36,8 @@ class ast.Elem extends ast.Node
   clone: ->
     if @val instanceof ast.Block
       v = @val.clone()
+    else if @val instanceof ast.Word
+      v = new ast.Word @val.name
     else
       v = @val
     new ast.Elem v, @name, @srcInfo
@@ -106,11 +109,13 @@ class ast.Block extends ast.Node
   getWord: (name) ->
     elem = @words[name]
     if elem != undefined
-      elem
-    else if @parent
-      @parent.getWord name
+      if (elem != null) && (elem.val instanceof ast.Word)
+        elem = @getWord elem.val.name
+    else if @parent != null
+      elem = @parent.getWord name
     else
-      null
+      elem = null
+    elem
 
 
   wordSeq: ->

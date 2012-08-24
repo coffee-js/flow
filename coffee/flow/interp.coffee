@@ -136,34 +136,33 @@ buildinWords = {
 }
 
 
-wordEval = (wordElem, ctx) ->
-  name = wordElem.val.name
-  elem = ctx.block.getWord name
+wordEval = (wordElem, blk) ->
+  word = wordElem.val
+  if word.val != null
+    return word.val
+
+  name = word.name
+  elem = blk.getWord name
 
   if elem != null
-    if elem.val instanceof ast.Word
-      wordEval elem, ctx
-    else
-      elem.val
+    word.val = elem.val
   else if buildinWords[name] != undefined
-    buildinWords[name].eval wordElem, ctx
+    word.val = (ctx) ->
+      buildinWords[name].eval wordElem, ctx
   else if name.match /^js\//i
-    args = []
-    for e in ctx.ret.seq
-      v = e.val
-      if typeof(v) == 'string'
-        args.push "\"" + v + "\""
-      else
-        args.push v
-    a = args.join ","
-    jsCode = name.slice(3) + "(" + a + ")"
-    v = eval jsCode
-    if v == undefined
-      new ast.Block [], [], []
-    else
-      v
+    word.val = (ctx) ->
+      args = []
+      for e in ctx.ret.seq
+        v = e.val
+        if typeof(v) == 'string'
+          args.push "\"" + v + "\""
+        else
+          args.push v
+      a = args.join ","
+      jsCode = name.slice(3) + "(" + a + ")"
+      eval jsCode
   else
-    err "word:\"#{name}\" not defined", wordElem.srcInfo.pos, ctx.block.srcInfo.src
+    err "word:\"#{name}\" not defined", wordElem.srcInfo.pos, blk.srcInfo.src
 
 
 seqCurryBlock = (blkElem, ctx, n) ->
@@ -181,23 +180,27 @@ seqCurryBlock = (blkElem, ctx, n) ->
   blk.curry argWords
 
 
+elemEval = (val, ctx, e) ->
+  retSeq = ctx.ret.seq
+  if (val instanceof ast.Block) && (val.elemType == "EVAL")
+    val = blockEval new ast.Elem(val, null, val.srcInfo), ctx
+    for ve in val.seq
+      retSeq.push ve
+  else if val instanceof Function
+    elemEval val(ctx), ctx, e
+  else
+    retSeq.push new ast.Elem val, null, e.srcInfo
+
+
 blockEval = (blkElem, parentCtx) ->
   blk = seqCurryBlock blkElem, parentCtx, blkElem.val.args.length
   ctx = new Context blk, parentCtx
-  retSeq = ctx.ret.seq
-
   for e in blk.seq
     if e.val instanceof ast.Word
-      val = wordEval e, ctx
+      val = wordEval e, blk
     else
       val = e.val
-    
-    if (val instanceof ast.Block) && (val.elemType == "EVAL")
-      val = blockEval (new ast.Elem val, null, val.srcInfo), ctx
-      for ve in val.seq
-        retSeq.push ve
-    else
-      retSeq.push (new ast.Elem val, null, e.srcInfo)
+    elemEval val, ctx, e
   ctx.ret
 
 

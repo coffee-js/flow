@@ -79,7 +79,7 @@ describe "Flow Interp", ->
 
 
     it "external call", ->
-      expect(run "\"hello world!\" js/console.log").toEqual ["hello world!"]
+      expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]
 
 
     it "concatnative", ->
@@ -93,19 +93,20 @@ describe "Flow Interp", ->
       it "word call word or block can only up block level", ->
         expect(run "b: [ c ] c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
         expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
+        expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
 
 
 
   describe "block data access", ->
 
     it "read named elem", ->
-      expect(run "{ a: 100 } :a get").toEqual [100]
-      expect(run "{ a: { b: 10 } } :a get :b get").toEqual [10]
+      expect(run "{ a: 100 } \"a\" get").toEqual [100]
+      expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
 
 
     it "write named elem", ->
-      expect(run "{ } 5 :a set :a get").toEqual [5]
-      expect(run "{ a: { } } :a get 200 :b set :b get").toEqual [200]
+      expect(run "{ } 5 \"a\" set \"a\" get").toEqual [5]
+      expect(run "{ a: { } } \"a\" get 200 \"b\" set \"b\" get").toEqual [200]
 
 
     it "read nth elem", ->
