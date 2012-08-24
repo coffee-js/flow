@@ -63,6 +63,15 @@ describe "Flow Parser", ->
       (expect (parse p, ": ").match).toEqual null
 
 
+  describe "combinator symbol", ->
+
+    it "match symbol", ->
+      p = parser.symbol
+      (expect (parse p, " ").match).toEqual null
+      (expect (parse p, ":aa").match).toEqual "aa"
+      (expect (parse p, ":").match).toEqual null
+
+
   describe "combinator name", ->
 
     it "match name", ->

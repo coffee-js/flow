@@ -40,8 +40,8 @@ describe "Flow Interp", ->
         expect(run "1 2 > { 1 2 + } { 3 4 + } if").toEqual [7]
 
       it "type check", ->
-        expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 cond is not a boolean: 1"
-        expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 whenTrue is not a block: 3"
+        expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 expect a boolean: 1"
+        expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
 
 
     describe "do block", ->
@@ -99,28 +99,28 @@ describe "Flow Interp", ->
   describe "block data access", ->
 
     it "read named elem", ->
-      expect(run "{ a: 100 } a>").toEqual [100]
-      expect(run "{ a: { b: 10 } } a> b>").toEqual [10]
+      expect(run "{ a: 100 } :a get").toEqual [100]
+      expect(run "{ a: { b: 10 } } :a get :b get").toEqual [10]
 
 
     it "write named elem", ->
-      expect(run "{ } 5 >a a>").toEqual [5]
-      expect(run "{ a: { } } a> 200 >b b>").toEqual [200]
+      expect(run "{ } 5 :a set :a get").toEqual [5]
+      expect(run "{ a: { } } :a get 200 :b set :b get").toEqual [200]
 
 
     it "read nth elem", ->
-      expect(run "{ 100 } -1>").toEqual [100]
-      expect(run "{ { 10 } } 1> 1>").toEqual [10]
+      expect(run "{ 100 } -1 get").toEqual [100]
+      expect(run "{ { 10 } } 1 get 1 get").toEqual [10]
 
 
     it "write nth elem", ->
-      expect(run "{ } 5 >1 1>").toEqual [5]
-      expect(run "{ { } } 1> 200 >1 1>").toEqual [200]
-      expect(run "{ { 3 4 } } -1> 5 >-2 -2>").toEqual [5]
+      expect(run "{ } 5 1 set 1 get").toEqual [5]
+      expect(run "{ { } } 1 get 200 1 set 1 get").toEqual [200]
+      expect(run "{ { 3 4 } } -1 get 5 -2 set -2 get").toEqual [5]
 
 
     it "slice", ->
-      expect(run "{ 1 2 3 4 5 } 2 -2 slice 1>").toEqual [2]
+      expect(run "{ 1 2 3 4 5 } 2 -2 slice 1 get").toEqual [2]
       expect(run "{ 1 2 3 4 5 } len").toEqual [5]
       expect(run "{ 1 2 3 4 5 } 1 5 slice len").toEqual [5]
       expect(run "{ 1 2 3 4 5 } 1 -1 slice len").toEqual [5]
@@ -150,7 +150,7 @@ describe "Flow Interp", ->
 
 
     it "unshift", ->
-      expect(run "{ 1 2 3 4 5 } 100 unshift 1>").toEqual [100]
+      expect(run "{ 1 2 3 4 5 } 100 unshift 1 get").toEqual [100]
       expect(run "{ 1 2 3 4 5 } 100 unshift len").toEqual [6]
 
 
@@ -158,7 +158,7 @@ describe "Flow Interp", ->
 
     filterFn = \
       "filter: [ a p >>
-        x:  [ a 1> ]
+        x:  [ a 1 get ]
         xs: [ a 2 -1 slice ]
         a len 0 = {
           a
@@ -173,18 +173,18 @@ describe "Flow Interp", ->
     it "filter impl", ->
       expect(run "#{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter len").toEqual [5]
       expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter len").toEqual [5]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter 1>").toEqual [0]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter 5>").toEqual [2]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 <= } filter 1>").toEqual [0]
+      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter 1 get").toEqual [0]
+      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter 5 get").toEqual [2]
+      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 <= } filter 1 get").toEqual [0]
       expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter len").toEqual [0]
 
 
     qsortFn = \
       "qsort: [ a >>
-        qivot: [ a 1> ]
-        xs: [ a 2 -1 slice ]
-        less: [ xs { qivot <= } filter qsort ]
-        more: [ xs { qivot >  } filter qsort ]
+        qivot: [ a 1 get ]
+        xs:    [ a 2 -1 slice ]
+        less:  [ xs { qivot <= } filter qsort ]
+        more:  [ xs { qivot >  } filter qsort ]
         a len 0 = {
           a
         } {
@@ -193,7 +193,7 @@ describe "Flow Interp", ->
       ]"
     qsortFn1 = \
       "qsort: [ a >>
-        qivot: [ a 1> ]
+        qivot: [ a 1 get ]
         less:  [ a { qivot < } filter qsort ]
         equal: [ a { qivot = } filter ]
         more:  [ a { qivot > } filter qsort ]
@@ -206,24 +206,24 @@ describe "Flow Interp", ->
     it "qsort impl", ->
       td = "12 100 5 34 27 10 -50 0"
       expect(run "#{filterFn} #{qsortFn} { #{td} } qsort len").toEqual [8]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 1>").toEqual [-50]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 2>").toEqual [0]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 3>").toEqual [5]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 4>").toEqual [10]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 5>").toEqual [12]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 6>").toEqual [27]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 7>").toEqual [34]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 8>").toEqual [100]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 1 get").toEqual [-50]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 2 get").toEqual [0]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 3 get").toEqual [5]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 4 get").toEqual [10]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 5 get").toEqual [12]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 6 get").toEqual [27]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 7 get").toEqual [34]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 8 get").toEqual [100]
 
       expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort len").toEqual [8]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 1>").toEqual [-50]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 2>").toEqual [0]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 3>").toEqual [5]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 4>").toEqual [10]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 5>").toEqual [12]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 6>").toEqual [27]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 7>").toEqual [34]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 8>").toEqual [100]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 1 get").toEqual [-50]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 2 get").toEqual [0]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 3 get").toEqual [5]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 4 get").toEqual [10]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 5 get").toEqual [12]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 6 get").toEqual [27]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 7 get").toEqual [34]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 8 get").toEqual [100]
 
 
 

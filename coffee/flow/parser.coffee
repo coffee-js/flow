@@ -28,6 +28,10 @@ combinator = do ->
   colon = pc.tok ':'
   negws = pc.neg pc.space()
   nameChar = pc.and negws, pc.neg(pc.seq colon, pc.space())
+
+  symbol = pc.map pc.seq(colon, pc.rep1(nameChar), endToken),
+    (n) -> n[1].reduce (t,s)->t.concat(s)
+
   name = pc.map pc.seq(pc.rep1(nameChar), colon, endToken),
     (n) -> n[0].reduce (t,s)->t.concat(s)
 
@@ -82,10 +86,10 @@ combinator = do ->
       blk.elemType = "VAL"
       blk
 
-  elem = pc.map pc.choice(evalBlock, valBlock, number, string, word),
+  elem = pc.map pc.choice(evalBlock, valBlock, number, string, symbol, word),
     (n, pos) -> new ast.Elem n, null, new ast.SrcInfo(pos)
 
-  { int10, number, string, colon, negws, nameChar, name, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
+  { int10, number, string, colon, negws, nameChar, symbol, name, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
 
 
 for k, v of combinator

@@ -66,11 +66,11 @@ buildinWords = {
   "if":   bw 3, (ctx, cond, whenTrue, whenFals) ->
     blk = ctx.block
     if typeof(cond.val) != 'boolean'
-      err "cond is not a boolean: #{cond.val}", cond.srcInfo.pos, blk.srcInfo.src
+      err "expect a boolean: #{cond.val}", cond.srcInfo.pos, blk.srcInfo.src
     if !(whenTrue.val instanceof ast.Block)
-      err "whenTrue is not a block: #{whenTrue.val}", whenTrue.srcInfo.pos, blk.srcInfo.src
+      err "expect a block: #{whenTrue.val}", whenTrue.srcInfo.pos, blk.srcInfo.src
     if !(whenFals.val instanceof ast.Block)
-      err "whenFals is not a block: #{whenFals.val}", whenFals.srcInfo.pos, blk.srcInfo.src
+      err "expect a block: #{whenFals.val}", whenFals.srcInfo.pos, blk.srcInfo.src
 
     if cond.val
       blockEval whenTrue, ctx
@@ -79,42 +79,60 @@ buildinWords = {
 
   "do":   bw 1, (ctx, blkElem) ->
     if !(blkElem.val instanceof ast.Block)
-      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+      err "expect a block: #{blkElem.val}", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
     blockEval blkElem, ctx
 
   "slice": bw 3, (ctx, blkElem, start, end) ->
     blk = blkElem.val
     if !(blk instanceof ast.Block)
-      err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
+      err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
     blk.slice start.val, end.val
 
   "num-words": bw 1, (ctx, blkElem) ->
     if !(blkElem.val instanceof ast.Block)
-      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+      err "expect a block: #{blkElem.val}", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
     blkElem.val.numWords
 
   "len": bw 1, (ctx, blkElem) ->
     if !(blkElem.val instanceof ast.Block)
-      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+      err "expect a block: #{blkElem.val}", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
     blkElem.val.seq.length
 
   "num-elems": bw 1, (ctx, blkElem) ->
     if !(blkElem.val instanceof ast.Block)
-      err "#{blkElem.val} is not a block", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
+      err "expect a block: #{blkElem.val}", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
     blkElem.val.numElems()
 
   "join": bw 2, (ctx, a, b) ->
     if !(a.val instanceof ast.Block)
-      err "#{a.val} is not a block", a.val.srcInfo.pos, a.val.srcInfo.src
+      err "expect a block: #{a.val}", a.val.srcInfo.pos, a.val.srcInfo.src
     if !(b.val instanceof ast.Block)
-      err "#{b.val} is not a block", b.val.srcInfo.pos, b.val.srcInfo.src
+      err "expect a block: #{b.val}", b.val.srcInfo.pos, b.val.srcInfo.src
     a.val.join b.val, ctx.block
 
   "unshift": bw 2, (ctx, blkElem, elem) ->
     blk = blkElem.val
     if !(blk instanceof ast.Block)
-      err "#{blk} is not a block", blk.srcInfo.pos, blk.srcInfo.src
+      err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
     blk.unshift elem
+
+  "get":     bw 2, (ctx, blkElem, symElem) ->
+    blk = blkElem.val
+    if !(blk instanceof ast.Block)
+      err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
+    name = symElem.val
+    [found, elem] = blk.getElem name
+    if found
+      elem.val
+    else
+      err "no elem named:#{name} in block #{blk}", symElem.srcInfo.pos, ctx.block.srcInfo.src
+
+  "set":     bw 3, (ctx, blkElem, elem, symElem) ->
+    blk = blkElem.val
+    if !(blk instanceof ast.Block)
+      err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
+    name = symElem.val
+    blk.setElem name, elem
 }
 
 
@@ -148,38 +166,6 @@ wordEval = (wordElem, ctx) ->
     err "word:\"#{name}\" not defined", wordElem.srcInfo.pos, ctx.block.srcInfo.src
 
 
-readElemInBlock = (wordElem, ctx) ->
-  [blkElem] = getArgs wordElem, 1, ctx
-  blk = blkElem.val
-  if !(blk instanceof ast.Block)
-    err "expect a block: #{blk}", blkElem.srcInfo.pos, ctx.block.srcInfo.src
-  name = wordElem.val.name.slice 0,-1
-  [found, elem] = blk.getElem name
-  if found
-    elem.val
-  else
-    err "no elem named:#{n} in block #{blk}", wordElem.srcInfo.pos, ctx.block.srcInfo.src
-
-
-writeElemInBlock = (wordElem, ctx) ->
-  [blkElem, elem] = getArgs wordElem, 2, ctx
-  blk = blkElem.val
-  if !(blk instanceof ast.Block)
-    err "expect a block: #{blk}", blkElem.srcInfo.pos, ctx.block.srcInfo.src
-  name = wordElem.val.name.slice 1
-  blk.setElem name, elem
-
-
-wordEval1 = (wordElem, ctx) ->
-  name = wordElem.val.name
-  if      name.match /.+>$/
-    readElemInBlock  wordElem, ctx
-  else if name.match /^>.+/
-    writeElemInBlock wordElem, ctx
-  else
-    wordEval wordElem, ctx
-
-
 seqCurryBlock = (blkElem, ctx, n) ->
   if n < 1
     return blkElem.val
@@ -202,7 +188,7 @@ blockEval = (blkElem, parentCtx) ->
 
   for e in blk.seq
     if e.val instanceof ast.Word
-      val = wordEval1 e, ctx
+      val = wordEval e, ctx
     else
       val = e.val
     

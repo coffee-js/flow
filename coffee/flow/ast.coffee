@@ -179,8 +179,13 @@ class ast.Block extends ast.Node
 
   getElem: (name) ->
     found = false
-    if name.match /\d+$/
+
+    if typeof name == "number"
+      n = name
+    else if name.match /\d+$/
       n = parseInt name
+
+    if n != undefined
       if n<0 then n = @seq.length+n+1
       elem = @seq[n-1]
       if elem != undefined
@@ -198,8 +203,13 @@ class ast.Block extends ast.Node
 
   setElem: (name, elem) ->
     blk = @clone()
-    if name.match /\d+$/
+
+    if typeof name == "number"
+      n = name
+    else if name.match /\d+$/
       n = parseInt name
+
+    if n != undefined
       if n<0 then n = blk.seq.length+n+1
       blk.seq[n-1] = elem.clone()
     else
