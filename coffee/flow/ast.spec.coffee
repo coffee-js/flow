@@ -9,14 +9,10 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 describe "Flow AST", ->
 
-  describe "elem node", ->
 
-    it "clone", ->
+  describe "block", ->
 
-
-  describe "block node", ->
-
-    it "clone", ->
+    it "link words val", ->
 
 
 

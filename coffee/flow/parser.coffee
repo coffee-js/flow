@@ -67,21 +67,23 @@ combinator = do ->
       args = if n[0]==true then [] else n[0]
       wordSeq = n[1].wordSeq
       seq     = n[1].seq
-      new ast.Block args, wordSeq, seq, new ast.SrcInfo(pos, src)
+      [args, wordSeq, seq, new ast.SrcInfo(pos, src)]
 
   evalBlock = pc.map pc.seq(pc.tok('['), pc.space(), block, pc.tok(']'), endToken),
     (n, pos) ->
-      blk = n[2]
-      blk.srcInfo.pos = pos
-      blk.elemType = "EVAL"
-      blk
+      args = n[2]
+      srcInfo = args.pop()
+      srcInfo.pos = pos
+      args = args.concat ["EVAL", srcInfo]
+      new ast.Block args...
 
   valBlock = pc.map pc.seq(pc.tok('{'), pc.space(), block, pc.tok('}'), endToken),
     (n, pos) ->
-      blk = n[2]
-      blk.srcInfo.pos = pos
-      blk.elemType = "VAL"
-      blk
+      args = n[2]
+      srcInfo = args.pop()
+      srcInfo.pos = pos
+      args = args.concat ["VAL", srcInfo]
+      new ast.Block args...
 
   elem = pc.map pc.choice(evalBlock, valBlock, number, string, word),
     (n, pos) -> new ast.Elem n, null, new ast.SrcInfo(pos)
@@ -99,7 +101,7 @@ parser.parse = (src) ->
   if r.match == null
     err "syntex error", r.state.lastFailPos, src
   
-  b = new ast.Block [], r.match.wordSeq, r.match.seq, new ast.SrcInfo(0, src)
+  b = new ast.Block [], r.match.wordSeq, r.match.seq, "EVAL", new ast.SrcInfo(0, src)
   e = new ast.Elem b, null, new ast.SrcInfo(0)
   e
 

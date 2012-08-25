@@ -18,6 +18,7 @@ body ->
 
     requirejs [
       "pc.spec",
+      "flow/ast.spec",
       "flow/parser.spec",
       "flow/interp.spec",
     ], ->
