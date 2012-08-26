@@ -21,12 +21,12 @@ class Closure
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (elem, blk, retSeq) ->
+  eval: (elem, retSeq, blk) ->
     args = retSeq.slice -@numArgs
     if args.length < @numArgs
       err "no enough args in seq:#{retSeq}", elem.srcInfo.pos, blk.srcInfo.src
     retSeq.length = retSeq.length-@numArgs
-    args = [blk, retSeq].concat args
+    args = [retSeq, blk].concat args
     @fn args...
 
 bw = ->
@@ -34,22 +34,22 @@ bw = ->
 
 
 buildinWords = {
-  "+":    bw 2, (block, retSeq, a, b) -> a.val+b.val
-  "-":    bw 2, (block, retSeq, a, b) -> a.val-b.val
-  "*":    bw 2, (block, retSeq, a, b) -> a.val*b.val
-  "/":    bw 2, (block, retSeq, a, b) -> a.val/b.val
+  "+":    bw 2, (retSeq, block, a, b) -> a.val+b.val
+  "-":    bw 2, (retSeq, block, a, b) -> a.val-b.val
+  "*":    bw 2, (retSeq, block, a, b) -> a.val*b.val
+  "/":    bw 2, (retSeq, block, a, b) -> a.val/b.val
 
-  "=":    bw 2, (block, retSeq, a, b) -> a.val==b.val
-  "<":    bw 2, (block, retSeq, a, b) -> a.val<b.val
-  ">":    bw 2, (block, retSeq, a, b) -> a.val>b.val
-  "<=":   bw 2, (block, retSeq, a, b) -> a.val<=b.val
-  ">=":   bw 2, (block, retSeq, a, b) -> a.val>=b.val
+  "=":    bw 2, (retSeq, block, a, b) -> a.val==b.val
+  "<":    bw 2, (retSeq, block, a, b) -> a.val<b.val
+  ">":    bw 2, (retSeq, block, a, b) -> a.val>b.val
+  "<=":   bw 2, (retSeq, block, a, b) -> a.val<=b.val
+  ">=":   bw 2, (retSeq, block, a, b) -> a.val>=b.val
 
-  "not":  bw 1, (block, retSeq, a)    -> !a.val
-  "and":  bw 2, (block, retSeq, a, b) -> a.val&&b.val
-  "or":   bw 2, (block, retSeq, a, b) -> a.val||b.val
+  "not":  bw 1, (retSeq, block, a)    -> !a.val
+  "and":  bw 2, (retSeq, block, a, b) -> a.val&&b.val
+  "or":   bw 2, (retSeq, block, a, b) -> a.val||b.val
 
-  "if":   bw 3, (block, retSeq, cond, whenTrue, whenFals) ->
+  "if":   bw 3, (retSeq, block, cond, whenTrue, whenFals) ->
     if typeof cond.val != 'boolean'
       err "expect a boolean: #{cond.val}", cond.srcInfo.pos, block.srcInfo.src
     if !(whenTrue.val instanceof Closure)
@@ -63,64 +63,68 @@ buildinWords = {
       blockEval whenFals.val.block, retSeq, whenFals.val.wordEnv
     undefined
 
-  "do":   bw 1, (block, retSeq, elem) ->
+  "do":   bw 1, (retSeq, block, elem) ->
     b = elem.val
     if !(b instanceof Closure)
       err "expect a block: #{b}", elem.srcInfo.pos, block.srcInfo.src
     blockEval b.block, retSeq, b.wordEnv
     undefined
 
-  # "get":  bw 2, (block, retSeq, blkElem, nameElem) ->
-  #   blk = blkElem.val
-  #   if !(blk instanceof ast.Block)
-  #     err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
-  #   name = nameElem.val
-  #   [found, elem] = blk.getElem name
-  #   if found
-  #     elem.val
-  #   else
-  #     err "no elem named:#{name} in block #{blk}", nameElem.srcInfo.pos, blk.srcInfo.src
+  "get":  bw 2, (retSeq, block, bElem, nameElem) ->
+    b = bElem.val
+    name = nameElem.val
+    if !(b instanceof Closure)
+      err "expect a block: #{b}", bElem.srcInfo.pos, block.srcInfo.src
+    
+    [found, elem] = b.block.getElem name
+    if found
+      elem.val
+    else
+      err "no elem named:#{name} in block #{b}", nameElem.srcInfo.pos, block.srcInfo.src
 
-  # "set":  bw 3, (block, retSeq, blkElem, elem, nameElem) ->
-  #   blk = blkElem.val
-  #   if !(blk instanceof ast.Block)
-  #     err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
-  #   name = nameElem.val
-  #   blk.setElem name, elem
+  "set":  bw 3, (retSeq, block, bElem, elem, nameElem) ->
+    b = bElem.val
+    if !(b instanceof Closure)
+      err "expect a block: #{b}", bElem.srcInfo.pos, block.srcInfo.src
+    name = nameElem.val
+    b.block.setElem name, elem
 
-  # "len":  bw 1, (block, retSeq, blkElem) ->
-  #   if !(blkElem.val instanceof ast.Block)
-  #     err "expect a block: #{blkElem.val}", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
-  #   blkElem.val.len()
+  "len":  bw 1, (retSeq, block, bElem) ->
+    b = bElem.val
+    if !(b instanceof Closure)
+      err "expect a block: #{bElem.val}", bElem.srcInfo.pos, block.srcInfo.src
+    b.block.len()
 
-  # "num-words": bw 1, (block, retSeq, blkElem) ->
-  #   if !(blkElem.val instanceof ast.Block)
-  #     err "expect a block: #{blkElem.val}", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
-  #   blkElem.val.numWords
+  "num-words": bw 1, (retSeq, block, bElem) ->
+    b = bElem.val
+    if !(b instanceof Closure)
+      err "expect a block: #{b}", bElem.srcInfo.pos, block.srcInfo.src
+    b.block.numWords
 
-  # "num-elems": bw 1, (block, retSeq, blkElem) ->
-  #   if !(blkElem.val instanceof ast.Block)
-  #     err "expect a block: #{blkElem.val}", blkElem.val.srcInfo.pos, blkElem.val.srcInfo.src
-  #   blkElem.val.numElems()
+  "num-elems": bw 1, (retSeq, block, bElem) ->
+    b = bElem.val
+    if !(b instanceof Closure)
+      err "expect a block: #{b}", bElem.srcInfo.pos, block.srcInfo.src
+    b.block.numElems()
 
-  # "slice":  bw 3, (block, retSeq, blkElem, start, end) ->
-  #   blk = blkElem.val
-  #   if !(blk instanceof ast.Block)
-  #     err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
-  #   blk.slice start.val, end.val
+  "slice":  bw 3, (retSeq, block, bElem, start, end) ->
+    b = bElem.val
+    if !(b instanceof Closure)
+      err "expect a block: #{b}", bElem.srcInfo.pos, block.srcInfo.src
+    b.block.slice start.val, end.val
 
-  # "join":   bw 2, (block, retSeq, a, b) ->
-  #   if !(a.val instanceof ast.Block)
-  #     err "expect a block: #{a.val}", a.val.srcInfo.pos, a.val.srcInfo.src
-  #   if !(b.val instanceof ast.Block)
-  #     err "expect a block: #{b.val}", b.val.srcInfo.pos, b.val.srcInfo.src
-  #   a.val.join b.val
+  "join":   bw 2, (retSeq, block, a, b) ->
+    if !(a.val instanceof Closure)
+      err "expect a block: #{a.val}", a.srcInfo.pos, block.srcInfo.src
+    if !(b.val instanceof Closure)
+      err "expect a block: #{b.val}", b.srcInfo.pos, block.srcInfo.src
+    a.val.block.join b.val.block
 
-  # "unshift":  bw 2, (block, retSeq, blkElem, elem) ->
-  #   blk = blkElem.val
-  #   if !(blk instanceof ast.Block)
-  #     err "expect a block: #{blk}", blk.srcInfo.pos, blk.srcInfo.src
-  #   blk.unshift elem
+  "unshift":  bw 2, (retSeq, block, bElem, elem) ->
+    b = bElem.val
+    if !(b instanceof Closure)
+      err "expect a block: #{b}", bElem.srcInfo.pos, block.srcInfo.src
+    b.block.unshift elem
 }
 
 
@@ -144,14 +148,16 @@ wordEval = (wordElem, wordEnv) ->
   w
 
 
-valEval = (val, e, blk, retSeq, wordEnv) ->
+valEval = (val, e, retSeq, wordEnv, blk) ->
   if val instanceof Closure && val.block.elemType == "EVAL"
     blockEval val.block, retSeq, val.wordEnv
   else if val instanceof BuildinWord
-    v = val.eval e, blk, retSeq
+    v = val.eval e, retSeq, blk
     if v != undefined
-      valEval v, e, blk, retSeq, wordEnv
+      valEval v, e, retSeq, wordEnv, blk
   else
+    if val instanceof ast.Block
+      val = new Closure val, wordEnv
     retSeq.push new ast.Elem val, null, e.srcInfo
 
 
@@ -183,7 +189,7 @@ blockEval = (blk, retSeq, preWordEnv) ->
       val = new Closure e.val, wordEnv
     else
       val = e.val
-    valEval val, e, blk, retSeq, wordEnv
+    valEval val, e, retSeq, wordEnv, blk
 
 
 interp.eval = (blkElem) ->
