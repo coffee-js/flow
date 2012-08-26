@@ -224,6 +224,12 @@ describe "Flow Interp", ->
 
 
 
+  describe "OO features", ->
+    it "define object", ->
+      expect(run "1 { a: [ b + ] b: 2 } \"a\" get").toEqual [3]
+      expect(run "x: { a: [ b + ] b: 2 } 1 x \"a\" get").toEqual [3]
+
+
 
   #   it "external call", ->
   #     #expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]

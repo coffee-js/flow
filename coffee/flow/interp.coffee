@@ -79,7 +79,8 @@ buildinWords = {
     [found, elem] = b.block.getElem name
     if found
       if elem.val instanceof ast.Block
-        new Closure elem.val, blockWordEnv(elem.val, {}, wordEnv)
+        bWordEnv = blockWordEnv b.block, {}, b.wordEnv
+        new Closure elem.val, blockWordEnv(elem.val, {}, bWordEnv)
       else
         elem.val
     else
@@ -168,8 +169,8 @@ blockWordEnv = (block, argWords, preWordEnv) ->
   words = {}
   wordEnv = [words].concat preWordEnv
 
-  for name of argWords
-    words[name] = argWords[name]
+  for a in block.args
+    words[a.name] = argWords[a.name]
 
   for name of block.words
     w = block.words[name]
@@ -181,6 +182,8 @@ blockWordEnv = (block, argWords, preWordEnv) ->
 
 
 seqCurryBlock = (block, retSeq, n) ->
+  if n < 1
+    return {}
   argWords = {}
   if n > block.args.length
     err "block:#{block} max args num is #{block.args.length}", block.srcInfo.pos, block.srcInfo.src
@@ -194,10 +197,7 @@ seqCurryBlock = (block, retSeq, n) ->
 
 
 blockEval = (block, retSeq, preWordEnv) ->
-  argWords = {}
-  l = block.args.length
-  if l > 0
-    argWords = seqCurryBlock block, retSeq, l
+  argWords = seqCurryBlock block, retSeq, block.args.length
   wordEnv = blockWordEnv block, argWords, preWordEnv
 
   for e in block.seq

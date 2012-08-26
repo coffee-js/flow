@@ -40,12 +40,13 @@ class ast.Block extends ast.Node
     else
       @srcInfo = srcInfo
 
+    @numWords = 0
     argWords = {}
     for a in args
       argWords[a.name] = null
+      @numWords += 1
 
     @words = {}
-    @numWords = 0
     for e in wordSeq
       name = e.name
       if @words[name] != undefined or argWords[name] != undefined
