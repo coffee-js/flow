@@ -126,11 +126,9 @@ describe "Flow Parser", ->
       (expect a.args).toEqual [
         {
           name: "aa"
-          val: null
         }
         {
           name: "bb"
-          val: null
         }
       ]
       (expect a.seq[0].val.words["sd"].val).toEqual 45

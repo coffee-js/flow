@@ -7,7 +7,7 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
 err = (s, pos=null, src=null) ->
-  if (pos != null) && (src != null)
+  if pos != null && src != null
     [line, col] = src.lineCol pos
     throw "#{src.path}:#{line}:#{col} #{s}"
   else
@@ -23,7 +23,6 @@ class ast.Node
 
 class ast.Word extends ast.Node
   constructor: (@name) ->
-    @val = null
 
 
 class ast.Elem extends ast.Node
@@ -41,45 +40,18 @@ class ast.Block extends ast.Node
     else
       @srcInfo = srcInfo
 
-    @argWords = {}
+    argWords = {}
     for a in args
-      @argWords[a.name] = null
+      argWords[a.name] = null
 
     @words = {}
     @numWords = 0
     for e in wordSeq
       name = e.name
-      if @words[name] != undefined or @argWords[name] != undefined
+      if @words[name] != undefined or argWords[name] != undefined
         err "redefined word:\"#{name}\"", e.elem.srcInfo.pos, @srcInfo.src
       @words[name] = e.elem
       @numWords += 1
-
-
-  linkWordsVal: (blocks=[]) ->
-    getWord = (name, blocks) ->
-      for i in [blocks.length...0]
-        b = blocks[i-1]
-        elem = b.words[name]
-        if elem != undefined
-          if elem.val instanceof ast.Word
-            elem = getWord elem.val.name, blocks.slice(0,i)
-          break
-      elem
-    linkRecur = (e, b) ->
-      if e.val instanceof ast.Word
-        name = e.val.name
-        if b.argWords[name] == undefined
-          elem = getWord name, blocks
-          if elem != undefined
-            e.val.val = elem
-      if e.val instanceof ast.Block
-        e.val.linkWordsVal blocks
-
-    blocks = blocks.concat [@]
-    for name of @words
-      linkRecur @words[name], @
-    for e in @seq
-      linkRecur e, @
 
 
   wordSeq: ->
@@ -156,7 +128,6 @@ class ast.Block extends ast.Node
     seq = @seq.slice 0
     seq.unshift elem
     new ast.Block @args, @wordSeq(), seq, @elemType, @srcInfo
-
 
 
 
