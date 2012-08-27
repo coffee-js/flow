@@ -63,7 +63,7 @@ buildinWords = {
       blockEval whenFals.val.block, retSeq, whenFals.val.wordEnv
     undefined
 
-  "do":   bw 1, (retSeq, wordEnv, block, elem) ->
+  "apply":   bw 1, (retSeq, wordEnv, block, elem) ->
     b = elem.val
     if !(b instanceof Closure)
       err "expect a block: #{b}", elem.srcInfo.pos, block.srcInfo.src

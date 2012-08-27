@@ -44,20 +44,20 @@ describe "Flow Interp", ->
         expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
 
 
-    describe "do block", ->
+    describe "apply block", ->
 
       it "basic", ->
-        expect(run "{ 1 2 + } do").toEqual [3]
+        expect(run "{ 1 2 + } apply").toEqual [3]
         expect(run "a: [ 2 + ] 1 [ a ]").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } do").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } [ do ]").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } [ f >> f ] do").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] do").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } apply").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ apply ]").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ f >> f ] apply").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] apply").toEqual [3]
 
       it "concatnative", ->
-        expect(run "1 { 2 + } do").toEqual [3]
-        expect(run "1 2 { + } do").toEqual [3]
-        expect(run "1 2 { n >> n 2 + - } do").toEqual [-3]
+        expect(run "1 { 2 + } apply").toEqual [3]
+        expect(run "1 2 { + } apply").toEqual [3]
+        expect(run "1 2 { n >> n 2 + - } apply").toEqual [-3]
 
 
   describe "word call", ->
@@ -160,7 +160,7 @@ describe "Flow Interp", ->
         a len 0 = {
           a
         } {
-          x p do {
+          x p apply {
             xs p filter x unshift
           } {
             xs p filter
@@ -168,12 +168,9 @@ describe "Flow Interp", ->
         } if
       ]"
     it "filter impl", ->
-      expect(run "#{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter len").toEqual [5]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter len").toEqual [5]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter 1 get").toEqual [0]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter 5 get").toEqual [2]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 <= } filter 1 get").toEqual [0]
-      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter len").toEqual [0]
+      expect(run "#{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter apply").toEqual [0,3,1,1,2]
+      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter apply").toEqual [0,3,4,1,2]
+      expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter apply").toEqual []
 
 
     qsortFn = \
@@ -202,25 +199,8 @@ describe "Flow Interp", ->
       ]"
     it "qsort impl", ->
       td = "12 100 5 34 27 10 -50 0"
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort len").toEqual [8]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 1 get").toEqual [-50]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 2 get").toEqual [0]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 3 get").toEqual [5]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 4 get").toEqual [10]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 5 get").toEqual [12]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 6 get").toEqual [27]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 7 get").toEqual [34]
-      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort 8 get").toEqual [100]
-
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort len").toEqual [8]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 1 get").toEqual [-50]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 2 get").toEqual [0]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 3 get").toEqual [5]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 4 get").toEqual [10]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 5 get").toEqual [12]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 6 get").toEqual [27]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 7 get").toEqual [34]
-      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort 8 get").toEqual [100]
+      expect(run "#{filterFn} #{qsortFn} { #{td} } qsort apply").toEqual [-50,0,5,10,12,27,34,100]
+      expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort apply").toEqual [-50,0,5,10,12,27,34,100]
 
 
 
