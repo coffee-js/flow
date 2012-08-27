@@ -206,8 +206,11 @@ describe "Flow Interp", ->
       expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort apply").toEqual [-50,0,5,10,12,27,34,100]
 
 
+    it "ifte impl", ->
+
     it "linrec impl", ->
 
+    it "binrec impl", ->
 
 
   describe "OO features", ->
