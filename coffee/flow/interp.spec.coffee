@@ -92,6 +92,9 @@ describe "Flow Interp", ->
         expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
 
 
+    it "closure test", ->
+
+
 
   describe "block data access", ->
 
@@ -203,11 +206,16 @@ describe "Flow Interp", ->
       expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort apply").toEqual [-50,0,5,10,12,27,34,100]
 
 
+    it "linrec impl", ->
+
+
 
   describe "OO features", ->
     it "define object", ->
       expect(run "1 { a: [ b + ] b: 2 } \"a\" get").toEqual [3]
       expect(run "x: { a: [ b + ] b: 2 } 1 x \"a\" get").toEqual [3]
+
+
 
 
 
