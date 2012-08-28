@@ -23,84 +23,84 @@ describe "Flow Interp", ->
       expect(run "1 2").toEqual [1, 2]
 
 
-  describe "buildin words", ->
+  # describe "buildin words", ->
 
-    describe "math OPs", ->
+  #   describe "math OPs", ->
 
-      it "basic", ->
-        expect(run "1 2 -").toEqual [-1]
-        expect(run "1 2 - 3 - 20").toEqual [-4, 20]
-        expect(run "1 2 + 3 4 - *").toEqual [-3]
-        expect(run "n: 1 n 2 -").toEqual [-1]
-
-
-    describe "if function", ->
-
-      it "basic", ->
-        expect(run "1 2 > { 1 2 + } { 3 4 + } if").toEqual [7]
-
-      it "type check", ->
-        expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 expect a boolean: 1"
-        expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
+  #     it "basic", ->
+  #       expect(run "1 2 -").toEqual [-1]
+  #       expect(run "1 2 - 3 - 20").toEqual [-4, 20]
+  #       expect(run "1 2 + 3 4 - *").toEqual [-3]
+  #       expect(run "n: 1 n 2 -").toEqual [-1]
 
 
-    describe "eval block", ->
+  #   describe "if function", ->
 
-      it "basic", ->
-        expect(run "{ 1 2 + } eval").toEqual [3]
-        expect(run "a: [ 2 + ] 1 [ a ]").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } eval").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } [ eval ]").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } [ f >> f ] eval").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] eval").toEqual [3]
+  #     it "basic", ->
+  #       expect(run "1 2 > { 1 2 + } { 3 4 + } if").toEqual [7]
 
-      it "concatnative", ->
-        expect(run "1 { 2 + } eval").toEqual [3]
-        expect(run "1 2 { + } eval").toEqual [3]
-        expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
+  #     it "type check", ->
+  #       expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 expect a boolean: 1"
+  #       expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
 
 
-  describe "word call", ->
+  #   describe "eval block", ->
 
-    it "basic", ->
-      expect(run "a: 20 a").toEqual [20]
-      expect(run "add: [ a b >> a b + ] 1 2 add").toEqual [3]
-      expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
-      expect(run "x: 2 y: 3 x y *").toEqual [6]
-      expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
-      expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
+  #     it "basic", ->
+  #       expect(run "{ 1 2 + } eval").toEqual [3]
+  #       expect(run "a: [ 2 + ] 1 [ a ]").toEqual [3]
+  #       expect(run "a: [ 2 + ] 1 { a } eval").toEqual [3]
+  #       expect(run "a: [ 2 + ] 1 { a } [ eval ]").toEqual [3]
+  #       expect(run "a: [ 2 + ] 1 { a } [ f >> f ] eval").toEqual [3]
+  #       expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] eval").toEqual [3]
 
-
-    it "recursion call", ->
-      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
-      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
-      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
-      expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
+  #     it "concatnative", ->
+  #       expect(run "1 { 2 + } eval").toEqual [3]
+  #       expect(run "1 2 { + } eval").toEqual [3]
+  #       expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
 
 
-    it "concatnative", ->
-      expect(run "a: [ 2 + ] 1 a").toEqual [3]
-      expect(run "a: [ + ] 1 2 a").toEqual [3]
-      expect(run "a: [ n >> n 2 + - ] 1 2 a").toEqual [-3]
+  # describe "word call", ->
+
+  #   it "basic", ->
+  #     expect(run "a: 20 a").toEqual [20]
+  #     expect(run "add: [ a b >> a b + ] 1 2 add").toEqual [3]
+  #     expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
+  #     expect(run "x: 2 y: 3 x y *").toEqual [6]
+  #     expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
+  #     expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
 
 
-    describe "scopes", ->
-
-      it "word call word or block can only up block level", ->
-        expect(run "b: [ c ] c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
-        expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
-        expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
-
-
-    it "closure test", ->
+  #   it "recursion call", ->
+  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
+  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
+  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
+  #     expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
 
 
+  #   it "concatnative", ->
+  #     expect(run "a: [ 2 + ] 1 a").toEqual [3]
+  #     expect(run "a: [ + ] 1 2 a").toEqual [3]
+  #     expect(run "a: [ n >> n 2 + - ] 1 2 a").toEqual [-3]
 
-  describe "block data access", ->
 
-    it "read named elem", ->
-      expect(run "{ a: 100 } \"a\" get").toEqual [100]
-      expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
+  #   describe "scopes", ->
+
+  #     it "word call word or block can only up block level", ->
+  #       expect(run "b: [ c ] c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
+  #       expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
+  #       expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
+
+
+  #   it "closure test", ->
+
+
+
+  # describe "block data access", ->
+
+  #   it "read named elem", ->
+  #     expect(run "{ a: 100 } \"a\" get").toEqual [100]
+  #     expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
 
 
   #   it "write named elem", ->
@@ -149,32 +149,32 @@ describe "Flow Interp", ->
   #     expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join num-elems").toEqual [8]
 
 
-    # it "unshift", ->
-    #   expect(run "{ 1 2 3 4 5 } 100 unshift 1 get").toEqual [100]
-    #   expect(run "{ 1 2 3 4 5 } 100 unshift len").toEqual [6]
+  #   it "splice", ->
+  #     expect(run "{ 1 2 3 4 5 } 1 0 { 100 } splice eval").toEqual [100,1,2,3,4,5]
+  #     expect(run "{ 1 2 3 4 5 } 2 2 { 100 } splice eval").toEqual [1,100,4,5]
 
 
-  #describe "simple function impl", ->
+  # describe "simple function impl", ->
 
-    # filterFn = \
-    #   "unshift: [ b e >> b 1 0 { e } splice ]
-    #   filter: [ a p >>
-    #     x:  [ a 1 get ]
-    #     xs: [ a 2 -1 slice ]
-    #     a len 0 = {
-    #       a
-    #     } {
-    #       x p eval {
-    #         xs p filter x unshift
-    #       } {
-    #         xs p filter
-    #       } if
-    #     } if
-    #   ]"
-    # it "filter impl", ->
-    #   expect(run "#{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter eval").toEqual [0,3,1,1,2]
-    #   expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter eval").toEqual [0,3,4,1,2]
-    #   expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter eval").toEqual []
+  #   filterFn = \
+  #     "unshift: [ b e >> b 1 0 { e } splice ]
+  #     filter: [ a p >>
+  #       x:  [ a 1 get ]
+  #       xs: [ a 2 -1 slice ]
+  #       a len 0 = {
+  #         a
+  #       } {
+  #         x p eval {
+  #           xs p filter x unshift
+  #         } {
+  #           xs p filter
+  #         } if
+  #       } if
+  #     ]"
+  #   it "filter impl", ->
+  #     expect(run "#{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter eval").toEqual [0,3,1,1,2]
+  #     expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter eval").toEqual [0,3,4,1,2]
+  #     expect(run "#{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter eval").toEqual []
 
 
     # qsortFn = \

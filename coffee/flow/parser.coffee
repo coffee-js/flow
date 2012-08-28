@@ -86,7 +86,7 @@ combinator = do ->
       new ast.Block args...
 
   elem = pc.map pc.choice(evalBlock, valBlock, number, string, word),
-    (n, pos) -> new ast.Elem n, null, new ast.SrcInfo(pos)
+    (n, pos, src) -> new ast.Elem n, null, new ast.SrcInfo(pos, src)
 
   { int10, number, string, colon, negws, nameChar, name, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
 

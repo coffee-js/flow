@@ -94,22 +94,12 @@ describe "Flow Parser", ->
       p = parser.seq
       t = (parse p, "sdf 435 dfg").match
       (expect t[0].val.name).toEqual "sdf"
-      (expect t[0].srcInfo).toEqual {
-        pos: 0
-        src: null
-      }
+      (expect t[0].srcInfo.pos).toEqual 0
       (expect t[1].val).toEqual 435
-      (expect t[1].srcInfo).toEqual {
-        pos: 4
-        src: null
-      }
+      (expect t[1].srcInfo.pos).toEqual 4
       t = (parse p, "serdgd 465 [ 564 ]").match[2].val.seq[0]
       (expect t.val).toEqual 564
-      (expect t.srcInfo).toEqual {
-        pos: 13
-        src: null
-      }
-
+      (expect t.srcInfo.pos).toEqual 13
 
   describe "combinator block", ->
 
