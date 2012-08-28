@@ -17,10 +17,10 @@ run = (txt) ->
 
 describe "Flow Interp", ->
 
-  describe "data", ->
+  # describe "data", ->
 
-    it "basic", ->
-      expect(run "1 2").toEqual [1, 2]
+  #   it "basic", ->
+  #     expect(run "1 2").toEqual [1, 2]
 
 
   # describe "buildin words", ->
@@ -60,22 +60,22 @@ describe "Flow Interp", ->
   #       expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
 
 
-  # describe "word call", ->
+  describe "word call", ->
 
-  #   it "basic", ->
-  #     expect(run "a: 20 a").toEqual [20]
-  #     expect(run "add: [ a b >> a b + ] 1 2 add").toEqual [3]
-  #     expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
-  #     expect(run "x: 2 y: 3 x y *").toEqual [6]
-  #     expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
-  #     expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
+    # it "basic", ->
+    #   expect(run "a: 20 a").toEqual [20]
+    #   expect(run "add: [ a b >> a b + ] 1 2 add").toEqual [3]
+    #   expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
+    #   expect(run "x: 2 y: 3 x y *").toEqual [6]
+    #   expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
+    #   expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
 
 
-  #   it "recursion call", ->
-  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
-  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
-  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
-  #     expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
+    it "recursion call", ->
+      expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
+      #expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
+      # expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
+      # expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
 
 
   #   it "concatnative", ->
