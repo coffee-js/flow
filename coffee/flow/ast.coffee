@@ -6,9 +6,10 @@ log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
-err = (s, pos=null, src=null) ->
-  if pos != null && src != null
-    [line, col] = src.lineCol pos
+err = (s, srcInfo=null) ->
+  if srcInfo != null
+    src = srcInfo.src
+    [line, col] = src.lineCol srcInfo.pos
     throw "#{src.path}:#{line}:#{col} #{s}"
   else
     throw s
@@ -26,20 +27,11 @@ class ast.Word extends ast.Node
 
 
 class ast.Elem extends ast.Node
-  constructor: (@val, @name=null, srcInfo=null) ->
-    if srcInfo == null
-      @srcInfo = new ast.SrcInfo null, null
-    else
-      @srcInfo = srcInfo
+  constructor: (@val, @srcInfo=null) ->
 
 
 class ast.Block extends ast.Node
-  constructor: (@args, wordSeq, @seq, @elemType, srcInfo=null) ->
-    if srcInfo == null
-      @srcInfo = new ast.SrcInfo null, null
-    else
-      @srcInfo = srcInfo
-
+  constructor: (@args, wordSeq, @seq, @elemType, @srcInfo=null) ->
     @numWords = 0
     argWords = {}
     for a in args
@@ -50,7 +42,7 @@ class ast.Block extends ast.Node
     for e in wordSeq
       name = e.name
       if @words[name] != undefined or argWords[name] != undefined
-        err "redefined word:\"#{name}\"", e.elem.srcInfo.pos, @srcInfo.src
+        err "redefined word:\"#{name}\"", e.elem.srcInfo
       @words[name] = e.elem
       @numWords += 1
 

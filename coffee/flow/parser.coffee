@@ -86,7 +86,7 @@ combinator = do ->
       new ast.Block args...
 
   elem = pc.map pc.choice(evalBlock, valBlock, number, string, word),
-    (n, pos, src) -> new ast.Elem n, null, new ast.SrcInfo(pos, src)
+    (n, pos, src) -> new ast.Elem n, new ast.SrcInfo(pos, src)
 
   { int10, number, string, colon, negws, nameChar, name, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
 
@@ -102,7 +102,7 @@ parser.parse = (src) ->
     err "syntex error", r.state.lastFailPos, src
   
   b = new ast.Block [], r.match.wordSeq, r.match.seq, "EVAL", new ast.SrcInfo(0, src)
-  e = new ast.Elem b, null, new ast.SrcInfo(0)
+  e = new ast.Elem b, new ast.SrcInfo(0)
   e
 
 

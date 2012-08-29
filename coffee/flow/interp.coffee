@@ -18,12 +18,12 @@ err = (s, srcInfo=null) ->
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (elem, retSeq, wordEnv) ->
+  eval: (elem, retSeq) ->
     args = retSeq.slice -@numArgs
     if args.length < @numArgs
       err "no enough args in seq:#{retSeq}", elem.srcInfo
     retSeq.length = retSeq.length-@numArgs
-    args = [retSeq, wordEnv].concat args
+    args = [retSeq].concat args
     @fn args...
 
 bw = ->
@@ -31,22 +31,22 @@ bw = ->
 
 
 buildinWords = {
-  "+":    bw 2, (retSeq, wordEnv, a, b) -> a.val+b.val
-  "-":    bw 2, (retSeq, wordEnv, a, b) -> a.val-b.val
-  "*":    bw 2, (retSeq, wordEnv, a, b) -> a.val*b.val
-  "/":    bw 2, (retSeq, wordEnv, a, b) -> a.val/b.val
+  "+":    bw 2, (retSeq, a, b) -> a.val+b.val
+  "-":    bw 2, (retSeq, a, b) -> a.val-b.val
+  "*":    bw 2, (retSeq, a, b) -> a.val*b.val
+  "/":    bw 2, (retSeq, a, b) -> a.val/b.val
 
-  "=":    bw 2, (retSeq, wordEnv, a, b) -> a.val==b.val
-  "<":    bw 2, (retSeq, wordEnv, a, b) -> a.val<b.val
-  ">":    bw 2, (retSeq, wordEnv, a, b) -> a.val>b.val
-  "<=":   bw 2, (retSeq, wordEnv, a, b) -> a.val<=b.val
-  ">=":   bw 2, (retSeq, wordEnv, a, b) -> a.val>=b.val
+  "=":    bw 2, (retSeq, a, b) -> a.val==b.val
+  "<":    bw 2, (retSeq, a, b) -> a.val<b.val
+  ">":    bw 2, (retSeq, a, b) -> a.val>b.val
+  "<=":   bw 2, (retSeq, a, b) -> a.val<=b.val
+  ">=":   bw 2, (retSeq, a, b) -> a.val>=b.val
 
-  "not":  bw 1, (retSeq, wordEnv, a)    -> !a.val
-  "and":  bw 2, (retSeq, wordEnv, a, b) -> a.val&&b.val
-  "or":   bw 2, (retSeq, wordEnv, a, b) -> a.val||b.val
+  "not":  bw 1, (retSeq, a)    -> !a.val
+  "and":  bw 2, (retSeq, a, b) -> a.val&&b.val
+  "or":   bw 2, (retSeq, a, b) -> a.val||b.val
 
-  "if":   bw 3, (retSeq, wordEnv, cond, whenTrue, whenFals) ->
+  "if":   bw 3, (retSeq, cond, whenTrue, whenFals) ->
     if typeof cond.val != 'boolean'
       err "expect a boolean: #{cond.val}", cond.srcInfo
     if !(whenTrue.val instanceof Closure)
@@ -60,72 +60,68 @@ buildinWords = {
       seqCurryEval whenFals.val, retSeq
     undefined
 
-  "eval":   bw 1, (retSeq, wordEnv, elem) ->
+  "eval":   bw 1, (retSeq, elem) ->
     c = elem.val
     if !(c instanceof Closure)
       err "expect a block: #{c}", elem.srcInfo
     seqCurryEval c, retSeq
     undefined
 
-  # "get":  bw 2, (retSeq, wordEnv, cElem, nameElem) ->
-  #   c = cElem.val
-  #   name = nameElem.val
-  #   if !(c instanceof Closure)
-  #     err "expect a block: #{c}", cElem.srcInfo
+  "get":  bw 2, (retSeq, cElem, nameElem) ->
+    c = cElem.val
+    name = nameElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
     
-  #   [found, elem] = c.getElem name
-  #   if found
-  #     elem.val
-  #   else
-  #     err "no elem named:#{name} in block #{c}", nameElem.srcInfo
+    [found, elem] = c.getElem name
+    if found
+      elem.val
+    else
+      err "no elem named:#{name} in block #{c}", nameElem.srcInfo
 
-  # "set":  bw 3, (retSeq, wordEnv, cElem, elem, nameElem) ->
-  #   c = cElem.val
-  #   if !(c instanceof Closure)
-  #     err "expect a block: #{c}", cElem.srcInfo
-  #   name = nameElem.val
-  #   c.setElem name, elem
+  "set":  bw 3, (retSeq, cElem, elem, nameElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    name = nameElem.val
+    c.setElem name, elem
 
-  # "len":  bw 1, (retSeq, wordEnv, cElem) ->
-  #   c = cElem.val
-  #   if !(c instanceof Closure)
-  #     err "expect a block: #{cElem.val}", cElem.srcInfo
-  #   c.len()
+  "len":  bw 1, (retSeq, cElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{cElem.val}", cElem.srcInfo
+    c.len()
 
-  # "num-words": bw 1, (retSeq, wordEnv, cElem) ->
-  #   c = cElem.val
-  #   if !(c instanceof Closure)
-  #     err "expect a block: #{c}", cElem.srcInfo
-  #   c.numWords()
+  "num-words": bw 1, (retSeq, cElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.numWords()
 
-  # "num-elems": bw 1, (retSeq, wordEnv, cElem) ->
-  #   c = cElem.val
-  #   if !(c instanceof Closure)
-  #     err "expect a block: #{c}", cElem.srcInfo
-  #   c.numElems()
+  "num-elems": bw 1, (retSeq, cElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.numElems()
 
-  # "slice":  bw 3, (retSeq, wordEnv, cElem, start, end) ->
-  #   c = cElem.val
-  #   if !(c instanceof Closure)
-  #     err "expect a block: #{c}", cElem.srcInfo
-  #   c.slice start.val, end.val
+  "slice":  bw 3, (retSeq, cElem, start, end) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.slice start.val, end.val
 
-  # "join":   bw 2, (retSeq, wordEnv, a, b) ->
-  #   if !(a.val instanceof Closure)
-  #     err "expect a block: #{a.val}", a.srcInfo
-  #   if !(b.val instanceof Closure)
-  #     err "expect a block: #{b.val}", b.srcInfo
-  #   a.val.join b.val
+  "join":   bw 2, (retSeq, a, b) ->
+    if !(a.val instanceof Closure)
+      err "expect a block: #{a.val}", a.srcInfo
+    if !(b.val instanceof Closure)
+      err "expect a block: #{b.val}", b.srcInfo
+    a.val.join b.val
 
-  # "splice":  bw 4, (retSeq, wordEnv, cElem, i, numDel, addElemsCElem) ->
-  #   c = cElem.val
-  #   if !(c instanceof Closure)
-  #     err "expect a block: #{c}", cElem.srcInfo
-
-  #   aec = addElemsCElem.val
-  #   addElems = aec.seq()
-  #   r = c.splice i.val, numDel.val, addElems
-  #   r
+  "splice":  bw 4, (retSeq, cElem, i, numDel, addElemsCElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.splice i.val, numDel.val, addElemsCElem.val.seq
 }
 
 
@@ -177,14 +173,15 @@ valEval = (val, e, retSeq, wordEnv) ->
   if val instanceof Closure && val.elemType == "EVAL"
     seqCurryEval val, retSeq, e.srcInfo
   else if val instanceof BuildinWord
-    v = val.eval e, retSeq, wordEnv
+    v = val.eval e, retSeq
     if v != undefined
       valEval v, e, retSeq, wordEnv
   else
-    retSeq.push new ast.Elem val, null, e.srcInfo
+    retSeq.push new Elem val, wordEnv, e.srcInfo
 
 
-block2closure = (b, preWordEnv) ->
+closureFromBlock = (b, preWordEnv, preArgs=[]) ->
+  args = preArgs.concat b.args
   words = {}
 
   for name of b.words
@@ -198,27 +195,37 @@ block2closure = (b, preWordEnv) ->
   for name of b.words
     e = b.words[name]
     if e.val instanceof ast.Block
-      c = new block2closure e.val, wordEnv
-      words[name] = new ast.Elem c, e.name, e.srcInfo
+      v = closureFromBlock e.val, wordEnv, args
+      words[name] = new Elem v, wordEnv, e.srcInfo
     else
       words[name] = e
 
   seq = b.seq.map (e) ->
-    if      e.val instanceof ast.Word
-      v = wordEval e, wordEnv
-      if v == undefined
-        v = e.val
-    else if e.val instanceof ast.Block
-      v = block2closure e.val, wordEnv
+    if e.val instanceof ast.Block
+      v = closureFromBlock e.val, wordEnv, args
     else
       v = e.val
-    new ast.Elem v, null, e.srcInfo
+    new Elem v, wordEnv, e.srcInfo
 
-  new Closure b.args.slice(0), words, seq, b.elemType, wordEnv
+  new Closure args, words, seq, b.elemType
+
+
+elemVal = (e) ->
+  if e.val instanceof ast.Word
+    v = wordEval e, e.wordEnv
+    if v == undefined
+      err "word:#{e.val.name} not defined", e.srcInfo
+  else
+    v = e.val
+  v
+
+
+class Elem
+  constructor: (@val, @wordEnv, @srcInfo=null) ->
 
 
 class Closure
-  constructor: (@args, @words, @seq, @elemType, @wordEnv) ->
+  constructor: (@args, @words, @seq, @elemType) ->
 
   curry: (argWords) ->
     if argWords == {}
@@ -232,104 +239,112 @@ class Closure
           hasWords = true
         else
           args.push a
-      if hasWords
-        wordEnv = [words].concat @wordEnv
-      else
-        wordEnv = @wordEnv
 
       seq = @seq.map (e) ->
-        if      e.val instanceof ast.Word
-          v = wordEval e, wordEnv
-          if v == undefined
-            v = e.val
-        else if e.val instanceof Closure
+        if e.val instanceof Closure
           v = e.val.curry argWords
         else
           v = e.val
-        new ast.Elem v, null, e.srcInfo
-      new Closure args, words, seq, @elemType, wordEnv
+        if hasWords
+          wordEnv = [words].concat e.wordEnv
+        else
+          wordEnv = e.wordEnv
+        new Elem v, wordEnv, e.srcInfo
+      new Closure args, words, seq, @elemType
 
   eval: (retSeq) ->
     for e in @seq
-      valEval e.val, e, retSeq, @wordEnv
+      valEval elemVal(e), e, retSeq, e.wordEnv
 
-  # getElem: (name) ->
-  #   found = false
-  #   if typeof name == "number"
-  #     n = name
-  #   else if name.match /\d+$/
-  #     n = parseInt name
-  #   if n != undefined
-  #     if n<0 then n = @seq().length+n+1
-  #     elem = @seq()[n-1]
-  #     if elem != undefined
-  #       found = true
-  #     else
-  #       elem = null
-  #   else
-  #     elem = @words[name]
-  #     if elem != undefined
-  #       found = true
-  #     else
-  #       elem = null
-  #   [found, elem]
+  getElem: (name) ->
+    found = false
+    if typeof name == "number"
+      n = name
+    else if name.match /\d+$/
+      n = parseInt name
+    if n != undefined
+      if n<0 then n = @seq.length+n+1
+      elem = @seq[n-1]
+      if elem != undefined
+        found = true
+      else
+        elem = null
+    else
+      elem = @words[name]
+      if elem != undefined
+        found = true
+      else
+        elem = null
+    [found, elem]
 
-  # clone: -> new Closure @block, @wordEnv, {}
+  setElem: (name, elem) ->
+    seq = @seq.slice 0
+    words = {}
+    for name of @words
+      words[name] = @words[name]
+    if typeof name == "number"
+      n = name
+    else if name.match /\d+$/
+      n = parseInt name
+    if n != undefined
+      if n<0 then n = seq.length+n+1
+      seq[n-1] = elem
+    else
+      words[name] = elem
+    new Closure @args, words, seq, @elemType
 
-  # setElem: (name, elem) ->
-  #   c = @clone()
-  #   if typeof name == "number"
-  #     n = name
-  #   else if name.match /\d+$/
-  #     n = parseInt name
-  #   if n != undefined
-  #     if n<0 then n = c.seq().length+n+1
-  #     c.seq()[n-1] = elem
-  #   else
-  #     c.words[name] = elem
-  #   c
+  len: ->
+    @seq.length
 
-  # len: ->
-  #   @seq().length
+  numWords: ->
+    if @_numWords == undefined
+      @_numWords = 0
+      for name of @words
+        @_numWords += 1
+      @_numWords
+    else
+      @_numWords
 
-  # numWords: ->
-  #   if @_numWords == undefined
-  #     @_numWords = 0
-  #     for name of @words
-  #       @_numWords += 1
-  #     @_numWords
-  #   else
-  #     @_numWords
+  numElems: ->
+    @numWords() + @len()
 
-  # numElems: ->
-  #   @numWords() + @len()
+  slice: (p1, p2) ->
+    if p1 < 0 then p1 = @seq.length + p1 + 1
+    if p2 < 0 then p2 = @seq.length + p2 + 2
+    seq = @seq.slice p1-1, p2
+    new Closure @args, @words, seq, @elemType
 
-  # slice: (p1, p2) ->
-  #   if p1 < 0 then p1 = @seq().length + p1 + 1
-  #   if p2 < 0 then p2 = @seq().length + p2 + 2
-  #   c = @clone()
-  #   c._seq = c.seq().slice p1-1, p2
-  #   c
+  join: (other) ->
+    args = []
+    argWords = {}
+    i = 0
+    for a in @args
+      argWords[a.name] = i
+      args.push a
+      i += 1
+    for a in other.args
+      if argWords[a.name] != undefined
+        args[ argWords[a.name] ] = a
+      else
+        args.push a
+    seq = @seq.concat other.seq
+    words = {}
+    for name of @words
+      words[name] = @words[name]
+    for name of other.words
+      words[name] = other.words[name]
+    new Closure args, words, seq, @elemType
 
-  # join: (other) ->
-  #   c = @clone()
-  #   c.args = c.args.concat other.args
-  #   c._seq = c.seq().concat other.seq()
-  #   for name of other.words
-  #     c.words[name] = other.words[name]
-  #   c
-
-  # splice: (i, numDel, addElems) ->
-  #   c = @clone()
-  #   c.seq()
-  #   c._seq.splice i-1, numDel, addElems...
-  #   c
+  splice: (i, numDel, addElems) ->
+    seq = @seq.slice 0
+    seq.splice i-1, numDel, addElems...
+    new Closure @args, @words, seq, @elemType
 
 
 
 interp.eval = (blockElem) ->
   retSeq = []
-  c = block2closure blockElem.val, []
+  c = closureFromBlock blockElem.val, []
   c.eval retSeq
   retSeq
 
