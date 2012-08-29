@@ -55,8 +55,10 @@ buildinWords = {
       err "expect a block: #{whenFals.val}", whenFals.srcInfo
 
     if cond.val
+      #log whenTrue.val.args
       seqCurryEval whenTrue.val, retSeq
     else
+      #log whenFals
       seqCurryEval whenFals.val, retSeq
     undefined
 
@@ -240,6 +242,18 @@ class Closure
         else
           args.push a
 
+      for name of @words
+        e = @words[name]
+        if e.val instanceof Closure
+          v = e.val.curry argWords
+        else
+          v = e.val
+        if hasWords
+          wordEnv = [words].concat e.wordEnv
+        else
+          wordEnv = e.wordEnv
+        @words[name] = new Elem v, wordEnv, e.srcInfo
+
       seq = @seq.map (e) ->
         if e.val instanceof Closure
           v = e.val.curry argWords
@@ -310,7 +324,7 @@ class Closure
 
   slice: (p1, p2) ->
     if p1 < 0 then p1 = @seq.length + p1 + 1
-    if p2 < 0 then p2 = @seq.length + p2 + 2
+    if p2 < 0 then p2 = @seq.length + p2 + 1
     seq = @seq.slice p1-1, p2
     new Closure @args, @words, seq, @elemType
 
