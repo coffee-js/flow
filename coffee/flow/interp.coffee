@@ -18,10 +18,10 @@ err = (s, srcInfo=null) ->
 class BuildinWord
   constructor: (@numArgs, @fn) ->
 
-  eval: (elem, retSeq) ->
+  eval: (retSeq, srcInfo=null) ->
     args = retSeq.slice -@numArgs
     if args.length < @numArgs
-      err "no enough args in seq:#{retSeq}", elem.srcInfo
+      err "no enough args in seq:#{retSeq}", srcInfo
     retSeq.length = retSeq.length-@numArgs
     args = [retSeq].concat args
     @fn args...
@@ -55,10 +55,8 @@ buildinWords = {
       err "expect a block: #{whenFals.val}", whenFals.srcInfo
 
     if cond.val
-      #log whenTrue.val.args
       seqCurryEval whenTrue.val, retSeq
     else
-      #log whenFals
       seqCurryEval whenFals.val, retSeq
     undefined
 
@@ -127,26 +125,6 @@ buildinWords = {
 }
 
 
-wordInEnv = (word, wordEnv) ->
-  name = word.name
-  for i in [0...wordEnv.length]
-    words = wordEnv[i]
-    w = words[name]
-    if w != undefined
-      if w.val instanceof ast.Word
-        return wordInEnv w.val, wordEnv.slice(i)
-      else
-        return w.val
-  undefined
-
-
-wordEval = (wordElem, wordEnv) ->
-  name = wordElem.val.name
-  w = wordInEnv wordElem.val, wordEnv
-  if w == undefined
-    w = buildinWords[name]
-  w
-
 
 seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
   if n < 1
@@ -171,15 +149,36 @@ seqCurryEval = (c, retSeq, srcInfo=null) ->
     c.eval retSeq
 
 
-valEval = (val, e, retSeq, wordEnv) ->
+valEval = (val, retSeq, wordEnv, srcInfo=null) ->
   if val instanceof Closure && val.elemType == "EVAL"
-    seqCurryEval val, retSeq, e.srcInfo
+    seqCurryEval val, retSeq, srcInfo
   else if val instanceof BuildinWord
-    v = val.eval e, retSeq
+    v = val.eval retSeq, srcInfo
     if v != undefined
-      valEval v, e, retSeq, wordEnv
+      valEval v, retSeq, wordEnv
   else
-    retSeq.push new Elem val, wordEnv, e.srcInfo
+    retSeq.push new ast.Elem val, srcInfo
+    
+
+class Word
+  constructor: (@name, @wordEnv) ->
+
+  wordInEnv: ->
+    for i in [0...@wordEnv.length]
+      words = @wordEnv[i]
+      w = words[@name]
+      if w != undefined
+        if w.val instanceof ast.Word
+          return wordInEnv w.val
+        else
+          return w.val
+    undefined
+
+  eval: ->
+    w = @wordInEnv()
+    if w == undefined
+      w = buildinWords[@name]
+    w
 
 
 closureFromBlock = (b, preWordEnv, preArgs=[]) ->
@@ -196,34 +195,32 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
 
   for name of b.words
     e = b.words[name]
-    if e.val instanceof ast.Block
+    if      e.val instanceof ast.Block
       v = closureFromBlock e.val, wordEnv, args
-      words[name] = new Elem v, wordEnv, e.srcInfo
-    else
-      words[name] = e
-
-  seq = b.seq.map (e) ->
-    if e.val instanceof ast.Block
-      v = closureFromBlock e.val, wordEnv, args
+    else if e.val instanceof ast.Word
+      v = new Word e.val.name, wordEnv
     else
       v = e.val
-    new Elem v, wordEnv, e.srcInfo
+    words[name] = new ast.Elem v, e.srcInfo
 
+  seq = b.seq.map (e) ->
+    if      e.val instanceof ast.Block
+      v = closureFromBlock e.val, wordEnv, args
+    else if e.val instanceof ast.Word
+      v = new Word e.val.name, wordEnv
+    else
+      v = e.val
+    new ast.Elem v, e.srcInfo
   new Closure args, words, seq, b.elemType
 
 
 elemVal = (e) ->
-  if e.val instanceof ast.Word
-    v = wordEval e, e.wordEnv
+  v = e.val
+  while v instanceof Word
+    v = v.eval()
     if v == undefined
       err "word:#{e.val.name} not defined", e.srcInfo
-  else
-    v = e.val
   v
-
-
-class Elem
-  constructor: (@val, @wordEnv, @srcInfo=null) ->
 
 
 class Closure
@@ -244,31 +241,35 @@ class Closure
 
       for name of @words
         e = @words[name]
-        if e.val instanceof Closure
+        if      e.val instanceof Word
+          if hasWords
+            wordEnv = [words].concat e.val.wordEnv
+          else
+            wordEnv = e.val.wordEnv
+          v = new Word e.val.name, wordEnv
+          words[name] = new ast.Elem v, e.srcInfo
+        else if e.val instanceof Closure
           v = e.val.curry argWords
-        else
-          v = e.val
-        if hasWords
-          wordEnv = [words].concat e.wordEnv
-        else
-          wordEnv = e.wordEnv
-        @words[name] = new Elem v, wordEnv, e.srcInfo
+          words[name] = new ast.Elem v, e.srcInfo
 
       seq = @seq.map (e) ->
-        if e.val instanceof Closure
+        if      e.val instanceof Word
+          if hasWords
+            wordEnv = [words].concat e.val.wordEnv
+          else
+            wordEnv = e.val.wordEnv
+          v = new Word e.val.name, wordEnv
+          new ast.Elem v, e.srcInfo
+        else if e.val instanceof Closure
           v = e.val.curry argWords
+          new ast.Elem v, e.srcInfo
         else
-          v = e.val
-        if hasWords
-          wordEnv = [words].concat e.wordEnv
-        else
-          wordEnv = e.wordEnv
-        new Elem v, wordEnv, e.srcInfo
+          e
       new Closure args, words, seq, @elemType
 
   eval: (retSeq) ->
     for e in @seq
-      valEval elemVal(e), e, retSeq, e.wordEnv
+      valEval elemVal(e), retSeq, e.wordEnv, e.srcInfo
 
   getElem: (name) ->
     found = false
