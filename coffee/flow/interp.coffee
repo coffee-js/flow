@@ -98,6 +98,8 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
     while v instanceof Array
       switch v[0]
         when "word"
+          if argWords[ v[1] ] != undefined
+            return v
           v1 = wordVal v[1], v[2]
           if v1 == undefined
             return v
@@ -118,6 +120,9 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
       v = e.val
 
   args = preArgs.concat b.args
+  argWords = {}
+  for a in args
+    argWords[a.name] = null
   words = {}
 
   wordEnv = [words].concat preWordEnv

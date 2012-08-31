@@ -51,13 +51,13 @@ describe "Flow Interp", ->
         expect(run "a: [ 2 + ] 1 [ a ]").toEqual [3]
         expect(run "a: [ 2 + ] 1 { a } eval").toEqual [3]
         expect(run "a: [ 2 + ] 1 { a } [ eval ]").toEqual [3]
-  #       expect(run "a: [ 2 + ] 1 { a } [ f >> f ] eval").toEqual [3]
-  #       expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] eval").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ f >> f ] eval").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] eval").toEqual [3]
 
-  #     it "concatnative", ->
-  #       expect(run "1 { 2 + } eval").toEqual [3]
-  #       expect(run "1 2 { + } eval").toEqual [3]
-  #       expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
+      it "concatnative", ->
+        expect(run "1 { 2 + } eval").toEqual [3]
+        expect(run "1 2 { + } eval").toEqual [3]
+        expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
 
 
   describe "word call", ->
@@ -85,15 +85,16 @@ describe "Flow Interp", ->
       expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
 
 
-    it "arg word priority > up env word", ->
-      #expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
+    it "not resolving arg word", ->
+      expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
+      expect(run "x: [ - >> - 1 + ] n: 1 0 x").toEqual [1]
 
 
-  #   it "recursion call", ->
-  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
-  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
-  #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
-  #     expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
+    it "recursion call", ->
+      #expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
+      # expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
+      # expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [55]
+      # expect(run "fib: [ n >> n 1 = n 0 = or { 1 } { n 1 - fib n 2 - fib + } if ] 10 fib").toEqual [89]
 
 
     # it "concatnative", ->
