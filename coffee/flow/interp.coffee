@@ -80,7 +80,7 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
             when "word"
               return wordInEnv w.val[1], w.val[2]
             when "block"
-              return closureFromBlock v.slice(1)...
+              return closureFromBlock w.val.slice(1)...
             else
               return w.val
         else

@@ -75,6 +75,14 @@ describe "Flow Interp", ->
       expect(run "b: [ c ] c: 100 b").toEqual [100]
 
 
+    describe "scopes", ->
+
+      it "word call word or block can only up block level", ->
+        expect(run "b: [ c ] c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
+        expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
+        expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
+
+
   #   it "recursion call", ->
   #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 1 fib").toEqual [1]
   #     expect(run "fib: [ n >> n 2 < { n } { n 1 - fib n 2 - fib + } if ] 2 fib").toEqual [1]
@@ -87,16 +95,6 @@ describe "Flow Interp", ->
     #   expect(run "a: [ + ] 1 2 a").toEqual [3]
     #   expect(run "a: [ n >> n 2 + - ] 1 2 a").toEqual [-3]
 
-
-
-
-
-  #   describe "scopes", ->
-
-  #     it "word call word or block can only up block level", ->
-  #       expect(run "b: [ c ] c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
-  #       expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
-  #       expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
 
 
   #   it "closure test", ->
