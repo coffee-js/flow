@@ -80,6 +80,8 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
             when "word"
               return wordInEnv w.val[1], w.val[2]
             when "block"
+              log 111111111111111111111111111111
+              log w.val[1]
               return closureFromBlock w.val.slice(1)...
             else
               return w.val
@@ -106,6 +108,8 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
           else
             v = v1
         when "block"
+          log 2222222222222222222222222222222222222
+          log v[1]
           v = closureFromBlock v.slice(1)...
         else
           v
@@ -132,7 +136,7 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
     v = preElemVal e, wordEnv, args
     w = new ast.Elem v, e.srcInfo
     words[name] = w
-
+  
   for name of words
     e = words[name]
     w = new ast.Elem elemVal(e), e.srcInfo
@@ -142,6 +146,7 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
     v = preElemVal e, wordEnv, args
     e = new ast.Elem v, e.srcInfo
     new ast.Elem elemVal(e), e.srcInfo
+  
   new Closure args, words, seq, b.elemType
 
 
