@@ -72,7 +72,7 @@ wordInEnv = (name, wordEnv) ->
           when "word"
             return wordInEnv w.val[1], w.val[2]
           when "block"
-            return new Closure v.slice(1)...
+            return closureFromBlock v.slice(1)...
           else
             return w.val
       else
@@ -96,7 +96,7 @@ elemVal = (e) ->
         else
           v = v1
       when "block"
-        v = new Closure v.slice(1)...
+        v = closureFromBlock v.slice(1)...
       else
         v
   v

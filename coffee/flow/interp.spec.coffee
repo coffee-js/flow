@@ -39,9 +39,9 @@ describe "Flow Interp", ->
       it "basic", ->
         expect(run "1 2 > { 1 2 + } { 3 4 + } if").toEqual [7]
 
-      # it "type check", ->
-      #   expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 expect a boolean: 1"
-      #   expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
+      it "type check", ->
+        expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 expect a boolean: 1"
+        expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
 
 
   #   describe "eval block", ->
@@ -60,7 +60,7 @@ describe "Flow Interp", ->
   #       expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
 
 
-  # describe "word call", ->
+  describe "word call", ->
 
   #   it "basic", ->
   #     expect(run "a: 20 a").toEqual [20]
@@ -69,6 +69,10 @@ describe "Flow Interp", ->
   #     expect(run "x: 2 y: 3 x y *").toEqual [6]
   #     expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
   #     expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
+
+
+    it "define word no order in same scope", ->
+      expect(run "b: [ c ] c: 100 b").toEqual [100]
 
 
   #   it "recursion call", ->
@@ -84,8 +88,7 @@ describe "Flow Interp", ->
     #   expect(run "a: [ n >> n 2 + - ] 1 2 a").toEqual [-3]
 
 
-  #   it "define word no order in same scope", ->
-  #     expect(run "b: [ c ] c: 100 b").toEqual [100]
+
 
 
   #   describe "scopes", ->
