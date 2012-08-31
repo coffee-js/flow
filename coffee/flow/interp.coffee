@@ -194,7 +194,8 @@ class Closure
             argWords = e.val[4]
           else
             argWords = {}#null
-          v = closureFromBlock(e.val.slice(1)...).curry argWords
+          c = closureFromBlock e.val.slice(1)...
+          v = c.curry argWords
         else
           err "fatal exception error"
     else
@@ -225,7 +226,14 @@ class Closure
             if v != undefined
               e = new ast.Elem v, e.srcInfo
           when "block"
-            v = e.val.concat [argWords]
+            v = e.val.slice 0
+            if v[4] == undefined
+              v[4] = {}
+            aw = v[4]
+            for name of argWords
+              if aw[name] != undefined
+                err "arg word:#{name} redefined"
+              aw[name] = argWords[name]
             e = new ast.Elem v, e.srcInfo
           else
             err "fatal exception error"
