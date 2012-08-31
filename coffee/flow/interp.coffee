@@ -60,56 +60,63 @@ buildinWords = {
     else
       seqCurryEval whenFals.val, retSeq
     undefined
+
+  "eval":   bw 1, (retSeq, elem) ->
+    c = elem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", elem.srcInfo
+    seqCurryEval c, retSeq
+    undefined
 }
 
 
-wordInEnv = (name, wordEnv) ->
-  for words in wordEnv
-    w = words[name]
-    if w != undefined
-      if w.val instanceof Array
-        switch w.val[0]
-          when "word"
-            return wordInEnv w.val[1], w.val[2]
-          when "block"
-            return closureFromBlock v.slice(1)...
-          else
-            return w.val
-      else
-        return w.val
-  undefined
-
-wordVal = (name, wordEnv) ->
-    w = wordInEnv(name, wordEnv)
-    if w == undefined
-      w = buildinWords[name]
-    w
-
-elemVal = (e) ->
-  v = e.val
-  while v instanceof Array
-    switch v[0]
-      when "word"
-        v1 = wordVal v[1], v[2]
-        if v1 == undefined
-          return v
-        else
-          v = v1
-      when "block"
-        v = closureFromBlock v.slice(1)...
-      else
-        v
-  v
-
-preElemVal = (e, wordEnv, args) ->
-  if      e.val instanceof ast.Block
-    v = ["block", e.val, wordEnv, args]
-  else if e.val instanceof ast.Word
-    v = ["word", e.val.name, wordEnv]
-  else
-    v = e.val
-
 closureFromBlock = (b, preWordEnv, preArgs=[]) ->
+  wordInEnv = (name, wordEnv) ->
+    for words in wordEnv
+      w = words[name]
+      if w != undefined
+        if w.val instanceof Array
+          switch w.val[0]
+            when "word"
+              return wordInEnv w.val[1], w.val[2]
+            when "block"
+              return closureFromBlock v.slice(1)...
+            else
+              return w.val
+        else
+          return w.val
+    undefined
+
+  wordVal = (name, wordEnv) ->
+      w = wordInEnv(name, wordEnv)
+      if w == undefined
+        w = buildinWords[name]
+      w
+
+  elemVal = (e) ->
+    v = e.val
+    while v instanceof Array
+      switch v[0]
+        when "word"
+          v1 = wordVal v[1], v[2]
+          if v1 == undefined
+            return v
+          else
+            v = v1
+        when "block"
+          v = closureFromBlock v.slice(1)...
+        else
+          v
+    v
+
+  preElemVal = (e, wordEnv, args) ->
+    if      e.val instanceof ast.Block
+      v = ["block", e.val, wordEnv, args]
+    else if e.val instanceof ast.Word
+      v = ["word", e.val.name, wordEnv]
+    else
+      v = e.val
+
   args = preArgs.concat b.args
   words = {}
 
@@ -171,11 +178,14 @@ valEval = (val, retSeq, wordEnv, srcInfo=null) ->
 class Closure
   constructor: (@args, @words, @seq, @elemType) ->
 
+  elemVal: (e) ->
+    if e.val instanceof Array
+      err "word:#{e.val[1]} not defined", e.srcInfo
+    e.val
+
   eval: (retSeq) ->
     for e in @seq
-      if e.val instanceof Array
-        err "word:#{e.val[1]} not defined", e.srcInfo
-      valEval e.val, retSeq, e.wordEnv, e.srcInfo
+      valEval @elemVal(e), retSeq, e.wordEnv, e.srcInfo
 
   curry: (argWords) ->
     if argWords == {}

@@ -44,13 +44,13 @@ describe "Flow Interp", ->
         expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
 
 
-  #   describe "eval block", ->
+    describe "eval block", ->
 
-  #     it "basic", ->
-  #       expect(run "{ 1 2 + } eval").toEqual [3]
-  #       expect(run "a: [ 2 + ] 1 [ a ]").toEqual [3]
-  #       expect(run "a: [ 2 + ] 1 { a } eval").toEqual [3]
-  #       expect(run "a: [ 2 + ] 1 { a } [ eval ]").toEqual [3]
+      it "basic", ->
+        expect(run "{ 1 2 + } eval").toEqual [3]
+        expect(run "a: [ 2 + ] 1 [ a ]").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } eval").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ eval ]").toEqual [3]
   #       expect(run "a: [ 2 + ] 1 { a } [ f >> f ] eval").toEqual [3]
   #       expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] eval").toEqual [3]
 
