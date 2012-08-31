@@ -88,10 +88,10 @@ closureFromBlock = (b, preWordEnv, preArgs=[]) ->
     undefined
 
   wordVal = (name, wordEnv) ->
-      w = wordInEnv(name, wordEnv)
-      if w == undefined
-        w = buildinWords[name]
-      w
+    w = wordInEnv(name, wordEnv)
+    if w == undefined
+      w = buildinWords[name]
+    w
 
   elemVal = (e) ->
     v = e.val
@@ -188,12 +188,45 @@ class Closure
       valEval @elemVal(e), retSeq, e.wordEnv, e.srcInfo
 
   curry: (argWords) ->
+    wordInEnv = (name, wordEnv) ->
+      for words in wordEnv
+        w = words[name]
+        if w != undefined
+          return w.val
+      undefined
+
     if argWords == {}
       @
     else
       args = []
       words = {}
       seq = []
+
+      for a in @args
+        if argWords[a.name] == undefined
+          args.push a
+
+      for name of @words
+        e = @words[name]
+        if      e.val instanceof Closure
+          v = e.val.curry argWords
+          words[name] = new ast.Elem v, e.srcInfo
+        else if e.val instanceof Array
+          if e.val[0] != "word"
+            err "fatal exception error"
+          v = wordInEnv e.val[1], [argWords]
+          words[name] = new ast.Elem v, e.srcInfo
+        else
+          words[name] = e
+
+      for e in @seq
+        if e.val instanceof Array
+          if e.val[0] != "word"
+            err "fatal exception error"
+          v = wordInEnv e.val[1], [argWords]
+          e = new ast.Elem v, e.srcInfo
+        seq.push e
+
       new Closure args, words, seq, @elemType
 
 

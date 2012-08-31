@@ -62,13 +62,8 @@ describe "Flow Interp", ->
 
   describe "word call", ->
 
-  #   it "basic", ->
-  #     expect(run "a: 20 a").toEqual [20]
-  #     expect(run "add: [ a b >> a b + ] 1 2 add").toEqual [3]
-  #     expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
-  #     expect(run "x: 2 y: 3 x y *").toEqual [6]
-  #     expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
-  #     expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
+    it "basic", ->
+      expect(run "a: 20 a").toEqual [20]
 
 
     it "define word no order in same scope", ->
@@ -81,6 +76,17 @@ describe "Flow Interp", ->
         expect(run "b: [ c ] c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
         expect(run "b: [ 1 c ] c: [ 2 + ] d: [ a: b c: [ 100 ] a ] d").toEqual [3]
         expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
+
+
+    it "curry call", ->
+      expect(run "add: [ a b >> a b + ] 1 2 add").toEqual [3]
+      expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
+      expect(run "x: 2 y: 3 x y *").toEqual [6]
+      expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
+
+
+    it "arg word priority > up env word", ->
+      #expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
 
 
   #   it "recursion call", ->
