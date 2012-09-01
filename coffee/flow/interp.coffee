@@ -122,7 +122,7 @@ buildinWords = {
     c = cElem.val
     if !(c instanceof Closure)
       err "expect a block: #{c}", cElem.srcInfo
-    c.splice i.val, numDel.val, addElemsCElem.val.seq
+    c.splice i.val, numDel.val, addElemsCElem.val.seq()
 }
 
 
@@ -225,6 +225,14 @@ class Closure
       v = e.val
     v
 
+  seq: ->
+    if @_seq != undefined
+      return @_seq
+    @_seq = []
+    for e in @block.seq
+      @_seq.push new ast.Elem @elemEval(e), e.srcInfo
+    @_seq
+
   eval: (retSeq) ->
     for e in @block.seq
       seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo
@@ -269,6 +277,12 @@ class Closure
     for name of other.argWords
       aw[name] = other.argWords[name]
     new Closure b, @preWordEnv, aw
+
+
+  splice: (i, numDel, addElems) ->
+    b = @block.splice i, numDel, addElems
+    new Closure b, @preWordEnv, @argWords
+
 
 
 interp.eval = (blockElem) ->

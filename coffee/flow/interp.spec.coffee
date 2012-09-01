@@ -165,97 +165,97 @@ describe "Flow Interp", ->
       expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join num-elems").toEqual [8]
 
 
-  #   it "splice", ->
-  #     expect(run "{ 1 2 3 4 5 } 1 0 { 100 } splice eval").toEqual [100,1,2,3,4,5]
-  #     expect(run "{ 1 2 3 4 5 } 2 2 { 100 } splice eval").toEqual [1,100,4,5]
-  #     expect(run "x: 100 { 1 2 3 4 5 } 1 0 { x } splice eval").toEqual [100,1,2,3,4,5]
-  #     expect(run "x: 100 { 1 2 3 4 5 } 2 2 { x } splice eval").toEqual [1,100,4,5]
+    it "splice", ->
+      expect(run "{ 1 2 3 4 5 } 1 0 { 100 } splice eval").toEqual [100,1,2,3,4,5]
+      expect(run "{ 1 2 3 4 5 } 2 2 { 100 } splice eval").toEqual [1,100,4,5]
+      expect(run "x: 100 { 1 2 3 4 5 } 1 0 { x } splice eval").toEqual [100,1,2,3,4,5]
+      expect(run "x: 100 { 1 2 3 4 5 } 2 2 { x } splice eval").toEqual [1,100,4,5]
 
 
-  #   it "unshift", ->
-  #     expect(run "#{unshiftFn} { 1 2 3 4 5 } 100 unshift eval").toEqual [100,1,2,3,4,5]
-  #     expect(run "#{unshiftFn} x: 100 { 1 2 3 4 5 } x unshift eval").toEqual [100,1,2,3,4,5]
+    it "unshift", ->
+      expect(run "#{unshiftFn} { 1 2 3 4 5 } 100 unshift eval").toEqual [100,1,2,3,4,5]
+      expect(run "#{unshiftFn} x: 100 { 1 2 3 4 5 } x unshift eval").toEqual [100,1,2,3,4,5]
 
 
-  #   it "push", ->
-  #     expect(run "#{pushFn} { 1 2 3 4 5 } 100 push eval").toEqual [1,2,3,4,5,100]
-  #     expect(run "#{pushFn} x: 100 { 1 2 3 4 5 } x push eval").toEqual [1,2,3,4,5,100]
+    it "push", ->
+      expect(run "#{pushFn} { 1 2 3 4 5 } 100 push eval").toEqual [1,2,3,4,5,100]
+      expect(run "#{pushFn} x: 100 { 1 2 3 4 5 } x push eval").toEqual [1,2,3,4,5,100]
 
 
-  # describe "simple function impl", ->
+  describe "simple function impl", ->
 
-  #   filterFn = \
-  #     "filter: [ a p >>
-  #       x:  [ a 1 get ]
-  #       xs: [ a 2 -1 slice ]
-  #       a len 0 = {
-  #         a
-  #       } {
-  #         x p eval {
-  #           xs p filter x unshift
-  #         } {
-  #           xs p filter
-  #         } if
-  #       } if
-  #     ]"
-  #   it "filter impl", ->
-      #expect(run "#{unshiftFn} #{filterFn} { 1 } { 3 <= } filter eval").toEqual [1]
-      # expect(run "#{unshiftFn} #{filterFn} { 0 1 } { 3 < } filter eval").toEqual [0,1]
-      # expect(run "#{unshiftFn} #{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter eval").toEqual [0,3,1,1,2]
-      # expect(run "{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter eval").toEqual [0,3,4,1,2]
-      # expect(run "{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter eval").toEqual []
-
-
-    # qsortFn = \
-    #   "qsort: [ a >>
-    #     qivot: [ a 1 get ]
-    #     xs:    [ a 2 -1 slice ]
-    #     less:  [ xs { qivot <= } filter qsort ]
-    #     more:  [ xs { qivot >  } filter qsort ]
-    #     a len 0 = {
-    #       a
-    #     } {
-    #       less more qivot unshift join
-    #     } if
-    #   ]"
-    # qsortFn1 = \
-    #   "qsort: [ a >>
-    #     qivot: [ a 1 get ]
-    #     less:  [ a { qivot < } filter qsort ]
-    #     equal: [ a { qivot = } filter ]
-    #     more:  [ a { qivot > } filter qsort ]
-    #     a len 0 = {
-    #       a
-    #     } {
-    #       less equal more join join
-    #     } if
-    #   ]"
-    # it "qsort impl", ->
-    #   td = "12 100 5 34 27 10 -50 0"
-    #   expect(run "#{filterFn} #{qsortFn} { #{td} } qsort eval").toEqual [-50,0,5,10,12,27,34,100]
-    #   expect(run "#{filterFn} #{qsortFn1} { #{td} } qsort eval").toEqual [-50,0,5,10,12,27,34,100]
+    filterFn = \
+      "filter: [ a p >>
+        x:  [ a 1 get ]
+        xs: [ a 2 -1 slice ]
+        a len 0 = {
+          a
+        } {
+          x p eval {
+            xs p filter x unshift
+          } {
+            xs p filter
+          } if
+        } if
+      ]"
+    it "filter impl", ->
+      expect(run "#{unshiftFn} #{filterFn} { 1 } { 3 <= } filter eval").toEqual [1]
+      expect(run "#{unshiftFn} #{filterFn} { 0 1 } { 3 < } filter eval").toEqual [0,1]
+      expect(run "#{unshiftFn} #{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter eval").toEqual [0,3,1,1,2]
+      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter eval").toEqual [0,3,4,1,2]
+      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter eval").toEqual []
 
 
-
-  #   it "ifte impl", ->
-
-  #   it "genrec impl", ->
-
-  #   it "linrec impl", ->
-
-  #   it "binrec impl", ->
-
-
-  # describe "OO features", ->
-  #   it "define object", ->
-  #     expect(run "1 { a: [ b + ] b: 2 } \"a\" get").toEqual [3]
-  #     expect(run "x: { a: [ b + ] b: 2 } 1 x \"a\" get").toEqual [3]
+    qsortFn = \
+      "qsort: [ a >>
+        qivot: [ a 1 get ]
+        xs:    [ a 2 -1 slice ]
+        less:  [ xs { qivot <= } filter qsort ]
+        more:  [ xs { qivot >  } filter qsort ]
+        a len 0 = {
+          a
+        } {
+          less more qivot unshift join
+        } if
+      ]"
+    qsortFn1 = \
+      "qsort: [ a >>
+        qivot: [ a 1 get ]
+        less:  [ a { qivot < } filter qsort ]
+        equal: [ a { qivot = } filter ]
+        more:  [ a { qivot > } filter qsort ]
+        a len 0 = {
+          a
+        } {
+          less equal more join join
+        } if
+      ]"
+    it "qsort impl", ->
+      td = "12 100 5 34 27 10 -50 0"
+      expect(run "#{unshiftFn} #{filterFn} #{qsortFn} { #{td} } qsort eval").toEqual [-50,0,5,10,12,27,34,100]
+      expect(run "#{unshiftFn} #{filterFn} #{qsortFn1} { #{td} } qsort eval").toEqual [-50,0,5,10,12,27,34,100]
 
 
 
+    it "ifte impl", ->
+
+    it "genrec impl", ->
+
+    it "linrec impl", ->
+
+    it "binrec impl", ->
 
 
-  #   it "external call", ->
-  #     #expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]
+  describe "OO features", ->
+    it "define object", ->
+      expect(run "1 { a: [ b + ] b: 2 } \"a\" get").toEqual [3]
+      expect(run "x: { a: [ b + ] b: 2 } 1 x \"a\" get").toEqual [3]
+
+
+
+
+
+    it "external call", ->
+      #expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]
 
 

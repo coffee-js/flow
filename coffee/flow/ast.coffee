@@ -146,7 +146,7 @@ class ast.Block extends ast.Node
   splice: (i, numDel, addElems) ->
     seq = @seq.slice 0
     seq.splice i-1, numDel, addElems...
-    new Closure @args, @words, seq, @elemType
+    new ast.Block @args, @wordSeq(), seq, @elemType, @srcInfo
 
 
 
