@@ -225,14 +225,6 @@ class Closure
       v = e.val
     v
 
-  seq: ->
-    if @_seq != undefined
-      return @_seq
-    @_seq = []
-    for e in @block.seq
-      @_seq.push new ast.Elem @elemEval(e), e.srcInfo
-    @_seq
-
   eval: (retSeq) ->
     for e in @block.seq
       seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo
@@ -246,6 +238,13 @@ class Closure
         aw[a.name] = argWords[a.name]
     new Closure @block, @preWordEnv, aw
 
+  seq: ->
+    if @_seq != undefined
+      return @_seq
+    @_seq = []
+    for e in @block.seq
+      @_seq.push new ast.Elem @elemEval(e), e.srcInfo
+    @_seq
 
   getElem: (name) ->
     [found, e] = @block.getElem name
@@ -253,21 +252,17 @@ class Closure
       e = new ast.Elem @elemEval(e), e.srcInfo
     [found, e]
 
-
   setElem: (name, elem) ->
     b = @block.setElem name, elem
     new Closure b, @preWordEnv, @argWords
-
 
   len: -> @block.len()
   numWords: -> @block.numWords + @numArgWords
   numElems: -> @len() + @numWords()
 
-
   slice: (p1, p2) ->
     b = @block.slice p1, p2
     new Closure b, @preWordEnv, @argWords
-
 
   join: (other) ->
     b = @block.join other.block
@@ -277,7 +272,6 @@ class Closure
     for name of other.argWords
       aw[name] = other.argWords[name]
     new Closure b, @preWordEnv, aw
-
 
   splice: (i, numDel, addElems) ->
     b = @block.splice i, numDel, addElems
