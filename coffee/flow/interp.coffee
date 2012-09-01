@@ -70,82 +70,23 @@ buildinWords = {
 }
 
 
-closureFromBlock = (b, preWordEnv, preArgs=[]) ->
-  wordInEnv = (name, wordEnv) ->
-    for words in wordEnv
-      w = words[name]
-      if w != undefined
-        if w.val instanceof Array
-          switch w.val[0]
-            when "word"
-              return wordInEnv w.val[1], w.val[2]
-            when "block"
-              return w.val#closureFromBlock w.val.slice(1)...
-            else
-              err "fatal exception error"
-        else
-          return w.val
-    undefined
 
-  wordVal = (name, wordEnv) ->
-    w = wordInEnv(name, wordEnv)
-    if w == undefined
-      w = buildinWords[name]
-    w
-
-  elemVal = (e) ->
-    v = e.val
-    while v instanceof Array
-      switch v[0]
-        when "word"
-          if argWords[ v[1] ] != undefined
-            return v
-          v1 = wordVal v[1], v[2]
-          if v1 == undefined
-            return v
-          else
-            v = v1
-        when "block"
-          return v #= closureFromBlock v.slice(1)...
-        else
-          err "fatal exception error"
-    v
-
-  preElemVal = (e, wordEnv, args) ->
-    if      e.val instanceof ast.Block
-      v = ["block", e.val, wordEnv, args]
-    else if e.val instanceof ast.Word
-      v = ["word", e.val.name, wordEnv]
-    else
-      v = e.val
-
-  args = preArgs.concat b.args
-  argWords = {}
-
-  for a in args
-    argWords[a.name] = null
-  words = {}
-
-  wordEnv = [words].concat preWordEnv
-
-  for name of b.words
-    e = b.words[name]
-    v = preElemVal e, wordEnv, args
-    w = new ast.Elem v, e.srcInfo
-    words[name] = w
-  
-  for name of words
+wordInEnv = (name, wordEnv) ->
+  for words in wordEnv
     e = words[name]
-    w = new ast.Elem elemVal(e), e.srcInfo
-    words[name] = w
+    if e != undefined
+      if e.val instanceof Word
+        return wordInEnv e.val.name, e.val.wordEnv
+      else
+        return e.val
+  undefined
 
-  seq = b.seq.map (e) ->
-    v = preElemVal e, wordEnv, args
-    e = new ast.Elem v, e.srcInfo
-    new ast.Elem elemVal(e), e.srcInfo
 
-  new Closure args, words, seq, b.elemType
-
+wordVal = (name, wordEnv) ->
+  e = wordInEnv(name, wordEnv)
+  if e == undefined
+    e = buildinWords[name]
+  e
 
 
 seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
@@ -162,6 +103,7 @@ seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
   retSeq.length = retSeq.length-n
   argWords
 
+
 seqCurryEval = (c, retSeq, srcInfo=null) ->
   if c.args.length > 0
     argWords = seqCurryArgWords c, retSeq, c.args.length, srcInfo
@@ -169,100 +111,67 @@ seqCurryEval = (c, retSeq, srcInfo=null) ->
   else
     c.eval retSeq
 
-valEval = (val, retSeq, wordEnv, srcInfo=null) ->
+
+seqEval = (val, retSeq, wordEnv, srcInfo=null) ->
   if val instanceof Closure && val.elemType == "EVAL"
     seqCurryEval val, retSeq, srcInfo
   else if val instanceof BuildinWord
     v = val.eval retSeq, srcInfo
     if v != undefined
-      valEval v, retSeq, wordEnv
+      seqEval v, retSeq, wordEnv
   else
     retSeq.push new ast.Elem val, srcInfo
 
 
+class Word
+  constructor: (@name, @wordEnv) ->
+
 
 class Closure
-  constructor: (@args, @words, @seq, @elemType) ->
-
-  elemVal: (e) ->
-    if e.val instanceof Array
-      switch e.val[0]
-        when "word"
-          err "word:#{e.val[1]} not defined", e.srcInfo
-        when "block"
-          if e.val[4] != undefined
-            argWords = e.val[4]
-          else
-            argWords = {}#null
-          c = closureFromBlock e.val.slice(1)...
-          v = c.curry argWords
+  constructor: (@block, @preWordEnv, argWords=null) ->
+    @elemType = @block.elemType
+    @words = {}
+    if argWords
+      @args = []
+      for a in @block.args
+        if argWords[a.name] == undefined
+          @args.push a
         else
-          err "fatal exception error"
+          @words[a.name] = argWords[a.name]
     else
-      v = e.val
-    v
+      @args = @block.args
 
   eval: (retSeq) ->
-    for e in @seq
-      valEval @elemVal(e), retSeq, e.wordEnv, e.srcInfo
+    wordEnv = [@words].concat @preWordEnv
+    for name of @block.words
+      e = @block.words[name]
+      if      e.val instanceof ast.Word
+        v = new Word e.val.name, wordEnv
+      else if e.val instanceof ast.Block
+        v = new Closure e.val, wordEnv
+      else
+        v = e.val
+      e = new ast.Elem v, name, e.srcInfo
+      @words[name] = e
+
+    for e in @block.seq
+      if      e.val instanceof ast.Word
+        v = wordVal e.val.name, wordEnv
+        if v == undefined
+          err "word:#{e.val.name} not defined", e.srcInfo
+      else if e.val instanceof ast.Block
+        v = new Closure e.val, wordEnv
+      else
+        v = e.val
+      seqEval v, retSeq, wordEnv, e.srcInfo
 
   curry: (argWords) ->
-
-    wordInEnv = (name, wordEnv) ->
-      for words in wordEnv
-        w = words[name]
-        if w != undefined
-          return w.val
-      undefined
-
-    curryElem = (e) ->
-      if      e.val instanceof Closure
-        v = e.val.curry argWords
-        e = new ast.Elem v, e.srcInfo
-      else if e.val instanceof Array
-        switch e.val[0]
-          when "word"
-            v = wordInEnv e.val[1], [argWords]
-            if v != undefined
-              e = new ast.Elem v, e.srcInfo
-          when "block"
-            v = e.val.slice 0
-            if v[4] == undefined
-              v[4] = {}
-            aw = v[4]
-            for name of argWords
-              if aw[name] != undefined
-                err "arg word:#{name} redefined"
-              aw[name] = argWords[name]
-            e = new ast.Elem v, e.srcInfo
-          else
-            err "fatal exception error"
-      e
-
-    if argWords == null
-      @
-    else
-      args = []
-      words = {}
-      seq = []
-
-      for a in @args
-        if argWords[a.name] == undefined
-          args.push a
-
-      for name of @words
-        words[name] = curryElem @words[name]
-
-      for e in @seq
-        seq.push curryElem(e)
-
-      new Closure args, words, seq, @elemType
-
+    new Closure @block, @preWordEnv, argWords
 
 
 interp.eval = (blockElem) ->
   retSeq = []
-  c = closureFromBlock blockElem.val, []
+  c = new Closure blockElem.val, []
   c.eval retSeq
   retSeq
 
