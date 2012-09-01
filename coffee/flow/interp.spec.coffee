@@ -112,11 +112,11 @@ describe "Flow Interp", ->
   pushFn = "push: [ b e >> b b len 1 + 0 { e } splice ]"
 
 
-  # describe "block data access", ->
+  describe "block data access", ->
 
-  #   it "read named elem", ->
-  #     expect(run "{ a: 100 } \"a\" get").toEqual [100]
-  #     expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
+    it "read named elem", ->
+      expect(run "{ a: 100 } \"a\" get").toEqual [100]
+      #expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
 
 
   #   it "write named elem", ->

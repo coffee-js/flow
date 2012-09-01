@@ -67,6 +67,18 @@ buildinWords = {
       err "expect a block: #{c}", elem.srcInfo
     seqCurryEval c, retSeq
     undefined
+
+  "get":    bw 2, (retSeq, cElem, nameElem) ->
+    c = cElem.val
+    name = nameElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    
+    [found, elem] = c.getElem name
+    if found
+      elem.val
+    else
+      err "no elem named:#{name} in block #{c}", nameElem.srcInfo
 }
 
 
@@ -80,7 +92,6 @@ wordInEnv = (name, wordEnv) ->
       else
         return e.val
   undefined
-
 
 wordVal = (name, wordEnv) ->
   e = wordInEnv(name, wordEnv)
@@ -102,7 +113,6 @@ seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
     argWords[a.name] = w
   retSeq.length = retSeq.length-n
   argWords
-
 
 seqCurryEval = (c, retSeq, srcInfo=null) ->
   if c.args.length > 0
@@ -140,15 +150,15 @@ class Closure
           @words[a.name] = argWords[a.name]
     else
       @args = @block.args
+    @wordEnv = [@words].concat @preWordEnv
 
   eval: (retSeq) ->
-    wordEnv = [@words].concat @preWordEnv
     for name of @block.words
       e = @block.words[name]
       if      e.val instanceof ast.Word
-        v = new Word e.val.name, wordEnv
+        v = new Word e.val.name, @wordEnv
       else if e.val instanceof ast.Block
-        v = new Closure e.val, wordEnv
+        v = new Closure e.val, @wordEnv
       else
         v = e.val
       e = new ast.Elem v, name, e.srcInfo
@@ -156,17 +166,21 @@ class Closure
 
     for e in @block.seq
       if      e.val instanceof ast.Word
-        v = wordVal e.val.name, wordEnv
+        v = wordVal e.val.name, @wordEnv
         if v == undefined
           err "word:#{e.val.name} not defined", e.srcInfo
       else if e.val instanceof ast.Block
-        v = new Closure e.val, wordEnv
+        v = new Closure e.val, @wordEnv
       else
         v = e.val
-      seqEval v, retSeq, wordEnv, e.srcInfo
+      seqEval v, retSeq, @wordEnv, e.srcInfo
 
   curry: (argWords) ->
     new Closure @block, @preWordEnv, argWords
+
+
+  getElem: (name) ->
+    [found, elem] = @block.getElem name
 
 
 interp.eval = (blockElem) ->
