@@ -116,53 +116,53 @@ describe "Flow Interp", ->
 
     it "read named elem", ->
       expect(run "{ a: 100 } \"a\" get").toEqual [100]
-      #expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
+      expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
 
 
-  #   it "write named elem", ->
-  #     expect(run "{ } 5 \"a\" set \"a\" get").toEqual [5]
-  #     expect(run "{ a: { } } \"a\" get 200 \"b\" set \"b\" get").toEqual [200]
+    it "read nth elem", ->
+      expect(run "{ 100 } -1 get").toEqual [100]
+      expect(run "{ { 10 } } 1 get 1 get").toEqual [10]
 
 
-  #   it "read nth elem", ->
-  #     expect(run "{ 100 } -1 get").toEqual [100]
-  #     expect(run "{ { 10 } } 1 get 1 get").toEqual [10]
+    it "write named elem", ->
+      expect(run "{ } 5 \"a\" set \"a\" get").toEqual [5]
+      expect(run "{ a: { } } \"a\" get 200 \"b\" set \"b\" get").toEqual [200]
 
 
-  #   it "write nth elem", ->
-  #     expect(run "{ } 5 1 set 1 get").toEqual [5]
-  #     expect(run "{ { } } 1 get 200 1 set 1 get").toEqual [200]
-  #     expect(run "{ { 3 4 } } -1 get 5 -2 set -2 get").toEqual [5]
+    it "write nth elem", ->
+      expect(run "{ } 5 1 set 1 get").toEqual [5]
+      expect(run "{ { } } 1 get 200 1 set 1 get").toEqual [200]
+      expect(run "{ { 3 4 } } -1 get 5 -2 set -2 get").toEqual [5]
 
 
-  #   it "len", ->
-  #     expect(run "{ 1 2 3 4 5 } len").toEqual [5]
-  #     expect(run "{ a: 1 b: 2 c: 3 } len").toEqual [0]
-  #     expect(run "{ a: 1 b: 2 c: 3 a b c } len").toEqual [3]
+    it "len", ->
+      expect(run "{ 1 2 3 4 5 } len").toEqual [5]
+      expect(run "{ a: 1 b: 2 c: 3 } len").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } len").toEqual [3]
 
 
-  #   it "num-words", ->
-  #     expect(run "{ 1 2 3 4 5 } num-words").toEqual [0]
-  #     expect(run "{ a: 1 b: 2 c: 3 } num-words").toEqual [3]
-  #     expect(run "{ a: 1 b: 2 c: 3 a b c } num-words").toEqual [3]
+    it "num-words", ->
+      expect(run "{ 1 2 3 4 5 } num-words").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 } num-words").toEqual [3]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } num-words").toEqual [3]
 
 
-  #   it "num-elems", ->
-  #     expect(run "{ 1 2 3 4 5 } num-elems").toEqual [5]
-  #     expect(run "{ a: 1 b: 2 c: 3 } num-elems").toEqual [3]
-  #     expect(run "{ a: 1 b: 2 c: 3 a b c } num-elems").toEqual [6]
+    it "num-elems", ->
+      expect(run "{ 1 2 3 4 5 } num-elems").toEqual [5]
+      expect(run "{ a: 1 b: 2 c: 3 } num-elems").toEqual [3]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } num-elems").toEqual [6]
 
 
-  #   it "slice", ->
-  #     expect(run "{ 1 2 3 4 5 } 2 -2 slice eval").toEqual [2,3,4]
-  #     expect(run "{ 1 2 3 4 5 } 1 5 slice eval").toEqual [1,2,3,4,5]
-  #     expect(run "{ 1 2 3 4 5 } 1 -1 slice eval").toEqual [1,2,3,4,5]
-  #     expect(run "{ 1 2 3 4 5 } 2 -1 slice eval").toEqual [2,3,4,5]
+    it "slice", ->
+      expect(run "{ 1 2 3 4 5 } 2 -2 slice eval").toEqual [2,3,4]
+      expect(run "{ 1 2 3 4 5 } 1 5 slice eval").toEqual [1,2,3,4,5]
+      expect(run "{ 1 2 3 4 5 } 1 -1 slice eval").toEqual [1,2,3,4,5]
+      expect(run "{ 1 2 3 4 5 } 2 -1 slice eval").toEqual [2,3,4,5]
 
 
-  #   it "join", ->
-  #     expect(run "{ 1 2 3 4 5 } { 6 7 8 9 10 } join num-elems").toEqual [10]
-  #     expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join num-elems").toEqual [8]
+    it "join", ->
+      expect(run "{ 1 2 3 4 5 } { 6 7 8 9 10 } join num-elems").toEqual [10]
+      expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join num-elems").toEqual [8]
 
 
   #   it "splice", ->

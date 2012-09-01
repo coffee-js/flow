@@ -105,19 +105,48 @@ class ast.Block extends ast.Node
 
   slice: (p1, p2) ->
     if p1 < 0 then p1 = @seq.length + p1 + 1
-    if p2 < 0 then p2 = @seq.length + p2 + 2
+    if p2 < 0 then p2 = @seq.length + p2 + 1
     seq = @seq.slice p1-1, p2
     new ast.Block @args, @wordSeq(), seq, @elemType, @srcInfo
 
 
   join: (other) ->
-    args = @args.concat other.args
-    wordSeq = @wordSeq().concat other.wordSeq()
+    args = []
+    argWordIdx = {}
+    i = 0
+    for a in @args
+      argWordIdx[a.name] = i
+      args.push a
+      i += 1
+    for a in other.args
+      if argWordIdx[a.name] != undefined
+        args[ argWordIdx[a.name] ] = a
+      else
+        args.push a
+    
+    wordSeq = []
+    myWordSeq = @wordSeq()
+    wordIdx = {}
+    i = 0
+    for w in myWordSeq
+      wordIdx[w.name] = i
+      wordSeq.push w
+      i += 1
+    otherWordSeq = other.wordSeq()
+    for w in otherWordSeq
+      if wordIdx[w.name] != undefined
+        wordSeq[ wordIdx[w.name] ] = w
+      else
+        wordSeq.push w
+
     seq = @seq.concat other.seq
     new ast.Block args, wordSeq, seq, "VAL", null
 
 
-
+  splice: (i, numDel, addElems) ->
+    seq = @seq.slice 0
+    seq.splice i-1, numDel, addElems...
+    new Closure @args, @words, seq, @elemType
 
 
 

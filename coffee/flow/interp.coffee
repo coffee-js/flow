@@ -61,14 +61,14 @@ buildinWords = {
       seqCurryEval whenFals.val, retSeq
     undefined
 
-  "eval":   bw 1, (retSeq, elem) ->
+  "eval": bw 1, (retSeq, elem) ->
     c = elem.val
     if !(c instanceof Closure)
       err "expect a block: #{c}", elem.srcInfo
     seqCurryEval c, retSeq
     undefined
 
-  "get":    bw 2, (retSeq, cElem, nameElem) ->
+  "get":  bw 2, (retSeq, cElem, nameElem) ->
     c = cElem.val
     name = nameElem.val
     if !(c instanceof Closure)
@@ -79,6 +79,50 @@ buildinWords = {
       elem.val
     else
       err "no elem named:#{name} in block #{c}", nameElem.srcInfo
+
+  "set":  bw 3, (retSeq, cElem, elem, nameElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    name = nameElem.val
+    c.setElem name, elem
+
+  "len":  bw 1, (retSeq, cElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{cElem.val}", cElem.srcInfo
+    c.len()
+
+  "num-words": bw 1, (retSeq, cElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.numWords()
+
+  "num-elems": bw 1, (retSeq, cElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.numElems()
+
+  "slice":  bw 3, (retSeq, cElem, start, end) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.slice start.val, end.val
+
+  "join":   bw 2, (retSeq, a, b) ->
+    if !(a.val instanceof Closure)
+      err "expect a block: #{a.val}", a.srcInfo
+    if !(b.val instanceof Closure)
+      err "expect a block: #{b.val}", b.srcInfo
+    a.val.join b.val
+
+  "splice":  bw 4, (retSeq, cElem, i, numDel, addElemsCElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", cElem.srcInfo
+    c.splice i.val, numDel.val, addElemsCElem.val.seq
 }
 
 
@@ -141,18 +185,23 @@ class Closure
   constructor: (@block, @preWordEnv, argWords=null) ->
     @elemType = @block.elemType
     @words = {}
+    @argWords = {}
+    @numArgWords = 0
     if argWords
       @args = []
       for a in @block.args
         if argWords[a.name] == undefined
           @args.push a
         else
-          @words[a.name] = argWords[a.name]
+          @words[a.name] = @argWords[a.name] = argWords[a.name]
+          @numArgWords += 1
     else
       @args = @block.args
-    @wordEnv = [@words].concat @preWordEnv
 
-  eval: (retSeq) ->
+  wordEnvInit: ->
+    if @wordEnv != undefined
+      return
+    @wordEnv = [@words].concat @preWordEnv
     for name of @block.words
       e = @block.words[name]
       if      e.val instanceof ast.Word
@@ -164,23 +213,62 @@ class Closure
       e = new ast.Elem v, name, e.srcInfo
       @words[name] = e
 
+  elemEval: (e) ->
+    @wordEnvInit()
+    if      e.val instanceof ast.Word
+      v = wordVal e.val.name, @wordEnv
+      if v == undefined
+        err "word:#{e.val.name} not defined", e.srcInfo
+    else if e.val instanceof ast.Block
+      v = new Closure e.val, @wordEnv
+    else
+      v = e.val
+    v
+
+  eval: (retSeq) ->
     for e in @block.seq
-      if      e.val instanceof ast.Word
-        v = wordVal e.val.name, @wordEnv
-        if v == undefined
-          err "word:#{e.val.name} not defined", e.srcInfo
-      else if e.val instanceof ast.Block
-        v = new Closure e.val, @wordEnv
-      else
-        v = e.val
-      seqEval v, retSeq, @wordEnv, e.srcInfo
+      seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo
 
   curry: (argWords) ->
-    new Closure @block, @preWordEnv, argWords
+    aw = {}
+    for a in @block.args
+      if @argWords[a.name] != undefined
+        aw[a.name] = @argWords[a.name]
+      if argWords[a.name] != undefined
+        aw[a.name] = argWords[a.name]
+    new Closure @block, @preWordEnv, aw
 
 
   getElem: (name) ->
-    [found, elem] = @block.getElem name
+    [found, e] = @block.getElem name
+    if found
+      e = new ast.Elem @elemEval(e), e.srcInfo
+    [found, e]
+
+
+  setElem: (name, elem) ->
+    b = @block.setElem name, elem
+    new Closure b, @preWordEnv, @argWords
+
+
+  len: -> @block.len()
+  numWords: -> @block.numWords + @numArgWords
+  numElems: -> @len() + @numWords()
+
+
+  slice: (p1, p2) ->
+    b = @block.slice p1, p2
+    new Closure b, @preWordEnv, @argWords
+
+
+  join: (other) ->
+    b = @block.join other.block
+    aw = {}
+    for name of @argWords
+      aw[name] = @argWords[name]
+    for name of other.argWords
+      aw[name] = other.argWords[name]
+    new Closure b, @preWordEnv, aw
 
 
 interp.eval = (blockElem) ->
