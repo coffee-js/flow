@@ -287,6 +287,8 @@ describe "Flow Interp", ->
     it "auto curry OO features", ->
       expect(run "{ a >> b: { a 2 + } } \"b\" get num-words").toEqual [0]
       expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [3]
+      expect(run "1 { a >> b: [ a >> a 2 + ] } \"b\" get").toEqual [3]
+      expect(run "1 2 { a >> b: [ c >> a c + ] } \"b\" get").toEqual [3]
 
 
 
