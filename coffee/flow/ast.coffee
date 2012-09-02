@@ -57,8 +57,16 @@ class ast.Block extends ast.Node
     wordSeq
 
 
-  clone: ->
-    new ast.Block @args.slice(0), @wordSeq(), @seq.slice(0), @elemType, @srcInfo
+  addArgs: (aa) ->
+    if aa.length == 0
+      return @
+    args = []
+    for a in aa
+      if @argWords[a.name] == undefined
+        args.push a
+    for a in @args
+      args.push a
+    new ast.Block args, @wordSeq(), @seq.slice(0), @elemType, @srcInfo
 
 
   getElem: (name) ->
@@ -84,17 +92,28 @@ class ast.Block extends ast.Node
 
 
   setElem: (name, elem) ->
-    blk = @clone()
+    seq = @seq.slice 0
+    wordIdx = {}
+    wordSeq = []
+    i = 0
+    for k of @words
+      wordIdx[k] = i
+      wordSeq.push {name:k, elem:words[k]}
+      i += 1
+
     if typeof name == "number"
       n = name
     else if name.match /\d+$/
       n = parseInt name
     if n != undefined
-      if n<0 then n = blk.seq.length+n+1
-      blk.seq[n-1] = elem
+      if n<0 then n = seq.length+n+1
+      seq[n-1] = elem
     else
-      blk.words[name] = elem
-    blk
+      if wordIdx[name] != undefined
+        wordSeq[ wordIdx[name] ].elem = elem
+      else
+        wordSeq.push {name, elem}
+    new ast.Block @args, wordSeq, seq, @elemType, @srcInfo
 
 
   len: ->

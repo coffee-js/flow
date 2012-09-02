@@ -281,10 +281,12 @@ describe "Flow Interp", ->
     it "curry OO features", ->
       expect(run "5 { a >> b: a } 1 seq-curry \"b\" get").toEqual [5]
       expect(run "3 { a >> b: [ a 2 + ] } 1 seq-curry \"b\" get").toEqual [5]
+      expect(run "3 { a >> [ a 2 + ] } 1 seq-curry 1 get").toEqual [5]
 
 
     it "auto curry OO features", ->
-      #expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [5]
+      expect(run "{ a >> b: { a 2 + } } \"b\" get num-words").toEqual [0]
+      expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [3]
 
 
 

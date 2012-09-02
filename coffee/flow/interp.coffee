@@ -272,7 +272,12 @@ class Closure
       if v == undefined
         err "word:#{e.val.name} not defined", e.srcInfo
     else if e.val instanceof ast.Block
-      v = new Closure e.val, @wordEnv
+      args = []
+      for a in @block.args
+        if @argWords[a.name] == undefined
+          args.push a
+      b = e.val.addArgs args
+      v = new Closure b, @wordEnv
     else
       v = e.val
     v
