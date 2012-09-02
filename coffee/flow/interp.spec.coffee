@@ -40,8 +40,8 @@ describe "Flow Interp", ->
         expect(run "1 2 > { 1 2 + } { 3 4 + } if").toEqual [7]
 
       it "type check", ->
-        expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 expect a boolean: 1"
-        expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a block: 3"
+        expect(-> run "1 { 1 2 + } { 3 4 + } if").toThrow "null:1:1 expect a boolean, got:[1:number]"
+        expect(-> run "1 2 > 3 { 3 4 + } if").toThrow "null:1:7 expect a object, got:[3:number]"
 
 
     describe "eval block", ->
@@ -261,7 +261,7 @@ describe "Flow Interp", ->
 
   describe "curry block", ->
     it "seq-curry", ->
-      expect(run "3 { a >> a } 1 seq-curry eval").toEqual [3]
+      expect(run "3 { a >> a 2 + } 1 seq-curry eval").toEqual [5]
       expect(run "1 2 { + } { a >> a } 3 seq-curry eval eval").toEqual [3]
 
 
