@@ -262,7 +262,7 @@ describe "Flow Interp", ->
   describe "curry block", ->
     it "seq-curry", ->
       expect(run "3 { a >> a } 1 seq-curry eval").toEqual [3]
-
+      expect(run "1 2 { + } { a >> a } 3 seq-curry eval eval").toEqual [3]
 
 
 
