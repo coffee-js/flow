@@ -64,7 +64,7 @@ buildinWords = {
   "<=":   bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val<=b.val
   ">=":   bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val>=b.val
 
-  "not":  bw 1, (retSeq, a)    -> ct a, "boolean"; !a.val
+  "not":  bw 1, (retSeq, a)    -> ct  a,    "boolean"; !a.val
   "and":  bw 2, (retSeq, a, b) -> ct2 a, b, "boolean"; a.val&&b.val
   "or":   bw 2, (retSeq, a, b) -> ct2 a, b, "boolean"; a.val||b.val
 
@@ -110,6 +110,11 @@ buildinWords = {
     c = cElem.val
     c.len()
 
+  "num-arg-words": bw 1, (retSeq, cElem) ->
+    ck cElem, Closure
+    c = cElem.val
+    c.numArgWords
+
   "num-words": bw 1, (retSeq, cElem) ->
     ck cElem, Closure
     c = cElem.val
@@ -120,18 +125,18 @@ buildinWords = {
     c = cElem.val
     c.numElems()
 
-  "slice":  bw 3, (retSeq, cElem, start, end) ->
+  "slice": bw 3, (retSeq, cElem, start, end) ->
     ck cElem, Closure
     ct start, "number"; ct end, "number"
 
     c = cElem.val
     c.slice start.val, end.val
 
-  "join":   bw 2, (retSeq, a, b) ->
+  "join": bw 2, (retSeq, a, b) ->
     ck a, Closure; ck b, Closure
     a.val.join b.val
 
-  "splice":  bw 4, (retSeq, cElem, iElem, numDelElem, addElemsCElem) ->
+  "splice": bw 4, (retSeq, cElem, iElem, numDelElem, addElemsCElem) ->
     ck cElem, Closure
     ct iElem, "number"; ct numDelElem, "number"
 
@@ -178,7 +183,7 @@ wordVal = (name, wordEnv) ->
   v = wordInEnv(name, wordEnv)
   if v == undefined
     v = buildinWords[name]
-  else if notEval
+  else if notEval && v.elemType == "EVAL"
     v = v.val()
   v
 
@@ -189,6 +194,8 @@ seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
   if n > c.args.length
     err "closure:#{c} args count:#{c.args.length} < #{n}", srcInfo
   argWords = {}
+  if retSeq.length < n
+    err "no enough elems in seq, seq.len:#{retSeq.length} n:#{n}", srcInfo
   args = retSeq.slice -n
   for i in [0..n-1]
     a = c.args[i]
@@ -304,6 +311,9 @@ class Closure
     @_seq
 
   getElem: (name) ->
+    if name[0] == "'"
+      notEval = true
+      name = name.slice 1
     [found, e] = @block.getElem name
     if found
       if e != null
@@ -312,6 +322,8 @@ class Closure
         e = @argWords[name]
       else
         found = false
+    if found && e.val instanceof Closure && notEval && e.val.elemType == "EVAL"
+      e.val = e.val.val()
     [found, e]
 
   setElem: (name, elem) ->

@@ -150,6 +150,11 @@ describe "Flow Interp", ->
       expect(run "{ a >> + } 5 \"a\" set num-elems").toEqual [2]
 
 
+    it "use \"'\" read val of a eval elem", ->
+      expect(run "{ [ 100 ] } \"'-1\" get eval").toEqual [100]
+      expect(run "{ a: [ 100 ] } \"'a\" get eval").toEqual [100]
+
+
     it "len", ->
       expect(run "{ 1 2 3 4 5 } len").toEqual [5]
       expect(run "{ a: 1 b: 2 c: 3 } len").toEqual [0]
@@ -289,7 +294,14 @@ describe "Flow Interp", ->
       expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [3]
       expect(run "1 { a >> b: [ a >> a 2 + ] } \"b\" get").toEqual [3]
       expect(run "1 2 { a >> b: [ c >> a c + ] } \"b\" get").toEqual [3]
+      expect(-> run "{ a >> b: [ 1 2 + ] } \"b\" get").toThrow "no enough elems in seq, seq.len:0 n:1"
 
+
+    it "num-arg-words", ->
+      expect(run "{ 1 2 3 4 5 } num-arg-words").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 } num-arg-words").toEqual [0]
+      expect(run "{ x y z >> a: 1 b: 2 c: 3 a b c } num-arg-words").toEqual [0]
+      expect(run "10 20 30 { x y z >> a: 1 b: 2 c: 3 a b c } 2 seq-curry num-arg-words").toEqual [10,2]
 
 
   it "external call", ->
