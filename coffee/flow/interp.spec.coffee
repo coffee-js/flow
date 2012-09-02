@@ -77,7 +77,7 @@ describe "Flow Interp", ->
         expect(run "b: c c: 100 d: [ a: b c: 10 a ] d").toEqual [100]
 
 
-    it "curry call", ->
+    it "seq curry call", ->
       expect(run "add: [ a b >> a b + ] 1 2 add").toEqual [3]
       expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
       expect(run "x: 2 y: 3 x y *").toEqual [6]
@@ -85,6 +85,7 @@ describe "Flow Interp", ->
       expect(run "a: [ 2 + ] 1 { a } [ f >> f ] eval").toEqual [3]
       expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] eval").toEqual [3]
       expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
+
 
     it "not resolving arg word", ->
       expect(run "x: [ n >> n 1 + ] n: 1 0 x").toEqual [1]
@@ -104,6 +105,10 @@ describe "Flow Interp", ->
       expect(run "a: [ n >> n 2 + - ] 1 2 a").toEqual [-3]
 
 
+    it "use \"'\" get val of a eval word", ->
+      expect(run "add: [ a b >> a b + ] 1 2 'add eval").toEqual [3]
+      expect(run "a: [ 2 + ] 1 'a eval ").toEqual [3]
+
 
     it "closure test", ->
 
@@ -112,7 +117,7 @@ describe "Flow Interp", ->
   pushFn = "push: [ b e >> b b len 1 + 0 { e } splice ]"
 
 
-  describe "block data access", ->
+  describe "basic block data access", ->
 
     it "read named elem", ->
       expect(run "{ a: 100 } \"a\" get").toEqual [100]
@@ -133,6 +138,16 @@ describe "Flow Interp", ->
       expect(run "{ } 5 1 set 1 get").toEqual [5]
       expect(run "{ { } } 1 get 200 1 set 1 get").toEqual [200]
       expect(run "{ { 3 4 } } -1 get 5 -2 set -2 get").toEqual [5]
+
+
+    it "read arg elem", ->
+      expect(-> run "{ a >> + } \"a\" get").toThrow "null:1:12 no elem named:a in block [object Object]"
+
+
+    it "write arg elem", ->
+      expect(run "{ a >> + } 5 \"a\" set \"a\" get").toEqual [5]
+      expect(run "{ a >> + } 5 \"a\" set num-words").toEqual [1]
+      expect(run "{ a >> + } 5 \"a\" set num-elems").toEqual [2]
 
 
     it "len", ->
@@ -246,26 +261,35 @@ describe "Flow Interp", ->
     it "binrec impl", ->
 
 
-  describe "OO features", ->
+  describe "basic OO features", ->
     it "define object", ->
       expect(run "1 { a: [ b + ] b: 2 } \"a\" get").toEqual [3]
       expect(run "x: { a: [ b + ] b: 2 } 1 x \"a\" get").toEqual [3]
-
-
-
-
-
-    it "external call", ->
-      #expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]
 
 
   describe "curry block", ->
     it "seq-curry", ->
       expect(run "3 { a >> a 2 + } 1 seq-curry eval").toEqual [5]
       expect(run "1 2 { + } { a >> a } 3 seq-curry eval eval").toEqual [3]
+      expect(run "3 { 1 + } 0 seq-curry eval").toEqual [4]
+
+
+    it "block read curry elem", ->
+      expect(run "3 { a >> a 2 + } 1 seq-curry \"a\" get").toEqual [3]
+
+
+    it "curry OO features", ->
+      expect(run "5 { a >> b: a } 1 seq-curry \"b\" get").toEqual [5]
+      expect(run "3 { a >> b: [ a 2 + ] } 1 seq-curry \"b\" get").toEqual [5]
+
+
+    it "auto curry OO features", ->
+      #expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [5]
 
 
 
+  it "external call", ->
+    #expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]
 
 
 

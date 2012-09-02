@@ -42,10 +42,14 @@ ct = (e, ta...) ->
 ct2 = (a, b, t) ->
   ct a, t; ct b, t
 
-ck = (e, k) ->
+ck = (e, ka...) ->
   ct e, "object"
-  if !(e.val instanceof k)
-    err "expect a #{k}: #{e.val}", e.srcInfo
+  for k in ka
+    if e.val instanceof k
+      pass = true
+  if !pass
+    ks = ka.join " or "
+    err "expect a #{ks}: #{e.val}", e.srcInfo
 
 
 buildinWords = {
@@ -168,10 +172,15 @@ wordInEnv = (name, wordEnv) ->
   undefined
 
 wordVal = (name, wordEnv) ->
-  e = wordInEnv(name, wordEnv)
-  if e == undefined
-    e = buildinWords[name]
-  e
+  if name[0] == "'"
+    notEval = true
+    name = name.slice 1
+  v = wordInEnv(name, wordEnv)
+  if v == undefined
+    v = buildinWords[name]
+  else if notEval
+    v = v.val()
+  v
 
 
 seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
@@ -228,12 +237,25 @@ class Closure
     else
       @args = @block.args
 
+  val: ->
+    switch @elemType
+      when "EVAL"
+        c = new Closure @block, @preWordEnv, @argWords
+        c.elemType = "VAL"
+        c
+      when "VAL"
+        @
+      else
+        err "fatal error: #{@} @elemType:#{@elemType}"
+
   wordEnvInit: ->
     if @wordEnv != undefined
       return
     @wordEnv = [@words].concat @preWordEnv
     for name of @block.words
       e = @block.words[name]
+      if e == null
+        continue
       if      e.val instanceof ast.Word
         v = new Word e.val.name, @wordEnv
       else if e.val instanceof ast.Block
@@ -279,15 +301,28 @@ class Closure
   getElem: (name) ->
     [found, e] = @block.getElem name
     if found
-      e = new ast.Elem @elemEval(e), e.srcInfo
+      if e != null
+        e = new ast.Elem @elemEval(e), e.srcInfo
+      else if @argWords[name] != undefined
+        e = @argWords[name]
+      else
+        found = false
     [found, e]
 
   setElem: (name, elem) ->
-    b = @block.setElem name, elem
-    new Closure b, @preWordEnv, @argWords
+    if @block.argWords[name] != undefined
+      aw = {}
+      for a in @block.args
+        if @argWords[a.name] != undefined
+          aw[a.name] = @argWords[a.name]
+      aw[name] = elem
+      new Closure @block, @preWordEnv, aw
+    else
+      b = @block.setElem name, elem
+      new Closure b, @preWordEnv, @argWords
 
   len: -> @block.len()
-  numWords: -> @block.numWords + @numArgWords
+  numWords: -> @block.numWords - @block.args.length + @numArgWords
   numElems: -> @len() + @numWords()
 
   slice: (p1, p2) ->
