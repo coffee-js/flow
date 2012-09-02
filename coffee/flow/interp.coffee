@@ -123,6 +123,24 @@ buildinWords = {
     if !(c instanceof Closure)
       err "expect a block: #{c}", cElem.srcInfo
     c.splice i.val, numDel.val, addElemsCElem.val.seq()
+
+  "seq-curry": bw 2, (retSeq, cElem, nElem) ->
+    c = cElem.val
+    if !(c instanceof Closure)
+      err "expect a block: #{c}", elem.srcInfo
+    n = nElem.val
+    if n > c.args.length
+      argN = c.args.length
+      seqN = n - c.args.length
+    else
+      argN = n
+    argWords = seqCurryArgWords c, retSeq, argN, cElem.srcInfo
+    r = c.curry argWords
+    if seqN != undefined
+      unshifts = retSeq.slice -seqN
+      retSeq.length = retSeq.length-seqN
+      r = r.splice 1, 0, unshifts
+    r
 }
 
 
@@ -148,7 +166,7 @@ seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
   if n < 1
     return {}
   if n > c.args.length
-    err "closure:#{c} max args num is #{c.args.length}", srcInfo
+    err "closure:#{c} args count:#{c.args.length} < #{n}", srcInfo
   argWords = {}
   args = retSeq.slice -n
   for i in [0..n-1]

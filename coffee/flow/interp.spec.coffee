@@ -23,7 +23,7 @@ describe "Flow Interp", ->
       expect(run "1 2").toEqual [1, 2]
 
 
-  describe "buildin words", ->
+  describe "basic words", ->
 
     describe "math OPs", ->
 
@@ -257,5 +257,18 @@ describe "Flow Interp", ->
 
     it "external call", ->
       #expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]
+
+
+  describe "curry block", ->
+    it "seq-curry", ->
+      expect(run "3 { a >> a } 1 seq-curry eval").toEqual [3]
+
+
+
+
+
+
+
+
 
 
