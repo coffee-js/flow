@@ -27,6 +27,7 @@ class BuildinWord
     args = [retSeq].concat args
     @fn args...
 
+
 bw = ->
   new BuildinWord arguments...
 
