@@ -162,8 +162,29 @@ buildinWords = {
       retSeq.length = retSeq.length-seqN
       r = r.splice 1, 0, unshifts
     r
+
+  "word-curry": bw 2, (retSeq, wElem, cElem) ->
+    ck wElem, Closure
+    ck cElem, Closure
+
+    w = wElem.val
+    c = cElem.val
+    w.wordEnvInit()
+    argWords = w.words
+    c.curry argWords
 }
 
+
+sepWordNameProc = (name) ->
+  opt = {}
+  switch name[0]
+    when "'"
+      opt.notEval = true
+      name = name.slice 1
+    when "#"
+      opt.wcEval = true
+      name = name.slice 1
+  [name, opt]
 
 
 wordInEnv = (name, wordEnv) ->
@@ -177,15 +198,11 @@ wordInEnv = (name, wordEnv) ->
   undefined
 
 wordVal = (name, wordEnv) ->
-  if name[0] == "'"
-    notEval = true
-    name = name.slice 1
+  [name, opt] = sepWordNameProc name
   v = wordInEnv(name, wordEnv)
   if v == undefined
     v = buildinWords[name]
-  else if notEval && v.elemType == "EVAL"
-    v = v.val()
-  v
+  [v, opt]
 
 
 seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
@@ -204,6 +221,7 @@ seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
   retSeq.length = retSeq.length-n
   argWords
 
+
 seqCurryEval = (c, retSeq, srcInfo=null) ->
   if c.args.length > 0
     argWords = seqCurryArgWords c, retSeq, c.args.length, srcInfo
@@ -212,13 +230,35 @@ seqCurryEval = (c, retSeq, srcInfo=null) ->
     c.eval retSeq
 
 
-seqEval = (val, retSeq, wordEnv, srcInfo=null) ->
-  if val instanceof Closure && val.elemType == "EVAL"
-    seqCurryEval val, retSeq, srcInfo
+wordCurryArgWords = (c, retSeq, srcInfo=null) ->
+  if retSeq.length < 1
+    err "no enough elems in seq, seq.len:#{retSeq.length}", srcInfo
+  e = retSeq.pop()
+  ck e, Closure
+  c = e.val
+  c.wordEnvInit()
+  argWords = c.words
+  argWords
+
+
+wordCurryEval = (c, retSeq, srcInfo=null) ->
+  if c.args.length > 0
+    argWords = wordCurryArgWords c, retSeq, srcInfo
+    (c.curry argWords).eval retSeq
+  else
+    c.eval retSeq
+
+
+seqEval = (val, retSeq, wordEnv, opt, srcInfo=null) ->
+  if      val instanceof Closure && val.elemType == "EVAL" && !opt.notEval
+    if opt.wcEval
+      wordCurryEval val, retSeq, srcInfo
+    else
+      seqCurryEval val, retSeq, srcInfo
   else if val instanceof BuildinWord
     v = val.eval retSeq, srcInfo
     if v != undefined
-      seqEval v, retSeq, wordEnv
+      seqEval v, retSeq, wordEnv, opt, srcInfo
   else
     retSeq.push new ast.Elem val, srcInfo
 
@@ -244,7 +284,7 @@ class Closure
     else
       @args = @block.args
 
-  val: ->
+  valDup: ->
     switch @elemType
       when "EVAL"
         c = new Closure @block, @preWordEnv, @argWords
@@ -274,8 +314,9 @@ class Closure
 
   elemEval: (e) ->
     @wordEnvInit()
+    opt = {}
     if      e.val instanceof ast.Word
-      v = wordVal e.val.name, @wordEnv
+      [v, opt] = wordVal e.val.name, @wordEnv
       if v == undefined
         err "word:#{e.val.name} not defined", e.srcInfo
     else if e.val instanceof ast.Block
@@ -287,11 +328,12 @@ class Closure
       v = new Closure b, @wordEnv
     else
       v = e.val
-    v
+    {v, opt}
 
   eval: (retSeq) ->
     for e in @block.seq
-      seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo
+      {v, opt} = @elemEval e
+      seqEval v, retSeq, @wordEnv, opt, e.srcInfo
 
   curry: (argWords) ->
     aw = {}
@@ -307,23 +349,21 @@ class Closure
       return @_seq
     @_seq = []
     for e in @block.seq
-      @_seq.push new ast.Elem @elemEval(e), e.srcInfo
+      @_seq.push new ast.Elem @elemEval(e).v, e.srcInfo
     @_seq
 
   getElem: (name) ->
-    if name[0] == "'"
-      notEval = true
-      name = name.slice 1
+    [name, opt] = sepWordNameProc name
     [found, e] = @block.getElem name
     if found
       if e != null
-        e = new ast.Elem @elemEval(e), e.srcInfo
+        e = new ast.Elem @elemEval(e).v, e.srcInfo
       else if @argWords[name] != undefined
         e = @argWords[name]
       else
         found = false
-    if found && e.val instanceof Closure && notEval && e.val.elemType == "EVAL"
-      e.val = e.val.val()
+    if found && e.val instanceof Closure && opt.notEval
+      e.val = e.val.valDup()
     [found, e]
 
   setElem: (name, elem) ->
