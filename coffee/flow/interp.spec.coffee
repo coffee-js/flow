@@ -304,9 +304,9 @@ describe "Flow Interp", ->
       expect(run "10 20 30 { x y z >> a: 1 b: 2 c: 3 a b c } 2 curry arg-word-count").toEqual [10,2]
 
 
-    it "word-curry", ->
-      expect(run "{ a: 1 b: 2 c: 3 } { a b c >> a b c } word-curry eval").toEqual [1,2,3]
-      expect(run "100 20 { b: 2 } { a b c >> a b c } word-curry eval").toEqual [100,2,20]
+    it "wcurry", ->
+      expect(run "{ a: 1 b: 2 c: 3 } { a b c >> a b c } wcurry eval").toEqual [1,2,3]
+      expect(run "100 20 { b: 2 } { a b c >> a b c } wcurry eval").toEqual [100,2,20]
 
 
   it "external call", ->

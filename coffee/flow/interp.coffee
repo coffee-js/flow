@@ -57,6 +57,9 @@ buildinWords = {
   "-":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val-b.val
   "*":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val*b.val
   "/":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val/b.val
+  "%":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val%b.val
+  "neg":  bw 1, (retSeq, a)    -> ct  a,    "number"; -a.val
+  "abs":  bw 1, (retSeq, a)    -> ct  a,    "number"; Math.abs a.val
 
   "=":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val==b.val
   "<":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val<b.val
@@ -163,7 +166,7 @@ buildinWords = {
       r = r.splice 1, 0, unshifts
     r
 
-  "word-curry": bw 2, (retSeq, wElem, cElem) ->
+  "wcurry": bw 2, (retSeq, wElem, cElem) ->
     ck wElem, Closure
     ck cElem, Closure
 
