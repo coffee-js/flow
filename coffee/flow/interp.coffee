@@ -181,9 +181,6 @@ sepWordNameProc = (name) ->
     when "'"
       opt.notEval = true
       name = name.slice 1
-    when "#"
-      opt.wcEval = true
-      name = name.slice 1
   [name, opt]
 
 
@@ -202,7 +199,9 @@ wordVal = (name, wordEnv) ->
   v = wordInEnv(name, wordEnv)
   if v == undefined
     v = buildinWords[name]
-  [v, opt]
+  else if opt.notEval
+    v = v.valDup()
+  v
 
 
 seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
@@ -249,16 +248,13 @@ wordCurryEval = (c, retSeq, srcInfo=null) ->
     c.eval retSeq
 
 
-seqEval = (val, retSeq, wordEnv, opt, srcInfo=null) ->
-  if      val instanceof Closure && val.elemType == "EVAL" && !opt.notEval
-    if opt.wcEval
-      wordCurryEval val, retSeq, srcInfo
-    else
-      seqCurryEval val, retSeq, srcInfo
+seqEval = (val, retSeq, wordEnv, srcInfo=null) ->
+  if      val instanceof Closure && val.elemType == "EVAL"
+    seqCurryEval val, retSeq, srcInfo
   else if val instanceof BuildinWord
     v = val.eval retSeq, srcInfo
     if v != undefined
-      seqEval v, retSeq, wordEnv, opt, srcInfo
+      seqEval v, retSeq, wordEnv, srcInfo
   else
     retSeq.push new ast.Elem val, srcInfo
 
@@ -314,9 +310,8 @@ class Closure
 
   elemEval: (e) ->
     @wordEnvInit()
-    opt = {}
     if      e.val instanceof ast.Word
-      [v, opt] = wordVal e.val.name, @wordEnv
+      v = wordVal e.val.name, @wordEnv
       if v == undefined
         err "word:#{e.val.name} not defined", e.srcInfo
     else if e.val instanceof ast.Block
@@ -328,12 +323,11 @@ class Closure
       v = new Closure b, @wordEnv
     else
       v = e.val
-    {v, opt}
+    v
 
   eval: (retSeq) ->
     for e in @block.seq
-      {v, opt} = @elemEval e
-      seqEval v, retSeq, @wordEnv, opt, e.srcInfo
+      seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo
 
   curry: (argWords) ->
     aw = {}
@@ -349,7 +343,7 @@ class Closure
       return @_seq
     @_seq = []
     for e in @block.seq
-      @_seq.push new ast.Elem @elemEval(e).v, e.srcInfo
+      @_seq.push new ast.Elem @elemEval(e), e.srcInfo
     @_seq
 
   getElem: (name) ->
@@ -357,7 +351,7 @@ class Closure
     [found, e] = @block.getElem name
     if found
       if e != null
-        e = new ast.Elem @elemEval(e).v, e.srcInfo
+        e = new ast.Elem @elemEval(e), e.srcInfo
       else if @argWords[name] != undefined
         e = @argWords[name]
       else

@@ -110,11 +110,6 @@ describe "Flow Interp", ->
       expect(run "a: [ 2 + ] 1 'a eval ").toEqual [3]
 
 
-    it "use \"#\" do word curry call", ->
-      expect(run "add: [ a b >> a b + ] { a: 1 b: 2 } #add").toEqual [3]
-      expect(-> run "add: [ a b >> a b + ] 10 { a: 1 } #add").toThrow "null:1:17 word:b not defined"
-
-
     it "closure test", ->
 
 
