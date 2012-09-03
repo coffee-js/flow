@@ -32,19 +32,19 @@ class ast.Elem extends ast.Node
 
 class ast.Block extends ast.Node
   constructor: (@args, wordSeq, @seq, @elemType, @srcInfo=null) ->
-    @numWords = 0
+    @wordCount = 0
     @argWords = {}
     @words = {}
     for a in args
       @words[a.name] = @argWords[a.name] = null
-      @numWords += 1
+      @wordCount += 1
 
     for e in wordSeq
       name = e.name
       if @words[name] != undefined
         err "redefined word:\"#{name}\"", e.elem.srcInfo
       @words[name] = e.elem
-      @numWords += 1
+      @wordCount += 1
 
 
   wordSeq: ->
@@ -120,8 +120,8 @@ class ast.Block extends ast.Node
     @seq.length
 
 
-  numElems: ->
-    @numWords + @len()
+  count: ->
+    @wordCount + @len()
 
 
   slice: (p1, p2) ->

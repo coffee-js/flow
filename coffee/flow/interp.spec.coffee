@@ -146,8 +146,8 @@ describe "Flow Interp", ->
 
     it "write arg elem", ->
       expect(run "{ a >> + } 5 \"a\" set \"a\" get").toEqual [5]
-      expect(run "{ a >> + } 5 \"a\" set num-words").toEqual [1]
-      expect(run "{ a >> + } 5 \"a\" set num-elems").toEqual [2]
+      expect(run "{ a >> + } 5 \"a\" set word-count").toEqual [1]
+      expect(run "{ a >> + } 5 \"a\" set count").toEqual [2]
 
 
     it "use \"'\" read val of a eval elem", ->
@@ -161,16 +161,16 @@ describe "Flow Interp", ->
       expect(run "{ a: 1 b: 2 c: 3 a b c } len").toEqual [3]
 
 
-    it "num-words", ->
-      expect(run "{ 1 2 3 4 5 } num-words").toEqual [0]
-      expect(run "{ a: 1 b: 2 c: 3 } num-words").toEqual [3]
-      expect(run "{ a: 1 b: 2 c: 3 a b c } num-words").toEqual [3]
+    it "word-count", ->
+      expect(run "{ 1 2 3 4 5 } word-count").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 } word-count").toEqual [3]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } word-count").toEqual [3]
 
 
-    it "num-elems", ->
-      expect(run "{ 1 2 3 4 5 } num-elems").toEqual [5]
-      expect(run "{ a: 1 b: 2 c: 3 } num-elems").toEqual [3]
-      expect(run "{ a: 1 b: 2 c: 3 a b c } num-elems").toEqual [6]
+    it "count", ->
+      expect(run "{ 1 2 3 4 5 } count").toEqual [5]
+      expect(run "{ a: 1 b: 2 c: 3 } count").toEqual [3]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } count").toEqual [6]
 
 
     it "slice", ->
@@ -181,8 +181,8 @@ describe "Flow Interp", ->
 
 
     it "join", ->
-      expect(run "{ 1 2 3 4 5 } { 6 7 8 9 10 } join num-elems").toEqual [10]
-      expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join num-elems").toEqual [8]
+      expect(run "{ 1 2 3 4 5 } { 6 7 8 9 10 } join count").toEqual [10]
+      expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join count").toEqual [8]
 
 
     it "splice", ->
@@ -273,35 +273,35 @@ describe "Flow Interp", ->
 
 
   describe "curry block", ->
-    it "seq-curry", ->
-      expect(run "3 { a >> a 2 + } 1 seq-curry eval").toEqual [5]
-      expect(run "1 2 { + } { a >> a } 3 seq-curry eval eval").toEqual [3]
-      expect(run "3 { 1 + } 0 seq-curry eval").toEqual [4]
+    it "curry", ->
+      expect(run "3 { a >> a 2 + } 1 curry eval").toEqual [5]
+      expect(run "1 2 { + } { a >> a } 3 curry eval eval").toEqual [3]
+      expect(run "3 { 1 + } 0 curry eval").toEqual [4]
 
 
     it "block read curry elem", ->
-      expect(run "3 { a >> a 2 + } 1 seq-curry \"a\" get").toEqual [3]
+      expect(run "3 { a >> a 2 + } 1 curry \"a\" get").toEqual [3]
 
 
     it "curry OO features", ->
-      expect(run "5 { a >> b: a } 1 seq-curry \"b\" get").toEqual [5]
-      expect(run "3 { a >> b: [ a 2 + ] } 1 seq-curry \"b\" get").toEqual [5]
-      expect(run "3 { a >> [ a 2 + ] } 1 seq-curry 1 get").toEqual [5]
+      expect(run "5 { a >> b: a } 1 curry \"b\" get").toEqual [5]
+      expect(run "3 { a >> b: [ a 2 + ] } 1 curry \"b\" get").toEqual [5]
+      expect(run "3 { a >> [ a 2 + ] } 1 curry 1 get").toEqual [5]
 
 
     it "auto curry OO features", ->
-      expect(run "{ a >> b: { a 2 + } } \"b\" get num-words").toEqual [0]
+      expect(run "{ a >> b: { a 2 + } } \"b\" get word-count").toEqual [0]
       expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [3]
       expect(run "1 { a >> b: [ a >> a 2 + ] } \"b\" get").toEqual [3]
       expect(run "1 2 { a >> b: [ c >> a c + ] } \"b\" get").toEqual [3]
       expect(-> run "{ a >> b: [ 1 2 + ] } \"b\" get").toThrow "no enough elems in seq, seq.len:0 n:1"
 
 
-    it "num-arg-words", ->
-      expect(run "{ 1 2 3 4 5 } num-arg-words").toEqual [0]
-      expect(run "{ a: 1 b: 2 c: 3 } num-arg-words").toEqual [0]
-      expect(run "{ x y z >> a: 1 b: 2 c: 3 a b c } num-arg-words").toEqual [0]
-      expect(run "10 20 30 { x y z >> a: 1 b: 2 c: 3 a b c } 2 seq-curry num-arg-words").toEqual [10,2]
+    it "arg-word-count", ->
+      expect(run "{ 1 2 3 4 5 } arg-word-count").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 } arg-word-count").toEqual [0]
+      expect(run "{ x y z >> a: 1 b: 2 c: 3 a b c } arg-word-count").toEqual [0]
+      expect(run "10 20 30 { x y z >> a: 1 b: 2 c: 3 a b c } 2 curry arg-word-count").toEqual [10,2]
 
 
   it "external call", ->

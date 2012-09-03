@@ -17,13 +17,13 @@ err = (s, srcInfo=null) ->
 
 
 class BuildinWord
-  constructor: (@numArgs, @fn) ->
+  constructor: (@argCount, @fn) ->
 
   eval: (retSeq, srcInfo=null) ->
-    args = retSeq.slice -@numArgs
-    if args.length < @numArgs
+    args = retSeq.slice -@argCount
+    if args.length < @argCount
       err "no enough args in seq:#{retSeq}", srcInfo
-    retSeq.length = retSeq.length-@numArgs
+    retSeq.length = retSeq.length-@argCount
     args = [retSeq].concat args
     @fn args...
 
@@ -110,20 +110,20 @@ buildinWords = {
     c = cElem.val
     c.len()
 
-  "num-arg-words": bw 1, (retSeq, cElem) ->
+  "arg-word-count": bw 1, (retSeq, cElem) ->
     ck cElem, Closure
     c = cElem.val
-    c.numArgWords
+    c.argWordCount
 
-  "num-words": bw 1, (retSeq, cElem) ->
+  "word-count": bw 1, (retSeq, cElem) ->
     ck cElem, Closure
     c = cElem.val
-    c.numWords()
+    c.wordCount()
 
-  "num-elems": bw 1, (retSeq, cElem) ->
+  "count": bw 1, (retSeq, cElem) ->
     ck cElem, Closure
     c = cElem.val
-    c.numElems()
+    c.count()
 
   "slice": bw 3, (retSeq, cElem, start, end) ->
     ck cElem, Closure
@@ -136,15 +136,15 @@ buildinWords = {
     ck a, Closure; ck b, Closure
     a.val.join b.val
 
-  "splice": bw 4, (retSeq, cElem, iElem, numDelElem, addElemsCElem) ->
+  "splice": bw 4, (retSeq, cElem, iElem, delCountElem, addElemsCElem) ->
     ck cElem, Closure
-    ct iElem, "number"; ct numDelElem, "number"
+    ct iElem, "number"; ct delCountElem, "number"
 
     ck addElemsCElem, Closure
     c = cElem.val
-    c.splice iElem.val, numDelElem.val, addElemsCElem.val.seq()
+    c.splice iElem.val, delCountElem.val, addElemsCElem.val.seq()
 
-  "seq-curry": bw 2, (retSeq, cElem, nElem) ->
+  "curry": bw 2, (retSeq, cElem, nElem) ->
     ck cElem, Closure
     ct nElem, "number"
 
@@ -232,7 +232,7 @@ class Closure
     @elemType = @block.elemType
     @words = {}
     @argWords = {}
-    @numArgWords = 0
+    @argWordCount = 0
     if argWords
       @args = []
       for a in @block.args
@@ -240,7 +240,7 @@ class Closure
           @args.push a
         else
           @words[a.name] = @argWords[a.name] = argWords[a.name]
-          @numArgWords += 1
+          @argWordCount += 1
     else
       @args = @block.args
 
@@ -339,8 +339,8 @@ class Closure
       new Closure b, @preWordEnv, @argWords
 
   len: -> @block.len()
-  numWords: -> @block.numWords - @block.args.length + @numArgWords
-  numElems: -> @len() + @numWords()
+  wordCount: -> @block.wordCount - @block.args.length + @argWordCount
+  count: -> @len() + @wordCount()
 
   slice: (p1, p2) ->
     b = @block.slice p1, p2
@@ -355,8 +355,8 @@ class Closure
       aw[name] = other.argWords[name]
     new Closure b, @preWordEnv, aw
 
-  splice: (i, numDel, addElems) ->
-    b = @block.splice i, numDel, addElems
+  splice: (i, delCount, addElems) ->
+    b = @block.splice i, delCount, addElems
     new Closure b, @preWordEnv, @argWords
 
 
