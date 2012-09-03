@@ -229,25 +229,6 @@ seqCurryEval = (c, retSeq, srcInfo=null) ->
     c.eval retSeq
 
 
-wordCurryArgWords = (c, retSeq, srcInfo=null) ->
-  if retSeq.length < 1
-    err "no enough elems in seq, seq.len:#{retSeq.length}", srcInfo
-  e = retSeq.pop()
-  ck e, Closure
-  c = e.val
-  c.wordEnvInit()
-  argWords = c.words
-  argWords
-
-
-wordCurryEval = (c, retSeq, srcInfo=null) ->
-  if c.args.length > 0
-    argWords = wordCurryArgWords c, retSeq, srcInfo
-    (c.curry argWords).eval retSeq
-  else
-    c.eval retSeq
-
-
 seqEval = (val, retSeq, wordEnv, srcInfo=null) ->
   if      val instanceof Closure && val.elemType == "EVAL"
     seqCurryEval val, retSeq, srcInfo
