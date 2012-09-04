@@ -223,7 +223,7 @@ describe "Flow Interp", ->
       expect(run "#{unshiftFn} #{filterFn} { 0 1 } { 3 < } filter eval").toEqual [0,1]
       expect(run "#{unshiftFn} #{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter eval").toEqual [0,3,1,1,2]
       expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter eval").toEqual [0,3,4,1,2]
-      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 0 < } filter eval").toEqual []
+      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 0 <  } filter eval").toEqual []
 
 
     qsortFn = \

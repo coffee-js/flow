@@ -6,7 +6,7 @@ log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
-err = (s, srcInfo=null) ->
+err = (s, srcInfo) ->
   if srcInfo != null
     src = srcInfo.src
     [line, col] = src.lineCol srcInfo.pos
@@ -15,16 +15,15 @@ err = (s, srcInfo=null) ->
     throw s
 
 
-
 class BuildinWord
   constructor: (@argCount, @fn) ->
 
-  eval: (retSeq, srcInfo=null) ->
+  eval: (retSeq, srcInfo, debugCtx) ->
     args = retSeq.slice -@argCount
     if args.length < @argCount
       err "no enough args in seq:#{retSeq}", srcInfo
     retSeq.length = retSeq.length-@argCount
-    args = [retSeq].concat args
+    args = [retSeq, debugCtx].concat args
     @fn args...
 
 
@@ -53,47 +52,47 @@ ck = (e, ka...) ->
 
 
 buildinWords = {
-  "+":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val+b.val
-  "-":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val-b.val
-  "*":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val*b.val
-  "/":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val/b.val
-  "%":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val%b.val
-  "neg":  bw 1, (retSeq, a)    -> ct  a,    "number"; -a.val
-  "abs":  bw 1, (retSeq, a)    -> ct  a,    "number"; Math.abs a.val
+  "+":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val+b.val
+  "-":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val-b.val
+  "*":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val*b.val
+  "/":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val/b.val
+  "%":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val%b.val
+  "neg":  bw 1, (retSeq, debugCtx, a)    -> ct  a,    "number"; -a.val
+  "abs":  bw 1, (retSeq, debugCtx, a)    -> ct  a,    "number"; Math.abs a.val
 
-  "=":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val==b.val
-  "<":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val<b.val
-  ">":    bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val>b.val
-  "<=":   bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val<=b.val
-  ">=":   bw 2, (retSeq, a, b) -> ct2 a, b, "number"; a.val>=b.val
+  "=":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val==b.val
+  "<":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val<b.val
+  ">":    bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val>b.val
+  "<=":   bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val<=b.val
+  ">=":   bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "number"; a.val>=b.val
 
-  "not":  bw 1, (retSeq, a)    -> ct  a,    "boolean"; !a.val
-  "and":  bw 2, (retSeq, a, b) -> ct2 a, b, "boolean"; a.val&&b.val
-  "or":   bw 2, (retSeq, a, b) -> ct2 a, b, "boolean"; a.val||b.val
+  "not":  bw 1, (retSeq, debugCtx, a)    -> ct  a,    "boolean"; !a.val
+  "and":  bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "boolean"; a.val&&b.val
+  "or":   bw 2, (retSeq, debugCtx, a, b) -> ct2 a, b, "boolean"; a.val||b.val
 
-  "if":   bw 3, (retSeq, cond, whenTrue, whenFals) ->
+  "if":   bw 3, (retSeq, debugCtx, cond, whenTrue, whenFals) ->
     ct cond, 'boolean'
     ck whenTrue, Closure
     ck whenFals, Closure
 
     if cond.val
-      seqApplyEval whenTrue.val, retSeq, whenTrue.srcInfo
+      seqApplyEval whenTrue.val, retSeq, whenTrue.srcInfo, debugCtx
     else
-      seqApplyEval whenFals.val, retSeq, whenFals.srcInfo
+      seqApplyEval whenFals.val, retSeq, whenFals.srcInfo, debugCtx
     undefined
 
-  "apply": bw 1, (retSeq, elem) ->
+  "apply": bw 1, (retSeq, debugCtx, elem) ->
     ck elem, Closure
     c = elem.val
     seqApply c, retSeq, elem.srcInfo
-  
-  "eval": bw 1, (retSeq, elem) ->
+
+  "eval": bw 1, (retSeq, debugCtx, elem) ->
     ck elem, Closure
     c = elem.val
-    seqApplyEval c, retSeq, elem.srcInfo
+    seqApplyEval c, retSeq, elem.srcInfo, debugCtx
     undefined
 
-  "get":  bw 2, (retSeq, cElem, nameElem) ->
+  "get":  bw 2, (retSeq, debugCtx, cElem, nameElem) ->
     ck cElem, Closure
     ct nameElem, "number", "string"
 
@@ -105,7 +104,7 @@ buildinWords = {
     else
       err "no elem named:#{name} in block #{c}", nameElem.srcInfo
 
-  "set":  bw 3, (retSeq, cElem, elem, nameElem) ->
+  "set":  bw 3, (retSeq, debugCtx, cElem, elem, nameElem) ->
     ck cElem, Closure
     ct nameElem, "number", "string"
 
@@ -113,38 +112,38 @@ buildinWords = {
     name = nameElem.val
     c.setElem name, elem
 
-  "len":  bw 1, (retSeq, cElem) ->
+  "len":  bw 1, (retSeq, debugCtx, cElem) ->
     ck cElem, Closure
     c = cElem.val
     c.len()
 
-  "arg-word-count": bw 1, (retSeq, cElem) ->
+  "arg-word-count": bw 1, (retSeq, debugCtx, cElem) ->
     ck cElem, Closure
     c = cElem.val
     c.argWordCount
 
-  "word-count": bw 1, (retSeq, cElem) ->
+  "word-count": bw 1, (retSeq, debugCtx, cElem) ->
     ck cElem, Closure
     c = cElem.val
     c.wordCount()
 
-  "count": bw 1, (retSeq, cElem) ->
+  "count": bw 1, (retSeq, debugCtx, cElem) ->
     ck cElem, Closure
     c = cElem.val
     c.count()
 
-  "slice": bw 3, (retSeq, cElem, start, end) ->
+  "slice": bw 3, (retSeq, debugCtx, cElem, start, end) ->
     ck cElem, Closure
     ct start, "number"; ct end, "number"
 
     c = cElem.val
     c.slice start.val, end.val
 
-  "join": bw 2, (retSeq, a, b) ->
+  "join": bw 2, (retSeq, debugCtx, a, b) ->
     ck a, Closure; ck b, Closure
     a.val.join b.val
 
-  "splice": bw 4, (retSeq, cElem, iElem, delCountElem, addElemsCElem) ->
+  "splice": bw 4, (retSeq, debugCtx, cElem, iElem, delCountElem, addElemsCElem) ->
     ck cElem, Closure
     ct iElem, "number"; ct delCountElem, "number"
 
@@ -152,7 +151,7 @@ buildinWords = {
     c = cElem.val
     c.splice iElem.val, delCountElem.val, addElemsCElem.val.seq()
 
-  "curry": bw 2, (retSeq, cElem, nElem) ->
+  "curry": bw 2, (retSeq, debugCtx, cElem, nElem) ->
     ck cElem, Closure
     ct nElem, "number"
 
@@ -171,7 +170,7 @@ buildinWords = {
       r = r.splice 1, 0, unshifts
     r
 
-  "wcurry": bw 2, (retSeq, wElem, cElem) ->
+  "wcurry": bw 2, (retSeq, debugCtx, wElem, cElem) ->
     ck wElem, Closure
     ck cElem, Closure
 
@@ -181,14 +180,6 @@ buildinWords = {
     argWords = w.words
     c.apply argWords
 }
-
-
-class Context
-  constructor: (@parent) ->
-    if @parent == null
-      @retSeq = []
-    else
-      @retSeq = @parent.retSeq
 
 
 sepWordNameProc = (name) ->
@@ -220,7 +211,7 @@ wordVal = (name, wordEnv) ->
   v
 
 
-seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
+seqCurryArgWords = (c, retSeq, n, srcInfo) ->
   if n < 1
     return {}
   if n > c.args.length
@@ -237,7 +228,7 @@ seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
   argWords
 
 
-seqApply = (c, retSeq, srcInfo=null) ->
+seqApply = (c, retSeq, srcInfo) ->
   if c.args.length > 0
     argWords = seqCurryArgWords c, retSeq, c.args.length, srcInfo
     c.apply argWords
@@ -245,17 +236,37 @@ seqApply = (c, retSeq, srcInfo=null) ->
     c
 
 
-seqApplyEval = (c, retSeq, srcInfo=null) ->
-  (seqApply c, retSeq, srcInfo).eval retSeq
+class DebugContex
+  constructor: (parent, @block, wordName, @stepCallback=null, @intoCallback=null) ->
+    if parent == null
+      @bSrcInfoStack = [@block.srcInfo]
+      @wordPath = [wordName]
+    else
+      @bSrcInfoStack = parent.bSrcInfoStack.concat @block.srcInfo
+      @wordPath = parent.wordPath.concat wordName
+    @seqEvalIdx = 0
+
+  evalInto: (b, wordName) ->
+    @intoCallback @, b, wordName
+    new DebugContex @, b, wordName, @stepCallback, @intoCallback
+
+  evalStep: ->
+    @seqEvalIdx += 1
+    @stepCallback @, @seqEvalIdx
+    @
 
 
-seqEval = (val, retSeq, wordEnv, srcInfo=null) ->
+seqApplyEval = (c, retSeq, srcInfo, debugCtx) ->
+  (seqApply c, retSeq, srcInfo).eval retSeq, debugCtx
+
+
+seqEval = (val, retSeq, wordEnv, srcInfo, debugCtx) ->
   if      val instanceof Closure && val.elemType == "EVAL"
-    seqApplyEval val, retSeq, srcInfo
+    seqApplyEval val, retSeq, srcInfo, debugCtx
   else if val instanceof BuildinWord
-    v = val.eval retSeq, srcInfo
+    v = val.eval retSeq, srcInfo, debugCtx
     if v != undefined
-      seqEval v, retSeq, wordEnv, srcInfo
+      seqEval v, retSeq, wordEnv, srcInfo, debugCtx
   else
     retSeq.push new ast.Elem val, srcInfo
 
@@ -326,9 +337,11 @@ class Closure
       v = e.val
     v
 
-  eval: (retSeq) ->
+  eval: (retSeq, debugCtx) ->
     for e in @block.seq
-      seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo
+      if debugCtx
+        debugCtx = debugCtx.evalStep()
+      seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo, debugCtx
 
   apply: (argWords) ->
     aw = {}
