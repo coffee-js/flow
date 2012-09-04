@@ -338,8 +338,10 @@ class Closure
     v
 
   eval: (retSeq, debugCtx) ->
+    if debugCtx != null
+      debugCtx = debugCtx.evalInto c.block, null
     for e in @block.seq
-      if debugCtx
+      if debugCtx != null
         debugCtx = debugCtx.evalStep()
       seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo, debugCtx
 
@@ -412,7 +414,7 @@ class Closure
 interp.eval = (blockElem) ->
   retSeq = []
   c = new Closure blockElem.val, []
-  c.eval retSeq
+  c.eval retSeq, null
   retSeq
 
 
