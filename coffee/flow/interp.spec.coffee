@@ -275,6 +275,8 @@ describe "Flow Interp", ->
   describe "apply block", ->
     it "apply", ->
       expect(run "3 { a >> a 2 + } apply eval").toEqual [5]
+      expect(run "1 2 { + } { a >> a } apply eval eval").toEqual [3]
+      expect(run "3 { 1 + } apply eval").toEqual [4]
 
 
     it "curry", ->
