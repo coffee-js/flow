@@ -6,7 +6,9 @@ log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
-err = (s, srcInfo) ->
+err = (s, srcInfo, debugCtx) ->
+  # if debugCtx != null
+  #   log 
   if srcInfo != null
     src = srcInfo.src
     [line, col] = src.lineCol srcInfo.pos
@@ -198,17 +200,17 @@ wordInEnv = (name, wordEnv) ->
       if e.val instanceof Word
         return wordInEnv e.val.name, e.val.wordEnv
       else
-        return e.val
-  undefined
+        return [e.val, name]
+  [null, null]
 
 wordVal = (name, wordEnv) ->
   [name, opt] = sepWordNameProc name
-  v = wordInEnv(name, wordEnv)
-  if v == undefined
+  [v, name1] = wordInEnv(name, wordEnv)
+  if v == null
     v = buildinWords[name]
   else if opt.notEval
     v = v.valDup()
-  v
+  [v, name1]
 
 
 seqCurryArgWords = (c, retSeq, n, srcInfo) ->
@@ -256,17 +258,17 @@ class DebugContex
     @
 
 
-seqApplyEval = (c, retSeq, srcInfo, debugCtx) ->
-  (seqApply c, retSeq, srcInfo).eval retSeq, debugCtx
+seqApplyEval = (c, retSeq, srcInfo, debugCtx, wordName) ->
+  (seqApply c, retSeq, srcInfo).eval retSeq, debugCtx, wordName
 
 
-seqEval = (val, retSeq, wordEnv, srcInfo, debugCtx) ->
+seqEval = (val, retSeq, wordEnv, srcInfo, debugCtx, wordName) ->
   if      val instanceof Closure && val.elemType == "EVAL"
-    seqApplyEval val, retSeq, srcInfo, debugCtx
+    seqApplyEval val, retSeq, srcInfo, debugCtx, wordName
   else if val instanceof BuildinWord
     v = val.eval retSeq, srcInfo, debugCtx
     if v != undefined
-      seqEval v, retSeq, wordEnv, srcInfo, debugCtx
+      seqEval v, retSeq, wordEnv, srcInfo, debugCtx, null
   else
     retSeq.push new ast.Elem val, srcInfo
 
@@ -323,7 +325,7 @@ class Closure
   elemEval: (e) ->
     @wordEnvInit()
     if      e.val instanceof ast.Word
-      v = wordVal e.val.name, @wordEnv
+      [v, name] = wordVal e.val.name, @wordEnv
       if v == undefined
         err "word:#{e.val.name} not defined", e.srcInfo
     else if e.val instanceof ast.Block
@@ -335,15 +337,16 @@ class Closure
       v = new Closure b, @wordEnv
     else
       v = e.val
-    v
+    {v, name}
 
-  eval: (retSeq, debugCtx) ->
+  eval: (retSeq, debugCtx, wordName) ->
     if debugCtx != null
-      debugCtx = debugCtx.evalInto c.block, null
+      debugCtx = debugCtx.evalInto c.block, wordName
     for e in @block.seq
       if debugCtx != null
         debugCtx = debugCtx.evalStep()
-      seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo, debugCtx
+      {v, name} = @elemEval e
+      seqEval v, retSeq, @wordEnv, e.srcInfo, debugCtx, name
 
   apply: (argWords) ->
     aw = {}
@@ -359,7 +362,7 @@ class Closure
       return @_seq
     @_seq = []
     for e in @block.seq
-      @_seq.push new ast.Elem @elemEval(e), e.srcInfo
+      @_seq.push new ast.Elem @elemEval(e).v, e.srcInfo
     @_seq
 
   getElem: (name) ->
@@ -367,7 +370,7 @@ class Closure
     [found, e] = @block.getElem name
     if found
       if e != null
-        e = new ast.Elem @elemEval(e), e.srcInfo
+        e = new ast.Elem @elemEval(e).v, e.srcInfo
       else if @argWords[name] != undefined
         e = @argWords[name]
       else
@@ -414,7 +417,7 @@ class Closure
 interp.eval = (blockElem) ->
   retSeq = []
   c = new Closure blockElem.val, []
-  c.eval retSeq, null
+  c.eval retSeq, null, null
   retSeq
 
 
