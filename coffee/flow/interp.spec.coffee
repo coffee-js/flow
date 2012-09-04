@@ -272,7 +272,11 @@ describe "Flow Interp", ->
       expect(run "x: { a: [ b + ] b: 2 } 1 x \"a\" get").toEqual [3]
 
 
-  describe "curry block", ->
+  describe "apply block", ->
+    it "apply", ->
+      expect(run "3 { a >> a 2 + } apply eval").toEqual [5]
+
+
     it "curry", ->
       expect(run "3 { a >> a 2 + } 1 curry eval").toEqual [5]
       expect(run "1 2 { + } { a >> a } 3 curry eval eval").toEqual [3]

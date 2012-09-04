@@ -77,15 +77,20 @@ buildinWords = {
     ck whenFals, Closure
 
     if cond.val
-      seqApplyEval whenTrue.val, retSeq
+      seqApplyEval whenTrue.val, retSeq, whenTrue.srcInfo
     else
-      seqApplyEval whenFals.val, retSeq
+      seqApplyEval whenFals.val, retSeq, whenFals.srcInfo
     undefined
 
+  "apply": bw 1, (retSeq, elem) ->
+    ck elem, Closure
+    c = elem.val
+    seqApply c, retSeq, elem.srcInfo
+  
   "eval": bw 1, (retSeq, elem) ->
     ck elem, Closure
     c = elem.val
-    seqApplyEval c, retSeq
+    seqApplyEval c, retSeq, elem.srcInfo
     undefined
 
   "get":  bw 2, (retSeq, cElem, nameElem) ->
