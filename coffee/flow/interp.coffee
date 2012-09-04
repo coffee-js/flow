@@ -77,15 +77,15 @@ buildinWords = {
     ck whenFals, Closure
 
     if cond.val
-      seqCurryEval whenTrue.val, retSeq
+      seqApplyEval whenTrue.val, retSeq
     else
-      seqCurryEval whenFals.val, retSeq
+      seqApplyEval whenFals.val, retSeq
     undefined
 
   "eval": bw 1, (retSeq, elem) ->
     ck elem, Closure
     c = elem.val
-    seqCurryEval c, retSeq
+    seqApplyEval c, retSeq
     undefined
 
   "get":  bw 2, (retSeq, cElem, nameElem) ->
@@ -159,7 +159,7 @@ buildinWords = {
     else
       argN = n
     argWords = seqCurryArgWords c, retSeq, argN, cElem.srcInfo
-    r = c.curry argWords
+    r = c.apply argWords
     if seqN != undefined
       unshifts = retSeq.slice -seqN
       retSeq.length = retSeq.length-seqN
@@ -174,8 +174,16 @@ buildinWords = {
     c = cElem.val
     w.wordEnvInit()
     argWords = w.words
-    c.curry argWords
+    c.apply argWords
 }
+
+
+class Context
+  constructor: (@parent) ->
+    if @parent == null
+      @retSeq = []
+    else
+      @retSeq = @parent.retSeq
 
 
 sepWordNameProc = (name) ->
@@ -224,17 +232,21 @@ seqCurryArgWords = (c, retSeq, n, srcInfo=null) ->
   argWords
 
 
-seqCurryEval = (c, retSeq, srcInfo=null) ->
+seqApply = (c, retSeq, srcInfo=null) ->
   if c.args.length > 0
     argWords = seqCurryArgWords c, retSeq, c.args.length, srcInfo
-    (c.curry argWords).eval retSeq
+    c.apply argWords
   else
-    c.eval retSeq
+    c
+
+
+seqApplyEval = (c, retSeq, srcInfo=null) ->
+  (seqApply c, retSeq, srcInfo).eval retSeq
 
 
 seqEval = (val, retSeq, wordEnv, srcInfo=null) ->
   if      val instanceof Closure && val.elemType == "EVAL"
-    seqCurryEval val, retSeq, srcInfo
+    seqApplyEval val, retSeq, srcInfo
   else if val instanceof BuildinWord
     v = val.eval retSeq, srcInfo
     if v != undefined
@@ -313,7 +325,7 @@ class Closure
     for e in @block.seq
       seqEval @elemEval(e), retSeq, @wordEnv, e.srcInfo
 
-  curry: (argWords) ->
+  apply: (argWords) ->
     aw = {}
     for a in @block.args
       if @argWords[a.name] != undefined
