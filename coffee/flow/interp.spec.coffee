@@ -279,17 +279,17 @@ describe "Flow Interp", ->
       expect(run "3 { 1 + } apply eval").toEqual [4]
 
 
-    it "curry", ->
+    it "apply", ->
       expect(run "3 { a >> a 2 + } 1 curry eval").toEqual [5]
       expect(run "1 2 { + } { a >> a } 3 curry eval eval").toEqual [3]
       expect(run "3 { 1 + } 0 curry eval").toEqual [4]
 
 
-    it "block read curry elem", ->
+    it "block read apply elem", ->
       expect(run "3 { a >> a 2 + } 1 curry \"a\" get").toEqual [3]
 
 
-    it "curry OO features", ->
+    it "apply OO features", ->
       expect(run "5 { a >> b: a } 1 curry \"b\" get").toEqual [5]
       expect(run "3 { a >> b: [ a 2 + ] } 1 curry \"b\" get").toEqual [5]
       expect(run "3 { a >> [ a 2 + ] } 1 curry 1 get").toEqual [5]
