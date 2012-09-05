@@ -6,13 +6,48 @@ log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
-err = (s, ctx, srcInfo) ->
+
+class DebugContex
+  constructor: (parent, @block, @nextCallback=null, @intoCallback=null) ->
+    if parent == null
+      @blockStack = [@block]
+    else
+      @blockStack = parent.blockStack.concat [@block]
+    @pElemIdx = 0
+
+  into: (b) ->
+    if @intoCallback != null
+      @intoCallback @, b
+    new DebugContex @, b, @nextCallback, @intoCallback
+
+  next: ->
+    @pElemIdx += 1
+    if @nextCallback != null
+      @nextCallback @, @pElemIdx
+    @
+
+  pElem: ->
+    e = @block.seq[@pElemIdx-1]
+    e
+
+
+err = (txt, ctx, srcInfo) ->
+  ctxInfo = ""
+  if ctx != null && ctx.debug != null
+    a = []
+    for b in ctx.debug.blockStack
+      bsi = b.srcInfo
+      src = bsi.src
+      [line, col] = src.lineCol bsi.pos
+      a.unshift "from #{src.path}:#{line}:#{col}<#{bsi.name}>"
+    ctxInfo = a.join "\n"
   if srcInfo != null
     src = srcInfo.src
     [line, col] = src.lineCol srcInfo.pos
-    throw "#{src.path}:#{line}:#{col} #{s}"
+    s = "#{src.path}:#{line}:#{col} #{txt}\n#{ctxInfo}"
   else
-    throw s
+    s = "#{txt}\n#{ctxInfo}"
+  throw s
 
 
 class BuildinWord
@@ -270,30 +305,6 @@ class Context
     else
       @debug = @debug.next()
       @
-
-
-class DebugContex
-  constructor: (parent, @block, @nextCallback=null, @intoCallback=null) ->
-    if parent == null
-      @blockStack = [@block]
-    else
-      @blockStack = parent.blockStack.concat [@block]
-    @pElemIdx = 0
-
-  into: (b) ->
-    if @intoCallback != null
-      @intoCallback @, b
-    new DebugContex @, b, @nextCallback, @intoCallback
-
-  next: ->
-    @pElemIdx += 1
-    if @nextCallback != null
-      @nextCallback @, @pElemIdx
-    @
-
-  pElem: ->
-    e = @block.seq[@pElemIdx-1]
-    e
 
 
 seqApplyEval = (c, ctx) ->

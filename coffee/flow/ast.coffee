@@ -16,7 +16,7 @@ err = (s, srcInfo=null) ->
 
 
 class ast.SrcInfo
-  constructor: (@pos=null, @src=null) ->
+  constructor: (@pos=null, @src=null, @name=null) ->
 
 
 class ast.Node
