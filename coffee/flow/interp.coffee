@@ -202,17 +202,17 @@ wordInEnv = (name, wordEnv) ->
       if e.val instanceof Word
         return wordInEnv e.val.name, e.val.wordEnv
       else
-        return [e.val, name]
-  [null, null]
+        return e.val
+  null
 
 wordVal = (name, wordEnv) ->
   [name, opt] = sepWordNameProc name
-  [v, name1] = wordInEnv(name, wordEnv)
+  v = wordInEnv(name, wordEnv)
   if v == null
     v = buildinWords[name]
   else if opt.notEval
     v = v.valDup()
-  [v, name1]
+  v
 
 
 curryArgWords = (c, ctx, n, srcInfo) ->
@@ -248,18 +248,18 @@ class Context
 
 
 class DebugContex
-  constructor: (parent, @block, wordName, @stepCallback=null, @intoCallback=null) ->
+  constructor: (parent, @block, @stepCallback=null, @intoCallback=null) ->
     if parent == null
       @bSrcInfoStack = [@block.srcInfo]
-      @wordPath = [wordName]
+      #@wordPath = [wordName]
     else
       @bSrcInfoStack = parent.bSrcInfoStack.concat @block.srcInfo
-      @wordPath = parent.wordPath.concat wordName
+      #@wordPath = parent.wordPath.concat wordName
     @seqEvalIdx = 0
 
-  into: (b, wordName) ->
-    @intoCallback @, b, wordName
-    new DebugContex @, b, wordName, @stepCallback, @intoCallback
+  into: (b) ->
+    @intoCallback @, b
+    new DebugContex @, b, @stepCallback, @intoCallback
 
   next: ->
     @seqEvalIdx += 1
@@ -267,13 +267,13 @@ class DebugContex
     @
 
 
-seqApplyEval = (c, ctx, srcInfo, wordName) ->
-  (seqApply c, ctx, srcInfo).eval ctx, wordName
+seqApplyEval = (c, ctx, srcInfo) ->
+  (seqApply c, ctx, srcInfo).eval ctx
 
 
-seqEval = (val, ctx, wordEnv, srcInfo, wordName) ->
+seqEval = (val, ctx, wordEnv, srcInfo) ->
   if      val instanceof Closure && val.elemType == "EVAL"
-    seqApplyEval val, ctx, srcInfo, wordName
+    seqApplyEval val, ctx, srcInfo
   else if val instanceof BuildinWord
     v = val.eval ctx, srcInfo
     if v != undefined
@@ -334,7 +334,7 @@ class Closure
   elemEval: (e) ->
     @wordEnvInit()
     if      e.val instanceof ast.Word
-      [v, name] = wordVal e.val.name, @wordEnv
+      v = wordVal e.val.name, @wordEnv
       if v == undefined
         err "word:#{e.val.name} not defined", e.srcInfo
     else if e.val instanceof ast.Block
@@ -346,16 +346,16 @@ class Closure
       v = new Closure b, @wordEnv
     else
       v = e.val
-    {v, name}
+    v
 
-  eval: (ctx, wordName) ->
+  eval: (ctx) ->
     if ctx.debug != null
-      ctx.debug = ctx.debug.into c.block, wordName
+      ctx.debug = ctx.debug.into c.block
     for e in @block.seq
       if ctx.debug != null
         ctx.debug = ctx.debug.next()
-      {v, name} = @elemEval e
-      seqEval v, ctx, @wordEnv, e.srcInfo, name
+      v = @elemEval e
+      seqEval v, ctx, @wordEnv, e.srcInfo
 
   apply: (argWords) ->
     aw = {}
@@ -371,7 +371,7 @@ class Closure
       return @_seq
     @_seq = []
     for e in @block.seq
-      @_seq.push new ast.Elem @elemEval(e).v, e.srcInfo
+      @_seq.push new ast.Elem @elemEval(e), e.srcInfo
     @_seq
 
   getElem: (name) ->
@@ -379,7 +379,7 @@ class Closure
     [found, e] = @block.getElem name
     if found
       if e != null
-        e = new ast.Elem @elemEval(e).v, e.srcInfo
+        e = new ast.Elem @elemEval(e), e.srcInfo
       else if @argWords[name] != undefined
         e = @argWords[name]
       else
