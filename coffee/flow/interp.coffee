@@ -152,15 +152,25 @@ buildinWords = {
     c = cElem.val
     c.len()
 
-  "arg-word-count": bw 1, (ctx, cElem) ->
+  "count-arg-words": bw 1, (ctx, cElem) ->
     ck ctx, cElem, Closure
     c = cElem.val
     c.argWordCount
 
-  "word-count": bw 1, (ctx, cElem) ->
+  "count-non-arg-words": bw 1, (ctx, cElem) ->
+    ck ctx, cElem, Closure
+    c = cElem.val
+    c.nonArgWordCount()
+
+  "count-words": bw 1, (ctx, cElem) ->
     ck ctx, cElem, Closure
     c = cElem.val
     c.wordCount()
+
+  "count-arg-slots": bw 1, (ctx, cElem) ->
+    ck ctx, cElem, Closure
+    c = cElem.val
+    c.argSlotCount()
 
   "count": bw 1, (ctx, cElem) ->
     ck ctx, cElem, Closure
@@ -218,6 +228,30 @@ buildinWords = {
     w.wordEnvInit()
     argWords = w.words
     c.apply argWords
+
+  "filter-arg-words": bw 1, (ctx, cElem) ->
+    ck ctx, cElem, Closure
+    c = cElem.val
+    c.filterArgWords()
+
+  "filter-words": bw 1, (ctx, cElem) ->
+    ck ctx, cElem, Closure
+    c = cElem.val
+    c.filterWords()
+
+  "filter-non-arg-words": bw 1, (ctx, cElem) ->
+    ck ctx, cElem, Closure
+    c = cElem.val
+    c.filterNonArgWords()
+
+  "filter-seq": bw 1, (ctx, cElem) ->
+    ck ctx, cElem, Closure
+    c = cElem.val
+    c.filterSeq()
+
+  # "map"
+  # "filter"
+  # "fold"
 }
 
 
@@ -438,7 +472,9 @@ class Closure
       new Closure b, @preWordEnv, @argWords
 
   len: -> @block.len()
-  wordCount: -> @block.wordCount - @block.args.length + @argWordCount
+  nonArgWordCount: -> @block.nonArgWordCount()
+  wordCount: -> @nonArgWordCount() + @argWordCount
+  argSlotCount: -> @block.args.length
   count: -> @len() + @wordCount()
 
   slice: (p1, p2) ->
@@ -457,6 +493,22 @@ class Closure
   splice: (i, delCount, addElems) ->
     b = @block.splice i, delCount, addElems
     new Closure b, @preWordEnv, @argWords
+
+  filterArgWords: ->
+    b = @block.filterArgWords()
+    new Closure b, @preWordEnv, @argWords
+
+  filterWords: ->
+    b = @block.filterWords()
+    new Closure b, @preWordEnv, @argWords
+
+  filterNonArgWords: ->
+    b = @block.filterNonArgWords()
+    new Closure b, @preWordEnv, {}
+
+  filterSeq: ->
+    b = @block.filterSeq()
+    new Closure b, @preWordEnv, {}
 
   toStr: ->
     @block.toStr()

@@ -146,7 +146,7 @@ describe "Flow Interp", ->
 
     it "write arg elem", ->
       expect(run "{ a >> + } 5 \"a\" set \"a\" get").toEqual [5]
-      expect(run "{ a >> + } 5 \"a\" set word-count").toEqual [1]
+      expect(run "{ a >> + } 5 \"a\" set count-words").toEqual [1]
       expect(run "{ a >> + } 5 \"a\" set count").toEqual [2]
 
 
@@ -161,10 +161,19 @@ describe "Flow Interp", ->
       expect(run "{ a: 1 b: 2 c: 3 a b c } len").toEqual [3]
 
 
-    it "word-count", ->
-      expect(run "{ 1 2 3 4 5 } word-count").toEqual [0]
-      expect(run "{ a: 1 b: 2 c: 3 } word-count").toEqual [3]
-      expect(run "{ a: 1 b: 2 c: 3 a b c } word-count").toEqual [3]
+    it "count-words", ->
+      expect(run "{ 1 2 3 4 5 } count-words").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 } count-words").toEqual [3]
+      expect(run "{ a: 1 b: 2 c: 3 a b c } count-words").toEqual [3]
+
+
+    it "count-arg-words", ->
+
+
+    it "count-non-arg-words", ->
+
+
+    it "count-arg-slots", ->
 
 
     it "count", ->
@@ -200,6 +209,15 @@ describe "Flow Interp", ->
     it "push", ->
       expect(run "#{pushFn} { 1 2 3 4 5 } 100 push eval").toEqual [1,2,3,4,5,100]
       expect(run "#{pushFn} x: 100 { 1 2 3 4 5 } x push eval").toEqual [1,2,3,4,5,100]
+
+
+    it "filter-arg-words", ->
+
+    it "filter-words", ->
+
+    it "filter-non-arg-words", ->
+
+    it "filter-seq", ->
 
 
   describe "simple function impl", ->
@@ -296,18 +314,18 @@ describe "Flow Interp", ->
 
 
     it "auto apply OO features", ->
-      expect(run "{ a >> b: { a 2 + } } \"b\" get word-count").toEqual [0]
+      expect(run "{ a >> b: { a 2 + } } \"b\" get count-words").toEqual [0]
       expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [3]
       expect(run "1 { a >> b: [ a >> a 2 + ] } \"b\" get").toEqual [3]
       expect(run "1 2 { a >> b: [ c >> a c + ] } \"b\" get").toEqual [3]
       expect(-> run "{ a >> b: [ 1 2 + ] } \"b\" get").toThrow()
 
 
-    it "arg-word-count", ->
-      expect(run "{ 1 2 3 4 5 } arg-word-count").toEqual [0]
-      expect(run "{ a: 1 b: 2 c: 3 } arg-word-count").toEqual [0]
-      expect(run "{ x y z >> a: 1 b: 2 c: 3 a b c } arg-word-count").toEqual [0]
-      expect(run "10 20 30 { x y z >> a: 1 b: 2 c: 3 a b c } 2 curry arg-word-count").toEqual [10,2]
+    it "count-arg-words", ->
+      expect(run "{ 1 2 3 4 5 } count-arg-words").toEqual [0]
+      expect(run "{ a: 1 b: 2 c: 3 } count-arg-words").toEqual [0]
+      expect(run "{ x y z >> a: 1 b: 2 c: 3 a b c } count-arg-words").toEqual [0]
+      expect(run "10 20 30 { x y z >> a: 1 b: 2 c: 3 a b c } 2 curry count-arg-words").toEqual [10,2]
 
 
     it "wapply", ->

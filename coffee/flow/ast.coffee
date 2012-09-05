@@ -65,7 +65,6 @@ class ast.Block extends ast.Node
       @words[name] = e.elem
       @wordCount += 1
 
-
   wordSeq: ->
     wordSeq = []
     for name of @words
@@ -74,7 +73,6 @@ class ast.Block extends ast.Node
       elem = @words[name]
       wordSeq.push {name, elem}
     wordSeq
-
 
   addArgs: (aa) ->
     if aa.length == 0
@@ -86,7 +84,6 @@ class ast.Block extends ast.Node
     for a in @args
       args.push a
     new ast.Block args, @wordSeq(), @seq.slice(0), @elemType, @srcInfo
-
 
   getElem: (name) ->
     found = false
@@ -108,7 +105,6 @@ class ast.Block extends ast.Node
       else
         elem = null
     [found, elem]
-
 
   setElem: (name, elem) ->
     seq = @seq.slice 0
@@ -134,21 +130,20 @@ class ast.Block extends ast.Node
         wordSeq.push {name, elem}
     new ast.Block @args, wordSeq, seq, @elemType, @srcInfo
 
-
   len: ->
     @seq.length
 
+  nonArgWordCount: ->
+    @wordCount - @args.length
 
   count: ->
     @wordCount + @len()
-
 
   slice: (p1, p2) ->
     if p1 < 0 then p1 = @seq.length + p1 + 1
     if p2 < 0 then p2 = @seq.length + p2 + 1
     seq = @seq.slice p1-1, p2
     new ast.Block @args, @wordSeq(), seq, @elemType, @srcInfo
-
 
   join: (other) ->
     args = []
@@ -182,12 +177,22 @@ class ast.Block extends ast.Node
     seq = @seq.concat other.seq
     new ast.Block args, wordSeq, seq, "VAL", null
 
-
   splice: (i, numDel, addElems) ->
     seq = @seq.slice 0
     seq.splice i-1, numDel, addElems...
     new ast.Block @args, @wordSeq(), seq, @elemType, @srcInfo
 
+  filterArgWords: ->
+    new ast.Block @args, [], [], @elemType, @srcInfo
+
+  filterWords: ->
+    new ast.Block @args, @wordSeq(), [], @elemType, @srcInfo
+
+  filterNonArgWords: ->
+    new ast.Block [], @wordSeq(), [], @elemType, @srcInfo
+
+  filterSeq: ->
+    new ast.Block [], [], @seq, @elemType, @srcInfo
 
   toStr: ->
     s = ""
