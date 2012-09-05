@@ -164,7 +164,7 @@ buildinWords = {
       seqN = n - c.args.length
     else
       argN = n
-    argWords = seqCurryArgWords c, retSeq, argN, cElem.srcInfo
+    argWords = curryArgWords c, retSeq, argN, cElem.srcInfo
     r = c.apply argWords
     if seqN != undefined
       unshifts = retSeq.slice -seqN
@@ -172,7 +172,7 @@ buildinWords = {
       r = r.splice 1, 0, unshifts
     r
 
-  "wcurry": bw 2, (retSeq, debugCtx, wElem, cElem) ->
+  "wapply": bw 2, (retSeq, debugCtx, wElem, cElem) ->
     ck wElem, Closure
     ck cElem, Closure
 
@@ -213,7 +213,7 @@ wordVal = (name, wordEnv) ->
   [v, name1]
 
 
-seqCurryArgWords = (c, retSeq, n, srcInfo) ->
+curryArgWords = (c, retSeq, n, srcInfo) ->
   if n < 1
     return {}
   if n > c.args.length
@@ -232,7 +232,7 @@ seqCurryArgWords = (c, retSeq, n, srcInfo) ->
 
 seqApply = (c, retSeq, srcInfo) ->
   if c.args.length > 0
-    argWords = seqCurryArgWords c, retSeq, c.args.length, srcInfo
+    argWords = curryArgWords c, retSeq, c.args.length, srcInfo
     c.apply argWords
   else
     c

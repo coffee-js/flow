@@ -295,7 +295,7 @@ describe "Flow Interp", ->
       expect(run "3 { a >> [ a 2 + ] } 1 curry 1 get").toEqual [5]
 
 
-    it "auto curry OO features", ->
+    it "auto apply OO features", ->
       expect(run "{ a >> b: { a 2 + } } \"b\" get word-count").toEqual [0]
       expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [3]
       expect(run "1 { a >> b: [ a >> a 2 + ] } \"b\" get").toEqual [3]
@@ -310,9 +310,9 @@ describe "Flow Interp", ->
       expect(run "10 20 30 { x y z >> a: 1 b: 2 c: 3 a b c } 2 curry arg-word-count").toEqual [10,2]
 
 
-    it "wcurry", ->
-      expect(run "{ a: 1 b: 2 c: 3 } { a b c >> a b c } wcurry eval").toEqual [1,2,3]
-      expect(run "100 20 { b: 2 } { a b c >> a b c } wcurry eval").toEqual [100,2,20]
+    it "wapply", ->
+      expect(run "{ a: 1 b: 2 c: 3 } { a b c >> a b c } wapply eval").toEqual [1,2,3]
+      expect(run "100 20 { b: 2 } { a b c >> a b c } wapply eval").toEqual [100,2,20]
 
 
   it "external call", ->
