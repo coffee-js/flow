@@ -81,20 +81,20 @@ buildinWords = {
     ck ctx, whenFals, Closure
 
     if cond.val
-      seqApplyEval whenTrue.val, ctx, whenTrue.srcInfo
+      seqApplyEval whenTrue.val, ctx
     else
-      seqApplyEval whenFals.val, ctx, whenFals.srcInfo
+      seqApplyEval whenFals.val, ctx
     undefined
 
   "apply": bw 1, (ctx, elem) ->
     ck ctx, elem, Closure
     c = elem.val
-    seqApply c, ctx, elem.srcInfo
+    seqApply c, ctx
 
   "eval": bw 1, (ctx, elem) ->
     ck ctx, elem, Closure
     c = elem.val
-    seqApplyEval c, ctx, elem.srcInfo
+    seqApplyEval c, ctx
     undefined
 
   "get":  bw 2, (ctx, cElem, nameElem) ->
@@ -170,7 +170,7 @@ buildinWords = {
       seqN = n - c.args.length
     else
       argN = n
-    argWords = curryArgWords c, ctx, argN, cElem.srcInfo
+    argWords = curryArgWords c, ctx, argN
     r = c.apply argWords
     if seqN != undefined
       retSeq = ctx.retSeq
@@ -459,7 +459,7 @@ interp.eval = (blockElem) ->
   ctx = new Context
   ctx.debug = new DebugContex null, b
   c = new Closure b, []
-  c.eval ctx, null
+  c.eval ctx
   ctx.retSeq
 
 
