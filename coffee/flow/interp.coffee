@@ -7,8 +7,6 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
 err = (s, srcInfo) ->
-  # if debug != null
-  #   log 
   if srcInfo != null
     src = srcInfo.src
     [line, col] = src.lineCol srcInfo.pos
@@ -20,8 +18,12 @@ err = (s, srcInfo) ->
 class BuildinWord
   constructor: (@argCount, @fn) ->
 
-  eval: (ctx, srcInfo) ->
+  eval: (ctx) ->
     retSeq = ctx.retSeq
+    if ctx.debug
+      srcInfo = ctx.debug.pElem().srcInfo
+    else
+      srcInfo = null
     args = retSeq.slice -@argCount
     if args.length < @argCount
       err "no enough args in seq:#{retSeq}", srcInfo
@@ -215,8 +217,12 @@ wordVal = (name, wordEnv) ->
   v
 
 
-curryArgWords = (c, ctx, n, srcInfo) ->
+curryArgWords = (c, ctx, n) ->
   retSeq = ctx.retSeq
+  if ctx.debug
+    srcInfo = ctx.debug.pElem().srcInfo
+  else
+    srcInfo = null
   if n < 1
     return {}
   if n > c.args.length
@@ -233,9 +239,9 @@ curryArgWords = (c, ctx, n, srcInfo) ->
   argWords
 
 
-seqApply = (c, ctx, srcInfo) ->
+seqApply = (c, ctx) ->
   if c.args.length > 0
-    argWords = curryArgWords c, ctx, c.args.length, srcInfo
+    argWords = curryArgWords c, ctx, c.args.length
     c.apply argWords
   else
     c
@@ -246,39 +252,68 @@ class Context
     @retSeq = []
     @debug = null
 
-
-class DebugContex
-  constructor: (parent, @block, @stepCallback=null, @intoCallback=null) ->
-    if parent == null
-      @bSrcInfoStack = [@block.srcInfo]
-      #@wordPath = [wordName]
-    else
-      @bSrcInfoStack = parent.bSrcInfoStack.concat @block.srcInfo
-      #@wordPath = parent.wordPath.concat wordName
-    @seqEvalIdx = 0
-
   into: (b) ->
-    @intoCallback @, b
-    new DebugContex @, b, @stepCallback, @intoCallback
+    if @debug == null
+      @
+    else
+      c = new Context
+      c.retSeq = @retSeq
+      c.debug = @debug.into b
+      c
 
   next: ->
-    @seqEvalIdx += 1
-    @stepCallback @, @seqEvalIdx
+    if @debug == null
+      @
+    else
+      @debug = @debug.next()
+      @
+
+
+class DebugContex
+  constructor: (parent, @block, @nextCallback=null, @intoCallback=null) ->
+    if parent == null
+      @blockStack = [@block]
+    else
+      @blockStack = parent.blockStack.concat [@block]
+    @pElemIdx = 0
+
+  into: (b) ->
+    if @intoCallback != null
+      @intoCallback @, b
+    new DebugContex @, b, @nextCallback, @intoCallback
+
+  next: ->
+    @pElemIdx += 1
+    if @nextCallback != null
+      @nextCallback @, @pElemIdx
     @
 
+  pElem: ->
+    e = @block.seq[@pElemIdx-1]
+    if e == undefined
+      log @block.seq
+      log e
+      log @pElemIdx-1
+      err ""
+    e
 
-seqApplyEval = (c, ctx, srcInfo) ->
-  (seqApply c, ctx, srcInfo).eval ctx
+
+seqApplyEval = (c, ctx) ->
+  (seqApply c, ctx).eval ctx
 
 
-seqEval = (val, ctx, wordEnv, srcInfo) ->
+seqEval = (val, ctx, wordEnv) ->
   if      val instanceof Closure && val.elemType == "EVAL"
-    seqApplyEval val, ctx, srcInfo
+    seqApplyEval val, ctx
   else if val instanceof BuildinWord
-    v = val.eval ctx, srcInfo
+    v = val.eval ctx
     if v != undefined
-      seqEval v, ctx, wordEnv, srcInfo, null
+      seqEval v, ctx, wordEnv
   else
+    if ctx.debug
+      srcInfo = ctx.debug.pElem().srcInfo
+    else
+      srcInfo = null
     ctx.retSeq.push new ast.Elem val, srcInfo
 
 
@@ -349,13 +384,11 @@ class Closure
     v
 
   eval: (ctx) ->
-    if ctx.debug != null
-      ctx.debug = ctx.debug.into c.block
+    ctx = ctx.into @block
     for e in @block.seq
-      if ctx.debug != null
-        ctx.debug = ctx.debug.next()
-      v = @elemEval e
-      seqEval v, ctx, @wordEnv, e.srcInfo
+      ctx = ctx.next()
+      seqEval @elemEval(e), ctx, @wordEnv
+
 
   apply: (argWords) ->
     aw = {}
@@ -424,8 +457,10 @@ class Closure
 
 
 interp.eval = (blockElem) ->
+  b = blockElem.val
   ctx = new Context
-  c = new Closure blockElem.val, []
+  ctx.debug = new DebugContex null, b
+  c = new Closure b, []
   c.eval ctx, null
   ctx.retSeq
 
