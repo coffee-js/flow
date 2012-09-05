@@ -42,7 +42,7 @@ class ast.Elem extends ast.Node
       when "number"
         @val
       when "string"
-        "\"#{@val}\""
+        "\"#{@val.replace('"','\"')}\""
       when "object"
         @val.toStr()
       else
