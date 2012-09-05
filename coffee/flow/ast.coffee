@@ -8,15 +8,20 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 err = (s, srcInfo=null) ->
   if srcInfo != null
-    src = srcInfo.src
-    [line, col] = src.lineCol srcInfo.pos
-    throw "#{src.path}:#{line}:#{col} #{s}"
+    throw "#{srcInfo.toStr()} #{s}"
   else
     throw s
 
 
 class ast.SrcInfo
   constructor: (@pos=null, @src=null, @name=null) ->
+
+  toStr: ->
+    [line, col] = @src.lineCol @pos
+    s = "#{@src.path}:#{line}:#{col}"
+    if @name != null
+      s += ":<#{@name}>"
+    s
 
 
 class ast.Node

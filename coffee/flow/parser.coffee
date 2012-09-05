@@ -8,7 +8,7 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
 err = (s, pos=null, src=null) ->
-  if (pos != null) && (src != null)
+  if pos != null && src != null
     [line, col] = src.lineCol pos
     throw "#{src.path}:#{line}:#{col} #{s}"
   else

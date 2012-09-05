@@ -36,15 +36,10 @@ err = (txt, ctx, srcInfo) ->
   if ctx != null && ctx.debug != null
     a = []
     for b in ctx.debug.blockStack
-      bsi = b.srcInfo
-      src = bsi.src
-      [line, col] = src.lineCol bsi.pos
-      a.unshift "from #{src.path}:#{line}:#{col}<#{bsi.name}>"
+      a.unshift "from #{b.srcInfo.toStr()}"
     ctxInfo = a.join "\n"
   if srcInfo != null
-    src = srcInfo.src
-    [line, col] = src.lineCol srcInfo.pos
-    s = "#{src.path}:#{line}:#{col} #{txt}\n#{ctxInfo}"
+    s = "#{srcInfo.toStr()} #{txt}\n#{ctxInfo}"
   else
     s = "#{txt}\n#{ctxInfo}"
   throw s
