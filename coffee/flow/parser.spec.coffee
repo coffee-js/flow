@@ -113,14 +113,7 @@ describe "Flow Parser", ->
       (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
 
       a = (parse p, "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match
-      (expect a.args).toEqual [
-        {
-          name: "aa"
-        }
-        {
-          name: "bb"
-        }
-      ]
+      (expect a.args[1].name).toEqual "bb"
       (expect a.seq[0].val.words["sd"].val).toEqual 45
       (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
 

@@ -30,9 +30,23 @@ class ast.Node
 class ast.Word extends ast.Node
   constructor: (@name) ->
 
+  toStr: ->
+    @name
+
 
 class ast.Elem extends ast.Node
   constructor: (@val, @srcInfo=null) ->
+
+  toStr: ->
+    switch typeof(@val)
+      when "number"
+        @val
+      when "string"
+        "\"#{@val}\""
+      when "object"
+        @val.toStr()
+      else
+        err "elem val type:#{typeof(@val)}", @srcInfo
 
 
 class ast.Block extends ast.Node
@@ -173,6 +187,30 @@ class ast.Block extends ast.Node
     seq = @seq.slice 0
     seq.splice i-1, numDel, addElems...
     new ast.Block @args, @wordSeq(), seq, @elemType, @srcInfo
+
+
+  toStr: ->
+    s = ""
+    if @args.length > 0
+      for a in @args
+        s += "#{a.name} "
+      s += ">> "
+    for name of @words
+      if @words[name] != null
+        s += "#{name}: #{@words[name].toStr()} "
+    for e in @seq
+      s += "#{e.toStr()} "
+    switch @elemType
+      when "EVAL"
+        "[ #{s}]"
+      when "VAL"
+        "{ #{s}}"
+      else
+        err "@elemType error"
+
+
+
+
 
 
 

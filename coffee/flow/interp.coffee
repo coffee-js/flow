@@ -71,7 +71,7 @@ ct = (ctx, e, ta...) ->
       pass = true
   if !pass
     ts = ta.join " or "
-    err "expect a #{ts}, got:[#{e.val}:#{typeof(e.val)}]", ctx, e.srcInfo
+    err "expect a #{ts}, got:[#{e.toStr()}:#{typeof(e.val)}]", ctx, e.srcInfo
 
 ct2 = (ctx, a, b, t) ->
   ct ctx, a, t; ct ctx, b, t
@@ -83,7 +83,7 @@ ck = (ctx, e, ka...) ->
       pass = true
   if !pass
     ks = ka.join " or "
-    err "expect a #{ks}: #{e.val}", ctx, e.srcInfo
+    err "expect a #{ks}: #{e.toStr()}", ctx, e.srcInfo
 
 
 buildinWords = {
@@ -137,7 +137,7 @@ buildinWords = {
     if found
       elem.val
     else
-      err "no elem named:#{name} in block #{c}", ctx, nameElem.srcInfo
+      err "no elem named:#{name} in block #{c.toStr()}", ctx, nameElem.srcInfo
 
   "set":  bw 3, (ctx, cElem, elem, nameElem) ->
     ck ctx, cElem, Closure
@@ -259,7 +259,7 @@ curryArgWords = (c, ctx, n) ->
   if n < 1
     return {}
   if n > c.args.length
-    err "closure:#{c} args count:#{c.args.length} < #{n}", ctx, srcInfo
+    err "closure:#{c.toStr()} args count:#{c.args.length} < #{n}", ctx, srcInfo
   argWords = {}
   if retSeq.length < n
     err "no enough elems in seq, seq.len:#{retSeq.length} n:#{n}", ctx, srcInfo
@@ -351,7 +351,7 @@ class Closure
       when "VAL"
         @
       else
-        err "fatal error: #{@} @elemType:#{@elemType}", ctx, null
+        err "fatal error: #{@toStr()} @elemType:#{@elemType}", ctx, null
 
   wordEnvInit: ->
     if @wordEnv != undefined
@@ -457,6 +457,9 @@ class Closure
   splice: (i, delCount, addElems) ->
     b = @block.splice i, delCount, addElems
     new Closure b, @preWordEnv, @argWords
+
+  toStr: ->
+    @block.toStr()
 
 
 
