@@ -52,6 +52,8 @@ combinator = do ->
       e = n[1]
       e.name = name
       e.srcInfo.pos = pos
+      if e.val instanceof ast.Block
+        e.val.srcInfo.name = name
       {name, elem:e}
 
   wordMap = pc.rep1(namedElem)
