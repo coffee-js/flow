@@ -274,7 +274,8 @@ wordInEnv = (name, wordEnv) ->
         return e.val
   null
 
-wordVal = (name, wordEnv, ctx) ->
+wordVal = (word, wordEnv, ctx) ->
+  name = word.name
   [name, opt] = sepWordNameProc name
   v = wordInEnv(name, wordEnv)
   if v == null
@@ -356,7 +357,9 @@ seqEval = (val, ctx, wordEnv) ->
 
 
 class Word
-  constructor: (@name, @wordEnv) ->
+  constructor: (w, @wordEnv) ->
+    @path = w.path
+    @name = w.name
 
 
 class Closure
@@ -396,7 +399,7 @@ class Closure
       if e == null
         continue
       if      e.val instanceof ast.Word
-        v = new Word e.val.name, @wordEnv
+        v = new Word e.val, @wordEnv
       else if e.val instanceof ast.Block
         v = new Closure e.val, @wordEnv
       else
@@ -407,7 +410,7 @@ class Closure
   elemEval: (e, ctx) ->
     @wordEnvInit()
     if      e.val instanceof ast.Word
-      v = wordVal e.val.name, @wordEnv, ctx
+      v = wordVal e.val, @wordEnv, ctx
       if v == undefined
         err "word:#{e.val.name} not defined", ctx, e.srcInfo
     else if e.val instanceof ast.Block
