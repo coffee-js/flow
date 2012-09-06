@@ -288,7 +288,7 @@ wordVal = (word, wordEnv, ctx) ->
       curPath = [name]
   else
     if ctx.retSeq.length == 0
-      err "no enough args in seq:#{retSeq}", ctx, srcInfo
+      err "no enough args in seq:#{ctx.retSeq}", ctx, srcInfo
     cElem = ctx.retSeq.pop()
     ck ctx, cElem, Closure
     v = cElem.val
@@ -312,10 +312,11 @@ wordVal = (word, wordEnv, ctx) ->
     v = v.valDup ctx
   else if word.opt == "#"
     if ctx.retSeq.length == 0
-      err "no enough args in seq:#{retSeq}", ctx, srcInfo
+      err "no enough args in seq:#{ctx.retSeq}", ctx, srcInfo
     elem = ctx.retSeq.pop()
     name = word.refines[refines.length]
     v = v.setElem name, elem
+    v = v.valDup ctx
   v
 
 

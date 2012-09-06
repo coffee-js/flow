@@ -126,7 +126,7 @@ describe "Flow Interp", ->
 
 
     it "write refinements with entry", ->
-      expect(run "a: [ a: [ { b: 10 } ] ] 100 #a.a.1.b .b").toEqual [100]
+      expect(run "a: [ a: [ [ b: 10 ] ] ] 100 #a.a.1.b .b").toEqual [100]
 
 
 
