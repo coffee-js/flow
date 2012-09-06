@@ -256,10 +256,9 @@ buildinWords = {
 
 
 sepWordNameProc = (name) ->
-  opt = {}
-  switch name[0]
+  opt = name[0]
+  switch opt
     when "'"
-      opt.notEval = true
       name = name.slice 1
   [name, opt]
 
@@ -279,23 +278,34 @@ wordVal = (word, wordEnv, ctx) ->
     srcInfo = ctx.debug.pElem().srcInfo
   else
     srcInfo = null
-  name = word.entry
-  [name, opt] = sepWordNameProc name
-  v = wordInEnv(name, wordEnv)
-  if v == null && word.refines.length == 0
-    v = buildinWords[name]
+
+  if word.entry != null
+    name = word.entry
+    v = wordInEnv(name, wordEnv)
+    if v == null && word.refines.length == 0
+      v = buildinWords[name]
+    else
+      curPath = [name]
   else
-    curPath = [name]
-    for name in word.refines
-      curPath.push name
-      if !(v instanceof Closure)
-        err "path:#{curPath.join(".")} can not reach", ctx, srcInfo
-      [found, e] = v.getElem(name)
-      if !found
-        err "word:#{name} not defined in path:#{curPath.slice(0,-1).join(".")}", ctx, srcInfo
-      v = e.val
-    if opt.notEval
-      v = v.valDup ctx
+    if ctx.retSeq.length == 0
+      err "no enough args in seq:#{retSeq}", ctx, srcInfo
+    cElem = ctx.retSeq.pop()
+    ck ctx, cElem, Closure
+    v = cElem.val
+    curPath = [null]
+
+  for name in word.refines
+    curPath.push name
+    if !(v instanceof Closure)
+      err "path:#{curPath.join(".")} can not reach", ctx, srcInfo
+    [found, e] = v.getElem name, ctx
+    if !found
+      err "word:#{name} not defined in path:#{curPath.slice(0,-1).join(".")}", ctx, srcInfo
+    v = e.val
+  if word.opt == "'"
+    if !(v instanceof Closure)
+      err "word:#{word.name} is not a block", ctx, srcInfo
+    v = v.valDup ctx
   v
 
 
@@ -375,6 +385,7 @@ class Word
     @entry = w.entry
     @refines = w.refines
     @name = w.name
+    @opt = w.opt
 
 
 class Closure
@@ -473,7 +484,7 @@ class Closure
         e = @argWords[name]
       else
         found = false
-    if found && e.val instanceof Closure && opt.notEval
+    if found && e.val instanceof Closure && opt == "'"
       e.val = e.val.valDup ctx
     [found, e]
 

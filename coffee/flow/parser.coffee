@@ -31,7 +31,8 @@ combinator = do ->
 
   colon = pc.ch ':'
   sep = pc.ch '.'
-  wordChar = pc.and pc.neg(pc.space()), pc.neg(sep)
+  wordOpt = pc.ch "'"
+  wordChar = pc.and pc.neg(pc.space()), pc.neg(sep), pc.neg(wordOpt)
   nameChar = pc.and wordChar, pc.neg(pc.seq colon, pc.space())
 
   name = pc.map pc.seq(pc.rep1(nameChar), colon, endToken),
@@ -39,9 +40,9 @@ combinator = do ->
 
   _wordName = pc.map pc.and(
       pc.rep1(pc.and pc.neg(pc.space()), pc.neg(sep)),
-      pc.neg(pc.seq pc.ch('[]'), endToken),
-      pc.neg(pc.seq pc.ch('{}'), endToken),
-      pc.neg(pc.seq pc.tok('>>'), endToken),
+      pc.neg(pc.seq pc.ch("[]"), endToken),
+      pc.neg(pc.seq pc.ch("{}"), endToken),
+      pc.neg(pc.seq pc.tok(">>"), endToken),
       pc.neg(name)),
     (n) -> n.reduce (t,s) -> t.concat(s)
 
@@ -50,11 +51,11 @@ combinator = do ->
   wordRefine = pc.map pc.rep1(pc.seq(sep, _wordName)),
     (n) -> n.map (nn) -> nn.reduce (s,w) -> w
 
-  word = pc.map pc.seq(pc.choice(
+  word = pc.map pc.seq(pc.optional(wordOpt), pc.choice(
       pc.seq(_wordName, pc.optional(wordRefine)),
       wordRefine
     ), endToken), (n) ->
-      a = n[0]
+      a = n[1]
       if a[1] == true
         entry = a[0]
         refines = []
@@ -64,7 +65,8 @@ combinator = do ->
       else
         entry = null
         refines = a
-      new ast.Word entry, refines
+      opt = if n[0]==true then null else n[0]
+      new ast.Word entry, refines, opt
 
   elem = null
   _elem = pc.lazy ->elem
