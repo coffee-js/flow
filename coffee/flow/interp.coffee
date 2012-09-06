@@ -279,14 +279,14 @@ wordVal = (word, wordEnv, ctx) ->
     srcInfo = ctx.debug.pElem().srcInfo
   else
     srcInfo = null
-  name = word.path[0]
+  name = word.entry
   [name, opt] = sepWordNameProc name
   v = wordInEnv(name, wordEnv)
-  if v == null && word.path.length == 1
+  if v == null && word.refines.length == 0
     v = buildinWords[name]
   else
     curPath = [name]
-    for name in word.path.slice 1
+    for name in word.refines
       curPath.push name
       if !(v instanceof Closure)
         err "path:#{curPath.join(".")} can not reach", ctx, srcInfo
@@ -372,7 +372,8 @@ seqEval = (val, ctx, wordEnv) ->
 
 class Word
   constructor: (w, @wordEnv) ->
-    @path = w.path
+    @entry = w.entry
+    @refines = w.refines
     @name = w.name
 
 

@@ -28,8 +28,8 @@ class ast.Node
 
 
 class ast.Word extends ast.Node
-  constructor: (@path) ->
-    @name = @path.join '.'
+  constructor: (@entry, @refines) ->
+    @name = ([@entry].concat @refines).join '.'
 
   toStr: ->
     @name

@@ -50,13 +50,21 @@ combinator = do ->
   wordRefine = pc.map pc.rep1(pc.seq(sep, _wordName)),
     (n) -> n.map (nn) -> nn.reduce (s,w) -> w
 
-  word = pc.map pc.seq(_wordName, pc.optional(wordRefine), endToken),
-    (n) ->
-      if n[1] == true
-        path = [n[0]]
+  word = pc.map pc.seq(pc.choice(
+      pc.seq(_wordName, pc.optional(wordRefine)),
+      wordRefine
+    ), endToken), (n) ->
+      a = n[0]
+      if a[1] == true
+        entry = a[0]
+        refines = []
+      else if a[1] instanceof Array
+        entry = a[0]
+        refines = a[1]
       else
-        path = [n[0]].concat n[1]
-      new ast.Word path
+        entry = null
+        refines = a
+      new ast.Word entry, refines
 
   elem = null
   _elem = pc.lazy ->elem
