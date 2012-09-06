@@ -3,7 +3,7 @@ ast = require "./ast"
 
 
 log = (s) -> console.log s
-pp = (s) -> console.log JSON.stringify s, null, '  '
+pp = (s) -> console.log JSON.stringify s, null, "  "
 
 
 
@@ -106,7 +106,7 @@ buildinWords = {
   "or":   bw 2, (ctx, a, b) -> ct2 ctx, a, b, "boolean"; a.val||b.val
 
   "if":   bw 3, (ctx, cond, whenTrue, whenFals) ->
-    ct ctx, cond, 'boolean'
+    ct ctx, cond, "boolean"
     ck ctx, whenTrue, Closure
     ck ctx, whenFals, Closure
 

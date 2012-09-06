@@ -102,8 +102,8 @@ describe "Flow Parser", ->
     it "match word", ->
       p = parser.word
       (expect (parse p, " ").match).toEqual null
-      (expect (parse p, "abc").match.a).toEqual ["abc"]
-      (expect (parse p, "a.b.c").match.a).toEqual ["a","b","c"]
+      (expect (parse p, "abc").match.path).toEqual ["abc"]
+      (expect (parse p, "a.b.c").match.path).toEqual ["a","b","c"]
 
 
   describe "combinator seq", ->

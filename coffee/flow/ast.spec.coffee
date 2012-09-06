@@ -14,20 +14,20 @@ parse = (s) ->
 
 describe "Flow AST", ->
 
-  # describe "block", ->
+  describe "block", ->
 
-  # describe "toStr()", ->
+  describe "toStr()", ->
 
-  #   it "number", ->
-  #     (expect (parse "1 2 3").toStr()).toEqual "[ 1 2 3 ]"
-
-
-  #   it "string", ->
-  #     (expect (parse "\"a\" \"b\" \"c\"").toStr()).toEqual "[ \"a\" \"b\" \"c\" ]"
+    it "number", ->
+      (expect (parse "1 2 3").toStr()).toEqual "[ 1 2 3 ]"
 
 
-  #   it "block", ->
-  #     (expect (parse "a: [ b: a c: { x y >> a } + ] 1 2 a").toStr()).toEqual "[ a: [ b: a c: { x y >> a } + ] 1 2 a ]"
+    it "string", ->
+      (expect (parse "\"a\" \"b\" \"c\"").toStr()).toEqual "[ \"a\" \"b\" \"c\" ]"
+
+
+    it "block", ->
+      (expect (parse "a: [ b: a c: { x y >> a } + ] 1 2 a").toStr()).toEqual "[ a: [ b: a c: { x y >> a } + ] 1 2 a ]"
 
 
 

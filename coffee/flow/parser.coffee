@@ -53,10 +53,10 @@ combinator = do ->
   word = pc.map pc.seq(_wordName, pc.optional(wordRefine), endToken),
     (n) ->
       if n[1] == true
-        a = [n[0]]
+        path = [n[0]]
       else
-        a = [n[0]].concat n[1]
-      new ast.Word a
+        path = [n[0]].concat n[1]
+      new ast.Word path
 
   elem = null
   _elem = pc.lazy ->elem
