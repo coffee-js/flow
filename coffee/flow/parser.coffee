@@ -31,8 +31,7 @@ combinator = do ->
 
   colon = pc.ch ':'
   sep = pc.ch '.'
-  wordOpt = pc.ch "'#"
-  wordChar = pc.and pc.neg(pc.space()), pc.neg(sep), pc.neg(wordOpt)
+  wordChar = pc.and pc.neg(pc.space()), pc.neg(sep)
   nameChar = pc.and wordChar, pc.neg(pc.seq colon, pc.space())
 
   name = pc.map pc.seq(pc.rep1(nameChar), colon, endToken),
@@ -51,6 +50,7 @@ combinator = do ->
   wordRefine = pc.map pc.rep1(pc.seq(sep, _wordName)),
     (n) -> n.map (nn) -> nn.reduce (s,w) -> w
 
+  wordOpt = pc.choice pc.ch "'#", pc.tok "#!"
   word = pc.map pc.seq(pc.optional(wordOpt), pc.choice(
       pc.seq(_wordName, pc.optional(wordRefine)),
       wordRefine

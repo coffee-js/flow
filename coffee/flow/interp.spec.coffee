@@ -244,7 +244,7 @@ describe "Flow Interp", ->
 
     filterFn = \
       "filter: [ a p >>
-        x:  [ a 1 get ]
+        x:  [ a.1 ]
         xs: [ a 2 -1 slice ]
         a len 0 = {
           a
@@ -266,7 +266,7 @@ describe "Flow Interp", ->
 
     qsortFn = \
       "qsort: [ a >>
-        qivot: [ a 1 get ]
+        qivot: [ a.1 ]
         xs:    [ a 2 -1 slice ]
         less:  [ xs { qivot <= } filter qsort ]
         more:  [ xs { qivot >  } filter qsort ]
@@ -278,7 +278,7 @@ describe "Flow Interp", ->
       ]"
     qsortFn1 = \
       "qsort: [ a >>
-        qivot: [ a 1 get ]
+        qivot: [ a.1 ]
         less:  [ a { qivot < } filter qsort ]
         equal: [ a { qivot = } filter ]
         more:  [ a { qivot > } filter qsort ]
@@ -306,8 +306,8 @@ describe "Flow Interp", ->
 
   describe "basic OO features", ->
     it "define object", ->
-      expect(run "1 { a: [ b + ] b: 2 } \"a\" get").toEqual [3]
-      expect(run "x: { a: [ b + ] b: 2 } 1 x \"a\" get").toEqual [3]
+      expect(run "1 { a: [ b + ] b: 2 } .a").toEqual [3]
+      expect(run "x: { a: [ b + ] b: 2 } 1 x .a").toEqual [3]
 
 
   describe "apply block", ->
@@ -324,21 +324,21 @@ describe "Flow Interp", ->
 
 
     it "block read apply elem", ->
-      expect(run "3 { a >> a 2 + } 1 curry \"a\" get").toEqual [3]
+      expect(run "3 { a >> a 2 + } 1 curry .a").toEqual [3]
 
 
     it "apply OO features", ->
-      expect(run "5 { a >> b: a } 1 curry \"b\" get").toEqual [5]
-      expect(run "3 { a >> b: [ a 2 + ] } 1 curry \"b\" get").toEqual [5]
+      expect(run "5 { a >> b: a } 1 curry .b").toEqual [5]
+      expect(run "3 { a >> b: [ a 2 + ] } 1 curry .b").toEqual [5]
       expect(run "3 { a >> [ a 2 + ] } 1 curry 1 get").toEqual [5]
 
 
     it "auto apply OO features", ->
-      expect(run "{ a >> b: { a 2 + } } \"b\" get count-words").toEqual [0]
-      expect(run "1 { a >> b: [ a 2 + ] } \"b\" get").toEqual [3]
-      expect(run "1 { a >> b: [ a >> a 2 + ] } \"b\" get").toEqual [3]
-      expect(run "1 2 { a >> b: [ c >> a c + ] } \"b\" get").toEqual [3]
-      expect(-> run "{ a >> b: [ 1 2 + ] } \"b\" get").toThrow()
+      expect(run "{ a >> b: { a 2 + } } .b count-words").toEqual [0]
+      expect(run "1 { a >> b: [ a 2 + ] } .b").toEqual [3]
+      expect(run "1 { a >> b: [ a >> a 2 + ] } .b").toEqual [3]
+      expect(run "1 2 { a >> b: [ c >> a c + ] } .b").toEqual [3]
+      expect(-> run "{ a >> b: [ 1 2 + ] } .b").toThrow()
 
 
     it "count-arg-words", ->
