@@ -275,13 +275,27 @@ wordInEnv = (name, wordEnv) ->
   null
 
 wordVal = (word, wordEnv, ctx) ->
-  name = word.name
+  if ctx.debug
+    srcInfo = ctx.debug.pElem().srcInfo
+  else
+    srcInfo = null
+  name = word.path[0]
   [name, opt] = sepWordNameProc name
   v = wordInEnv(name, wordEnv)
-  if v == null
+  if v == null && word.path.length == 1
     v = buildinWords[name]
-  else if opt.notEval
-    v = v.valDup ctx
+  else
+    curPath = [name]
+    for name in word.path.slice 1
+      curPath.push name
+      if !(v instanceof Closure)
+        err "path:#{curPath.join(".")} can not reach", ctx, srcInfo
+      [found, e] = v.getElem(name)
+      if !found
+        err "word:#{name} not defined in path:#{curPath.slice(0,-1).join(".")}", ctx, srcInfo
+      v = e.val
+    if opt.notEval
+      v = v.valDup ctx
   v
 
 

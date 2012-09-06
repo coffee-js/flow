@@ -111,7 +111,9 @@ describe "Flow Interp", ->
 
 
     it "refinement", ->
-      expect(run "a: [ a: 1 ] a.a").toEqual [1]
+      expect(run "a: [ a: [ [ b: 10 ] ] ] a.a.1.b").toEqual [10]
+      expect(-> run "a: [ a: 1 ] a.a.1.b").toThrow()
+      expect(-> run "a: [ a: [ [ a: 1 ] ] ] a.a.1.b").toThrow()
 
 
     it "closure test", ->
@@ -123,32 +125,32 @@ describe "Flow Interp", ->
 
   describe "basic block data access", ->
 
-    it "read named elem", ->
+    it "read named elem with get", ->
       expect(run "{ a: 100 } \"a\" get").toEqual [100]
       expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
 
 
-    it "read nth elem", ->
+    it "read nth elem with get", ->
       expect(run "{ 100 } -1 get").toEqual [100]
       expect(run "{ { 10 } } 1 get 1 get").toEqual [10]
 
 
-    it "write named elem", ->
+    it "write named elem with set", ->
       expect(run "{ } 5 \"a\" set \"a\" get").toEqual [5]
       expect(run "{ a: { } } \"a\" get 200 \"b\" set \"b\" get").toEqual [200]
 
 
-    it "write nth elem", ->
+    it "write nth elem with set", ->
       expect(run "{ } 5 1 set 1 get").toEqual [5]
       expect(run "{ { } } 1 get 200 1 set 1 get").toEqual [200]
       expect(run "{ { 3 4 } } -1 get 5 -2 set -2 get").toEqual [5]
 
 
-    it "read arg elem", ->
+    it "read arg elem with get", ->
       expect(-> run "{ a >> + } \"a\" get").toThrow()
 
 
-    it "write arg elem", ->
+    it "write arg elem with set", ->
       expect(run "{ a >> + } 5 \"a\" set \"a\" get").toEqual [5]
       expect(run "{ a >> + } 5 \"a\" set count-words").toEqual [1]
       expect(run "{ a >> + } 5 \"a\" set count").toEqual [2]
