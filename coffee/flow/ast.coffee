@@ -28,7 +28,8 @@ class ast.Node
 
 
 class ast.Word extends ast.Node
-  constructor: (@name) ->
+  constructor: (@a) ->
+    @name = @a.join '.'
 
   toStr: ->
     @name
@@ -54,8 +55,8 @@ class ast.Block extends ast.Node
     @wordCount = 0
     @argWords = {}
     @words = {}
-    for a in args
-      @words[a.name] = @argWords[a.name] = null
+    for name in args
+      @words[name] = @argWords[name] = null
       @wordCount += 1
 
     for e in wordSeq
@@ -78,11 +79,11 @@ class ast.Block extends ast.Node
     if aa.length == 0
       return @
     args = []
-    for a in aa
-      if @argWords[a.name] == undefined
-        args.push a
-    for a in @args
-      args.push a
+    for name in aa
+      if @argWords[name] == undefined
+        args.push name
+    for name in @args
+      args.push name
     new ast.Block args, @wordSeq(), @seq.slice(0), @elemType, @srcInfo
 
   getElem: (name) ->
@@ -149,15 +150,15 @@ class ast.Block extends ast.Node
     args = []
     argWordIdx = {}
     i = 0
-    for a in @args
-      argWordIdx[a.name] = i
-      args.push a
+    for name in @args
+      argWordIdx[name] = i
+      args.push name
       i += 1
-    for a in other.args
-      if argWordIdx[a.name] != undefined
-        args[ argWordIdx[a.name] ] = a
+    for name in other.args
+      if argWordIdx[name] != undefined
+        args[ argWordIdx[name] ] = name
       else
-        args.push a
+        args.push name
     
     wordSeq = []
     myWordSeq = @wordSeq()
@@ -197,8 +198,8 @@ class ast.Block extends ast.Node
   toStr: ->
     s = ""
     if @args.length > 0
-      for a in @args
-        s += "#{a.name} "
+      for name in @args
+        s += "#{name} "
       s += ">> "
     for name of @words
       if @words[name] != null

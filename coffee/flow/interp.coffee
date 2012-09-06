@@ -299,9 +299,9 @@ curryArgWords = (c, ctx, n) ->
     err "no enough elems in seq, seq.len:#{retSeq.length} n:#{n}", ctx, srcInfo
   args = retSeq.slice -n
   for i in [0..n-1]
-    a = c.args[i]
+    name = c.args[i]
     w = args[i]
-    argWords[a.name] = w
+    argWords[name] = w
   retSeq.length = retSeq.length-n
   argWords
 
@@ -367,11 +367,11 @@ class Closure
     @argWordCount = 0
     if argWords
       @args = []
-      for a in @block.args
-        if argWords[a.name] == undefined
-          @args.push a
+      for name in @block.args
+        if argWords[name] == undefined
+          @args.push name
         else
-          @words[a.name] = @argWords[a.name] = argWords[a.name]
+          @words[name] = @argWords[name] = argWords[name]
           @argWordCount += 1
     else
       @args = @block.args
@@ -412,9 +412,9 @@ class Closure
         err "word:#{e.val.name} not defined", ctx, e.srcInfo
     else if e.val instanceof ast.Block
       args = []
-      for a in @block.args
-        if @argWords[a.name] == undefined
-          args.push a
+      for name in @block.args
+        if @argWords[name] == undefined
+          args.push name
       b = e.val.addArgs args
       v = new Closure b, @wordEnv
     else
@@ -430,11 +430,11 @@ class Closure
 
   apply: (argWords) ->
     aw = {}
-    for a in @block.args
-      if @argWords[a.name] != undefined
-        aw[a.name] = @argWords[a.name]
-      if argWords[a.name] != undefined
-        aw[a.name] = argWords[a.name]
+    for name in @block.args
+      if @argWords[name] != undefined
+        aw[name] = @argWords[name]
+      if argWords[name] != undefined
+        aw[name] = argWords[name]
     new Closure @block, @preWordEnv, aw
 
   seq: (ctx) ->
@@ -462,10 +462,10 @@ class Closure
   setElem: (name, elem) ->
     if @block.argWords[name] != undefined
       aw = {}
-      for a in @block.args
-        if @argWords[a.name] != undefined
-          aw[a.name] = @argWords[a.name]
-      aw[name] = elem
+      for aname in @block.args
+        if @argWords[aname] != undefined
+          aw[aname] = @argWords[aname]
+      aw[aname] = elem
       new Closure @block, @preWordEnv, aw
     else
       b = @block.setElem name, elem

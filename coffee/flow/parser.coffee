@@ -18,32 +18,50 @@ err = (s, pos=null, src=null) ->
 combinator = do ->
   endToken = pc.choice pc.space(), pc.end()
 
-  int10 = pc.map pc.rep1(pc.range '0','9'), (n)->n.reduce (t,s)->t.concat(s)
+  int10 = pc.map pc.rep1(pc.range '0','9'), (n) -> n.reduce (t,s) -> t.concat(s)
+
   number = pc.map pc.seq(pc.optional(pc.tok '-'), int10, endToken),
     (n) -> parseInt(if n[0]=='-' then n[0].concat(n[1]) else n[1])
 
   string = pc.map pc.seq(pc.tok('"'), pc.rep0(pc.choice pc.tok('\\"'), pc.neg(pc.tok('"'))), pc.tok('"'), endToken),
-    (n) -> if n[1].length > 0 then n[1].reduce (t,s)->t.concat(s) else ""
+    (n) ->
+      if n[1].length > 0
+        n[1].reduce (t,s) -> t.concat(s)
+      else ""
 
-  colon = pc.tok ':'
-  negws = pc.neg pc.space()
-  nameChar = pc.and negws, pc.neg(pc.seq colon, pc.space())
+  colon = pc.ch ':'
+  sep = pc.ch '.'
+  wordChar = pc.and pc.neg(pc.space()), pc.neg(sep)
+  nameChar = pc.and wordChar, pc.neg(pc.seq colon, pc.space())
 
   name = pc.map pc.seq(pc.rep1(nameChar), colon, endToken),
-    (n) -> n[0].reduce (t,s)->t.concat(s)
+    (n) -> n[0].reduce (t,s) -> t.concat(s)
 
-  word = pc.map pc.seq( pc.and(
-      pc.rep1(pc.neg pc.space()),
+  _wordName = pc.map pc.and(
+      pc.rep1(pc.and pc.neg(pc.space()), pc.neg(sep)),
       pc.neg(pc.seq pc.ch('[]'), endToken),
       pc.neg(pc.seq pc.ch('{}'), endToken),
       pc.neg(pc.seq pc.tok('>>'), endToken),
-      pc.neg(name)), endToken),
-    (n) -> new ast.Word n[0].reduce (t,s)->t.concat(s)
+      pc.neg(name)),
+    (n) -> n.reduce (t,s) -> t.concat(s)
+
+  wordName = pc.map pc.seq(_wordName, endToken), (n) -> n[0]
+
+  wordRefine = pc.map pc.rep1(pc.seq(sep, _wordName)),
+    (n) -> n.map (nn) -> nn.reduce (s,w) -> w
+
+  word = pc.map pc.seq(_wordName, pc.optional(wordRefine), endToken),
+    (n) ->
+      if n[1] == true
+        a = [n[0]]
+      else
+        a = [n[0]].concat n[1]
+      new ast.Word a
 
   elem = null
   _elem = pc.lazy ->elem
 
-  args = pc.map pc.seq(pc.rep1(word), pc.tok('>>'), pc.space()),
+  args = pc.map pc.seq(pc.rep1(wordName), pc.tok('>>'), pc.space()),
     (n) -> n[0]
 
   namedElem = pc.map pc.seq(name, _elem),
@@ -90,7 +108,7 @@ combinator = do ->
   elem = pc.map pc.choice(evalBlock, valBlock, number, string, word),
     (n, pos, src) -> new ast.Elem n, new ast.SrcInfo(pos, src)
 
-  { int10, number, string, colon, negws, nameChar, name, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
+  { int10, number, string, colon, wordChar, nameChar, name, wordName, wordRefine, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
 
 
 for k, v of combinator

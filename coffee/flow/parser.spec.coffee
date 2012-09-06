@@ -45,10 +45,10 @@ describe "Flow Parser", ->
       (expect (parse p, "aa").match).toEqual null
 
 
-  describe "combinator negws", ->
+  describe "combinator wordChar", ->
 
-    it "match negws", ->
-      p = parser.negws
+    it "match wordChar", ->
+      p = parser.wordChar
       (expect (parse p, " ").match).toEqual null
       (expect (parse p, "aa").match).toEqual "a"
 
@@ -73,19 +73,37 @@ describe "Flow Parser", ->
       (expect (parse p, "aa").match).toEqual null
 
 
+  describe "combinator wordName", ->
+
+    it "match wordName", ->
+      p = parser.wordName
+      (expect (parse p, " ").match).toEqual null
+      (expect (parse p, "abc").match).toEqual "abc"
+      (expect (parse p, "abc: ").match).toEqual null
+      (expect (parse p, "abc:").match).toEqual "abc:"
+      (expect (parse p, "[").match).toEqual null
+      (expect (parse p, "]").match).toEqual null
+      (expect (parse p, "[abc").match).toEqual "[abc"
+      (expect (parse p, "[abc]").match).toEqual "[abc]"
+      (expect (parse p, "{([])").match).toEqual "{([])"
+
+
+  describe "combinator wordRefine", ->
+
+    it "match wordRefine", ->
+      p = parser.wordRefine
+      (expect (parse p, " ").match).toEqual null
+      (expect (parse p, ".abc").match).toEqual ["abc"]
+      (expect (parse p, ".a.b.c").match).toEqual ["a","b","c"]
+
+
   describe "combinator word", ->
 
     it "match word", ->
       p = parser.word
       (expect (parse p, " ").match).toEqual null
-      (expect (parse p, "abc").match.name).toEqual "abc"
-      (expect (parse p, "abc: ").match).toEqual null
-      (expect (parse p, "abc:").match.name).toEqual "abc:"
-      (expect (parse p, "[").match).toEqual null
-      (expect (parse p, "]").match).toEqual null
-      (expect (parse p, "[abc").match.name).toEqual "[abc"
-      (expect (parse p, "[abc]").match.name).toEqual "[abc]"
-      (expect (parse p, "{([])").match.name).toEqual "{([])"
+      (expect (parse p, "abc").match.a).toEqual ["abc"]
+      (expect (parse p, "a.b.c").match.a).toEqual ["a","b","c"]
 
 
   describe "combinator seq", ->
@@ -101,6 +119,7 @@ describe "Flow Parser", ->
       (expect t.val).toEqual 564
       (expect t.srcInfo.pos).toEqual 13
 
+
   describe "combinator block", ->
 
     it "match block", ->
@@ -113,7 +132,7 @@ describe "Flow Parser", ->
       (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
 
       a = (parse p, "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match
-      (expect a.args[1].name).toEqual "bb"
+      (expect a.args[1]).toEqual "bb"
       (expect a.seq[0].val.words["sd"].val).toEqual 45
       (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
 
