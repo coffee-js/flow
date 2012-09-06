@@ -31,7 +31,7 @@ combinator = do ->
 
   colon = pc.ch ':'
   sep = pc.ch '.'
-  wordOpt = pc.ch "'"
+  wordOpt = pc.ch "'#"
   wordChar = pc.and pc.neg(pc.space()), pc.neg(sep), pc.neg(wordOpt)
   nameChar = pc.and wordChar, pc.neg(pc.seq colon, pc.space())
 

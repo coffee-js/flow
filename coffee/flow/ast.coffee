@@ -114,7 +114,7 @@ class ast.Block extends ast.Node
     i = 0
     for k of @words
       wordIdx[k] = i
-      wordSeq.push {name:k, elem:words[k]}
+      wordSeq.push {name:k, elem:@words[k]}
       i += 1
 
     if typeof name == "number"

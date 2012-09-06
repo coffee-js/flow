@@ -294,7 +294,11 @@ wordVal = (word, wordEnv, ctx) ->
     v = cElem.val
     curPath = [null]
 
-  for name in word.refines
+  if word.opt == "#"
+    refines = word.refines.slice 0,-1
+  else
+    refines = word.refines
+  for name in refines
     curPath.push name
     if !(v instanceof Closure)
       err "path:#{curPath.join(".")} can not reach", ctx, srcInfo
@@ -306,6 +310,12 @@ wordVal = (word, wordEnv, ctx) ->
     if !(v instanceof Closure)
       err "word:#{word.name} is not a block", ctx, srcInfo
     v = v.valDup ctx
+  else if word.opt == "#"
+    if ctx.retSeq.length == 0
+      err "no enough args in seq:#{retSeq}", ctx, srcInfo
+    elem = ctx.retSeq.pop()
+    name = word.refines[refines.length]
+    v = v.setElem name, elem
   v
 
 

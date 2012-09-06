@@ -110,19 +110,24 @@ describe "Flow Interp", ->
       expect(run "a: [ 2 + ] 1 'a eval ").toEqual [3]
 
 
-    it "refinements with entry", ->
+    it "read refinements with entry", ->
       expect(run "a: [ a: [ [ b: 10 ] ] ] a.a.1.b").toEqual [10]
       expect(-> run "a: [ a: 1 ] a.a.1.b").toThrow()
       expect(-> run "a: [ a: [ [ a: 1 ] ] ] a.a.1.b").toThrow()
 
 
-    it "refinements with no entry", ->
+    it "read refinements with no entry", ->
       expect(run "{ a: [ [ b: 10 ] ] } .a.1.b").toEqual [10]
       expect(run "{ a: [ [ b: [ 10 ] ] ] } '.a.1.b eval").toEqual [10]
 
 
-    it "word to word to word", ->
+    it "read word to word to word", ->
       expect(run "1 2 { a: [ b: [ c: d ] d: [ + ] ] } '.a.b.c eval").toEqual [3]
+
+
+    it "write refinements with entry", ->
+      expect(run "a: [ a: [ { b: 10 } ] ] 100 #a.a.1.b .b").toEqual [100]
+
 
 
     it "closure test", ->
@@ -146,7 +151,7 @@ describe "Flow Interp", ->
 
     it "read arg elem with get", ->
       expect(-> run "{ a >> + } \"a\" get").toThrow()
-      
+
 
     it "write named elem with set", ->
       expect(run "{ } 5 \"a\" set \"a\" get").toEqual [5]
