@@ -107,7 +107,7 @@ describe "Flow Interp", ->
 
     it "use \"'\" get val of a eval word", ->
       expect(run "add: [ a b >> a b + ] 1 2 'add eval").toEqual [3]
-      expect(run "a: [ 2 + ] 1 'a eval ").toEqual [3]
+      expect(run "a: [ 2 + ] 1 'a eval").toEqual [3]
 
 
     it "read refinements with entry", ->

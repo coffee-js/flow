@@ -83,9 +83,10 @@ describe "Flow Parser", ->
       (expect (parse p, "abc:").match).toEqual "abc:"
       (expect (parse p, "[").match).toEqual null
       (expect (parse p, "]").match).toEqual null
-      (expect (parse p, "[abc").match).toEqual "[abc"
-      (expect (parse p, "[abc]").match).toEqual "[abc]"
-      (expect (parse p, "{([])").match).toEqual "{([])"
+      (expect (parse p, "[abc").match).toEqual null
+      (expect (parse p, "[abc]").match).toEqual null
+      (expect (parse p, "{([])").match).toEqual null
+      (expect (parse p, ">>").match).toEqual null
 
 
   describe "combinator wordRefine", ->
@@ -120,9 +121,9 @@ describe "Flow Parser", ->
       (expect t[0].srcInfo.pos).toEqual 0
       (expect t[1].val).toEqual 435
       (expect t[1].srcInfo.pos).toEqual 4
-      t = (parse p, "serdgd 465 [ 564 ]").match[2].val.seq[0]
+      t = (parse p, "serdgd 465 [564]").match[2].val.seq[0]
       (expect t.val).toEqual 564
-      (expect t.srcInfo.pos).toEqual 13
+      (expect t.srcInfo.pos).toEqual 12
 
 
   describe "combinator block", ->
@@ -130,16 +131,14 @@ describe "Flow Parser", ->
     it "match block", ->
       p = parser.evalBlock
 
-      (expect (parse p, "[]").match).toEqual null
-
-      a = (parse p, "[ [ sd: 45 [] ] - ]").match
+      a = (parse p, "[[sd: 45 aa] -]").match
       (expect a.seq[0].val.words["sd"].name).toEqual "sd"
-      (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
+      (expect a.seq[0].val.seq[0].val.name).toEqual "aa"
 
-      a = (parse p, "[ aa bb >> [ cc >> sd: 45 [] ] - aa ]").match
+      a = (parse p, "[aa bb >> [cc >> sd: 45 aa] - aa]").match
       (expect a.args[1]).toEqual "bb"
       (expect a.seq[0].val.words["sd"].val).toEqual 45
-      (expect a.seq[0].val.seq[0].val.name).toEqual "[]"
+      (expect a.seq[0].val.seq[0].val.name).toEqual "aa"
 
 
   describe "parse", ->
@@ -147,10 +146,10 @@ describe "Flow Parser", ->
     it "print error info", ->
 
       src = new pc.Source "1 2 [", null
-      (expect (->parser.parse src)).toThrow "null:1:5 syntex error"
+      (expect (->parser.parse src)).toThrow "null:1:4 syntex error"
 
-      src = new pc.Source "a: [ n >> n: 1 2 + ] a", null
-      (expect (->parser.parse src)).toThrow "null:1:11 redefined word:\"n\""
+      src = new pc.Source "a: [n >> n: 1 2 +] a", null
+      (expect (->parser.parse src)).toThrow "null:1:10 redefined word:\"n\""
 
 
 
