@@ -253,15 +253,15 @@ describe "Flow Interp", ->
   describe "simple function impl", ->
 
     filterFn = \
-      "filter: [a p >>
+      "filter: [ a p >>
         x:  a.1
-        xs: [a 2 -1 slice]
+        xs: [ a 2 -1 slice ]
         a len 0 =
         { {} }
         {
           x p do
-          {xs p filter x unshift}
-          {xs p filter}
+          { xs p filter x unshift }
+          { xs p filter }
           if
         }
         if
@@ -275,25 +275,25 @@ describe "Flow Interp", ->
 
 
     qsortFn = \
-      "qsort: [a >>
+      "qsort: [ a >>
         qivot: a.1
-        xs:    [a 2 -1 slice]
-        less:  [xs {qivot <=} filter qsort]
-        more:  [xs {qivot > } filter qsort]
+        xs:    [ a 2 -1 slice]
+        less:  [ xs {qivot <=} filter qsort ]
+        more:  [ xs {qivot > } filter qsort ]
         a len 0 =
         { {} }
-        {less more qivot unshift concat}
+        { less more qivot unshift concat }
         if
       ]"
     qsortFn1 = \
-      "qsort: [a >>
+      "qsort: [ a >>
         qivot: a.1
-        less:  [a {qivot <} filter qsort]
-        equal: [a {qivot =} filter ]
-        more:  [a {qivot >} filter qsort]
+        less:  [ a {qivot <} filter qsort ]
+        equal: [ a {qivot =} filter ]
+        more:  [ a {qivot >} filter qsort ]
         a len 0 =
         { a }
-        {less equal more concat concat}
+        { less equal more concat concat }
         if
       ]"
     it "qsort impl", ->
