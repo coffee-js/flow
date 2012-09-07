@@ -185,10 +185,10 @@ buildinWords = {
     c = cElem.val
     c.slice start.val, end.val
 
-  "join": bw 2, (ctx, a, b) ->
+  "concat": bw 2, (ctx, a, b) ->
     ck ctx, a, Closure
     ck ctx, b, Closure
-    a.val.join b.val
+    a.val.concat b.val
 
   "splice": bw 4, (ctx, cElem, iElem, delCountElem, addElemsCElem) ->
     ck ctx, cElem, Closure
@@ -537,8 +537,8 @@ class Closure
     b = @block.slice p1, p2
     new Closure b, @preWordEnv, @argWords
 
-  join: (other) ->
-    b = @block.join other.block
+  concat: (other) ->
+    b = @block.concat other.block
     aw = {}
     for name of @argWords
       aw[name] = @argWords[name]

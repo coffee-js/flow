@@ -146,7 +146,7 @@ class ast.Block extends ast.Node
     seq = @seq.slice p1-1, p2
     new ast.Block @args, @wordSeq(), seq, @elemType, @srcInfo
 
-  join: (other) ->
+  concat: (other) ->
     args = []
     argWordIdx = {}
     i = 0

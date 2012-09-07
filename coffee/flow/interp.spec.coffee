@@ -218,9 +218,9 @@ describe "Flow Interp", ->
       expect(run "{ 1 2 3 4 5 } 2 -1 slice eval").toEqual [2,3,4,5]
 
 
-    it "join", ->
-      expect(run "{ 1 2 3 4 5 } { 6 7 8 9 10 } join count").toEqual [10]
-      expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } join count").toEqual [8]
+    it "concat", ->
+      expect(run "{ 1 2 3 4 5 } { 6 7 8 9 10 } concat count").toEqual [10]
+      expect(run "{ a: 1 b: 2 a b } { c: 3 d: 4 c d } concat count").toEqual [8]
 
 
     it "splice", ->
@@ -281,7 +281,7 @@ describe "Flow Interp", ->
         more:  [xs {qivot > } filter qsort]
         a len 0 =
         { {} }
-        {less more qivot unshift join}
+        {less more qivot unshift concat}
         if
       ]"
     qsortFn1 = \
@@ -292,7 +292,7 @@ describe "Flow Interp", ->
         more:  [a {qivot >} filter qsort]
         a len 0 =
         { a }
-        {less equal more join join}
+        {less equal more concat concat}
         if
       ]"
     it "qsort impl", ->
