@@ -253,7 +253,7 @@ describe "Flow Interp", ->
 
     filterFn = \
       "filter: [a p >>
-        x:  [a.1]
+        x:  a.1
         xs: [a 2 -1 slice]
         a len 0 =
         { {} }
@@ -275,7 +275,7 @@ describe "Flow Interp", ->
 
     qsortFn = \
       "qsort: [a >>
-        qivot: [a.1]
+        qivot: a.1
         xs:    [a 2 -1 slice]
         less:  [xs {qivot <=} filter qsort]
         more:  [xs {qivot > } filter qsort]
@@ -286,7 +286,7 @@ describe "Flow Interp", ->
       ]"
     qsortFn1 = \
       "qsort: [a >>
-        qivot: [a.1]
+        qivot: a.1
         less:  [a {qivot <} filter qsort]
         equal: [a {qivot =} filter ]
         more:  [a {qivot >} filter qsort]

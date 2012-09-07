@@ -264,12 +264,12 @@ sepWordNameProc = (name) ->
   [name, opt]
 
 
-wordInEnv = (name, wordEnv) ->
+wordInEnv = (name, wordEnv, ctx) ->
   for words in wordEnv
     e = words[name]
     if e != undefined
       if e.val instanceof Word
-        return wordInEnv e.val.name, e.val.wordEnv
+        return wordVal e.val, e.val.wordEnv, ctx
       else
         return e.val
   null
@@ -282,7 +282,7 @@ wordVal = (word, wordEnv, ctx) ->
 
   if word.entry != null
     name = word.entry
-    v = wordInEnv(name, wordEnv)
+    v = wordInEnv name, wordEnv, ctx
     if v == null && word.refines.length == 0
       v = buildinWords[name]
     else
