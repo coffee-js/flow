@@ -212,7 +212,7 @@ class ast.Block extends ast.Node
       when "VAL"
         "{ #{s}}"
       else
-        err "@elemType error"
+        err "fatal error: #{@toStr()} @elemType:#{@elemType}"
 
 
 
