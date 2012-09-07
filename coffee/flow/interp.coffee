@@ -121,7 +121,7 @@ buildinWords = {
     c = elem.val
     seqApply c, ctx
 
-  "eval": bw 1, (ctx, elem) ->
+  "do": bw 1, (ctx, elem) ->
     ck ctx, elem, Closure
     c = elem.val
     seqApplyEval c, ctx

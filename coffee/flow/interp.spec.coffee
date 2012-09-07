@@ -47,15 +47,15 @@ describe "Flow Interp", ->
     describe "eval block", ->
 
       it "basic", ->
-        expect(run "{ 1 2 + } eval").toEqual [3]
+        expect(run "{ 1 2 + } do").toEqual [3]
         expect(run "a: [ 2 + ] 1 [ a ]").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } eval").toEqual [3]
-        expect(run "a: [ 2 + ] 1 { a } [ eval ]").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } do").toEqual [3]
+        expect(run "a: [ 2 + ] 1 { a } [ do ]").toEqual [3]
 
 
       it "concatnative", ->
-        expect(run "1 { 2 + } eval").toEqual [3]
-        expect(run "1 2 { + } eval").toEqual [3]
+        expect(run "1 { 2 + } do").toEqual [3]
+        expect(run "1 2 { + } do").toEqual [3]
 
 
 
@@ -66,7 +66,8 @@ describe "Flow Interp", ->
 
 
     it "define word no order in same scope", ->
-      expect(run "b: [ c ] c: 100 b").toEqual [100]
+      expect(run "b: [c] c: 100 b").toEqual [100]
+      expect(run "b: c c: 100 b").toEqual [100]
 
 
     describe "scopes", ->
@@ -82,9 +83,9 @@ describe "Flow Interp", ->
       expect(run "fib: [ n >> n 1 = n 0 = or ] 2 fib 1 fib").toEqual [false, true]
       expect(run "x: 2 y: 3 x y *").toEqual [6]
       expect(run "x: [ n >> n 1 + ] 0 x").toEqual [1]
-      expect(run "a: [ 2 + ] 1 { a } [ f >> f ] eval").toEqual [3]
-      expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] eval").toEqual [3]
-      expect(run "1 2 { n >> n 2 + - } eval").toEqual [-3]
+      expect(run "a: [ 2 + ] 1 { a } [ f >> f ] do").toEqual [3]
+      expect(run "a: [ 2 + ] 1 { a } [ v f >> v f ] do").toEqual [3]
+      expect(run "1 2 { n >> n 2 + - } do").toEqual [-3]
 
 
     it "not resolving arg word", ->
@@ -106,8 +107,8 @@ describe "Flow Interp", ->
 
 
     it "use \"'\" get val of a eval word", ->
-      expect(run "add: [ a b >> a b + ] 1 2 'add eval").toEqual [3]
-      expect(run "a: [ 2 + ] 1 'a eval").toEqual [3]
+      expect(run "add: [ a b >> a b + ] 1 2 'add do").toEqual [3]
+      expect(run "a: [ 2 + ] 1 'a do").toEqual [3]
 
 
     it "read refinements with entry", ->
@@ -118,11 +119,11 @@ describe "Flow Interp", ->
 
     it "read refinements with no entry", ->
       expect(run "{ a: [ [ b: 10 ] ] } .a.1.b").toEqual [10]
-      expect(run "{ a: [ [ b: [ 10 ] ] ] } '.a.1.b eval").toEqual [10]
+      expect(run "{ a: [ [ b: [ 10 ] ] ] } '.a.1.b do").toEqual [10]
 
 
     it "read word to word to word", ->
-      expect(run "1 2 { a: [ b: [ c: d ] d: [ + ] ] } '.a.b.c eval").toEqual [3]
+      expect(run "1 2 { a: [ b: [ c: d ] d: [ + ] ] } '.a.b.c do").toEqual [3]
 
 
     it "write refinements with entry", ->
@@ -180,8 +181,8 @@ describe "Flow Interp", ->
 
 
     it "use \"'\" read val of a eval elem", ->
-      expect(run "{ [ 100 ] } \"'-1\" get eval").toEqual [100]
-      expect(run "{ a: [ 100 ] } \"'a\" get eval").toEqual [100]
+      expect(run "{ [ 100 ] } \"'-1\" get do").toEqual [100]
+      expect(run "{ a: [ 100 ] } \"'a\" get do").toEqual [100]
 
 
     it "len", ->
@@ -212,10 +213,10 @@ describe "Flow Interp", ->
 
 
     it "slice", ->
-      expect(run "{ 1 2 3 4 5 } 2 -2 slice eval").toEqual [2,3,4]
-      expect(run "{ 1 2 3 4 5 } 1 5 slice eval").toEqual [1,2,3,4,5]
-      expect(run "{ 1 2 3 4 5 } 1 -1 slice eval").toEqual [1,2,3,4,5]
-      expect(run "{ 1 2 3 4 5 } 2 -1 slice eval").toEqual [2,3,4,5]
+      expect(run "{ 1 2 3 4 5 } 2 -2 slice do").toEqual [2,3,4]
+      expect(run "{ 1 2 3 4 5 } 1 5 slice do").toEqual [1,2,3,4,5]
+      expect(run "{ 1 2 3 4 5 } 1 -1 slice do").toEqual [1,2,3,4,5]
+      expect(run "{ 1 2 3 4 5 } 2 -1 slice do").toEqual [2,3,4,5]
 
 
     it "concat", ->
@@ -224,20 +225,20 @@ describe "Flow Interp", ->
 
 
     it "splice", ->
-      expect(run "{ 1 2 3 4 5 } 1 0 { 100 } splice eval").toEqual [100,1,2,3,4,5]
-      expect(run "{ 1 2 3 4 5 } 2 2 { 100 } splice eval").toEqual [1,100,4,5]
-      expect(run "x: 100 { 1 2 3 4 5 } 1 0 { x } splice eval").toEqual [100,1,2,3,4,5]
-      expect(run "x: 100 { 1 2 3 4 5 } 2 2 { x } splice eval").toEqual [1,100,4,5]
+      expect(run "{ 1 2 3 4 5 } 1 0 { 100 } splice do").toEqual [100,1,2,3,4,5]
+      expect(run "{ 1 2 3 4 5 } 2 2 { 100 } splice do").toEqual [1,100,4,5]
+      expect(run "x: 100 { 1 2 3 4 5 } 1 0 { x } splice do").toEqual [100,1,2,3,4,5]
+      expect(run "x: 100 { 1 2 3 4 5 } 2 2 { x } splice do").toEqual [1,100,4,5]
 
 
     it "unshift", ->
-      expect(run "#{unshiftFn} { 1 2 3 4 5 } 100 unshift eval").toEqual [100,1,2,3,4,5]
-      expect(run "#{unshiftFn} x: 100 { 1 2 3 4 5 } x unshift eval").toEqual [100,1,2,3,4,5]
+      expect(run "#{unshiftFn} { 1 2 3 4 5 } 100 unshift do").toEqual [100,1,2,3,4,5]
+      expect(run "#{unshiftFn} x: 100 { 1 2 3 4 5 } x unshift do").toEqual [100,1,2,3,4,5]
 
 
     it "push", ->
-      expect(run "#{pushFn} { 1 2 3 4 5 } 100 push eval").toEqual [1,2,3,4,5,100]
-      expect(run "#{pushFn} x: 100 { 1 2 3 4 5 } x push eval").toEqual [1,2,3,4,5,100]
+      expect(run "#{pushFn} { 1 2 3 4 5 } 100 push do").toEqual [1,2,3,4,5,100]
+      expect(run "#{pushFn} x: 100 { 1 2 3 4 5 } x push do").toEqual [1,2,3,4,5,100]
 
 
     it "filter-arg-words", ->
@@ -258,7 +259,7 @@ describe "Flow Interp", ->
         a len 0 =
         { {} }
         {
-          x p eval
+          x p do
           {xs p filter x unshift}
           {xs p filter}
           if
@@ -266,11 +267,11 @@ describe "Flow Interp", ->
         if
       ]"
     it "filter impl", ->
-      expect(run "#{unshiftFn} #{filterFn} { 1 } { 3 <= } filter eval").toEqual [1]
-      expect(run "#{unshiftFn} #{filterFn} { 0 1 } { 3 < } filter eval").toEqual [0,1]
-      expect(run "#{unshiftFn} #{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter eval").toEqual [0,3,1,1,2]
-      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter eval").toEqual [0,3,4,1,2]
-      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 0 <  } filter eval").toEqual []
+      expect(run "#{unshiftFn} #{filterFn} { 1 } { 3 <= } filter do").toEqual [1]
+      expect(run "#{unshiftFn} #{filterFn} { 0 1 } { 3 < } filter do").toEqual [0,1]
+      expect(run "#{unshiftFn} #{filterFn} { 0 3 1 4 1 5 2 } { 3 <= } filter do").toEqual [0,3,1,1,2]
+      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 4 <= } filter do").toEqual [0,3,4,1,2]
+      expect(run "#{unshiftFn} #{filterFn} { 0 3 5 4 1 5 2 } { 0 <  } filter do").toEqual []
 
 
     qsortFn = \
@@ -297,8 +298,8 @@ describe "Flow Interp", ->
       ]"
     it "qsort impl", ->
       td = "12 100 5 34 27 10 -50 0"
-      expect(run "#{unshiftFn} #{filterFn} #{qsortFn} { #{td} } qsort eval").toEqual [-50,0,5,10,12,27,34,100]
-      expect(run "#{unshiftFn} #{filterFn} #{qsortFn1} { #{td} } qsort eval").toEqual [-50,0,5,10,12,27,34,100]
+      expect(run "#{unshiftFn} #{filterFn} #{qsortFn} { #{td} } qsort do").toEqual [-50,0,5,10,12,27,34,100]
+      expect(run "#{unshiftFn} #{filterFn} #{qsortFn1} { #{td} } qsort do").toEqual [-50,0,5,10,12,27,34,100]
 
 
 
@@ -319,15 +320,15 @@ describe "Flow Interp", ->
 
   describe "apply block", ->
     it "apply", ->
-      expect(run "3 { a >> a 2 + } apply eval").toEqual [5]
-      expect(run "1 2 { + } { a >> a } apply eval eval").toEqual [3]
-      expect(run "3 { 1 + } apply eval").toEqual [4]
+      expect(run "3 { a >> a 2 + } apply do").toEqual [5]
+      expect(run "1 2 { + } { a >> a } apply do do").toEqual [3]
+      expect(run "3 { 1 + } apply do").toEqual [4]
 
 
     it "apply", ->
-      expect(run "3 { a >> a 2 + } 1 curry eval").toEqual [5]
-      expect(run "1 2 { + } { a >> a } 3 curry eval eval").toEqual [3]
-      expect(run "3 { 1 + } 0 curry eval").toEqual [4]
+      expect(run "3 { a >> a 2 + } 1 curry do").toEqual [5]
+      expect(run "1 2 { + } { a >> a } 3 curry do do").toEqual [3]
+      expect(run "3 { 1 + } 0 curry do").toEqual [4]
 
 
     it "block read apply elem", ->
@@ -356,8 +357,8 @@ describe "Flow Interp", ->
 
 
     it "wapply", ->
-      expect(run "{ a: 1 b: 2 c: 3 } { a b c >> a b c } wapply eval").toEqual [1,2,3]
-      expect(run "100 20 { b: 2 } { a b c >> a b c } wapply eval").toEqual [100,2,20]
+      expect(run "{ a: 1 b: 2 c: 3 } { a b c >> a b c } wapply do").toEqual [1,2,3]
+      expect(run "100 20 { b: 2 } { a b c >> a b c } wapply do").toEqual [100,2,20]
 
 
   it "external call", ->
