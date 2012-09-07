@@ -252,18 +252,18 @@ describe "Flow Interp", ->
   describe "simple function impl", ->
 
     filterFn = \
-      "filter: [ a p >>
-        x:  [ a.1 ]
-        xs: [ a 2 -1 slice ]
-        a len 0 = {
-          a
-        } {
-          x p eval {
-            xs p filter x unshift
-          } {
-            xs p filter
-          } if
-        } if
+      "filter: [a p >>
+        x:  [a.1]
+        xs: [a 2 -1 slice]
+        a len 0 =
+        { {} }
+        {
+          x p eval
+          {xs p filter x unshift}
+          {xs p filter}
+          if
+        }
+        if
       ]"
     it "filter impl", ->
       expect(run "#{unshiftFn} #{filterFn} { 1 } { 3 <= } filter eval").toEqual [1]
@@ -274,28 +274,26 @@ describe "Flow Interp", ->
 
 
     qsortFn = \
-      "qsort: [ a >>
-        qivot: [ a.1 ]
-        xs:    [ a 2 -1 slice ]
-        less:  [ xs { qivot <= } filter qsort ]
-        more:  [ xs { qivot >  } filter qsort ]
-        a len 0 = {
-          a
-        } {
-          less more qivot unshift join
-        } if
+      "qsort: [a >>
+        qivot: [a.1]
+        xs:    [a 2 -1 slice]
+        less:  [xs {qivot <=} filter qsort]
+        more:  [xs {qivot > } filter qsort]
+        a len 0 =
+        { {} }
+        {less more qivot unshift join}
+        if
       ]"
     qsortFn1 = \
-      "qsort: [ a >>
-        qivot: [ a.1 ]
-        less:  [ a { qivot < } filter qsort ]
-        equal: [ a { qivot = } filter ]
-        more:  [ a { qivot > } filter qsort ]
-        a len 0 = {
-          a
-        } {
-          less equal more join join
-        } if
+      "qsort: [a >>
+        qivot: [a.1]
+        less:  [a {qivot <} filter qsort]
+        equal: [a {qivot =} filter ]
+        more:  [a {qivot >} filter qsort]
+        a len 0 =
+        { a }
+        {less equal more join join}
+        if
       ]"
     it "qsort impl", ->
       td = "12 100 5 34 27 10 -50 0"
