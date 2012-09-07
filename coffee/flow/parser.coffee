@@ -50,7 +50,7 @@ combinator = do ->
   wordRefine = pc.map pc.rep1(pc.seq(sep, _wordName)),
     (n) -> n.map (nn) -> nn.reduce (s,w) -> w
 
-  wordOpt = pc.choice pc.ch "'#", pc.tok "#!"
+  wordOpt = pc.choice pc.tok("#!"), pc.ch("'#")
   word = pc.map pc.seq(pc.optional(wordOpt), pc.choice(
       pc.seq(_wordName, pc.optional(wordRefine)),
       wordRefine

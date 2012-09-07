@@ -127,6 +127,7 @@ describe "Flow Interp", ->
 
     it "write refinements with entry", ->
       expect(run "a: [ a: [ [ b: 10 ] ] ] 100 #a.a.1.b .b").toEqual [100]
+      expect(run "a: [ a: [ [ b: 10 ] ] ] { 1 2 + } #!a.a.1.b .b").toEqual [3]
 
 
 
@@ -168,6 +169,10 @@ describe "Flow Interp", ->
       expect(run "{ a >> + } 5 \"a\" set \"a\" get").toEqual [5]
       expect(run "{ a >> + } 5 \"a\" set count-words").toEqual [1]
       expect(run "{ a >> + } 5 \"a\" set count").toEqual [2]
+
+
+    it "write eval elem with set", ->
+      expect(run "{ a: [ + ] } { 5 } \"!a\" set .a").toEqual [5]
 
 
     it "use \"'\" read val of a eval elem", ->

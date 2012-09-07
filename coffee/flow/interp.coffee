@@ -145,7 +145,7 @@ buildinWords = {
 
     c = cElem.val
     name = nameElem.val
-    c.setElem name, elem
+    c.setElem name, elem, ctx
 
   "len":  bw 1, (ctx, cElem) ->
     ck ctx, cElem, Closure
@@ -256,9 +256,10 @@ buildinWords = {
 
 
 sepWordNameProc = (name) ->
-  opt = name[0]
-  switch opt
-    when "'"
+  opt = null
+  switch name[0]
+    when "'", "!"
+      opt = name[0]
       name = name.slice 1
   [name, opt]
 
@@ -294,7 +295,7 @@ wordVal = (word, wordEnv, ctx) ->
     v = cElem.val
     curPath = [null]
 
-  if word.opt == "#"
+  if word.opt != null && word.opt[0] == "#"
     refines = word.refines.slice 0,-1
   else
     refines = word.refines
@@ -310,15 +311,16 @@ wordVal = (word, wordEnv, ctx) ->
     if !(v instanceof Closure)
       err "word:#{word.name} is not a block", ctx, srcInfo
     v = v.valDup ctx
-  else if word.opt == "#"
+  else if word.opt != null && word.opt[0] == "#"
     if ctx.retSeq.length == 0
       err "no enough args in seq:#{ctx.retSeq}", ctx, srcInfo
     elem = ctx.retSeq.pop()
     name = word.refines[refines.length]
-    v = v.setElem name, elem
+    if word.opt == "#!"
+      name = "!#{name}"
+    v = v.setElem name, elem, ctx
     v = v.valDup ctx
   v
-
 
 curryArgWords = (c, ctx, n) ->
   retSeq = ctx.retSeq
@@ -427,6 +429,17 @@ class Closure
       else
         err "fatal error: #{@toStr()} @elemType:#{@elemType}", ctx, null
 
+  evalDup: (ctx) ->
+    switch @elemType
+      when "EVAL"
+        @
+      when "VAL"
+        c = new Closure @block, @preWordEnv, @argWords
+        c.elemType = "EVAL"
+        c
+      else
+        err "fatal error: #{@toStr()} @elemType:#{@elemType}", ctx, null
+
   wordEnvInit: ->
     if @wordEnv != undefined
       return
@@ -499,7 +512,10 @@ class Closure
       e.val = e.val.valDup ctx
     [found, e]
 
-  setElem: (name, elem) ->
+  setElem: (name, elem, ctx) ->
+    [name, opt] = sepWordNameProc name
+    if opt == "!"
+      elem.val = elem.val.evalDup ctx
     if @block.argWords[name] != undefined
       aw = {}
       for aname in @block.args
