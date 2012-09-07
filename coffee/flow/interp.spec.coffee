@@ -130,6 +130,10 @@ describe "Flow Interp", ->
       expect(run "a: [ a: [ [ b: 10 ] ] ] { 1 2 + } #!a.a.1.b .b").toEqual [3]
 
 
+    it "write refinements with no entry", ->
+      expect(run "100 { a: [ [ b: 10 ] ] } #.a.1.b .b").toEqual [100]
+      expect(run "{ 1 2 + } { a: [ [ b: 10 ] ] } #!.a.1.b .b").toEqual [3]
+
 
     it "closure test", ->
 
