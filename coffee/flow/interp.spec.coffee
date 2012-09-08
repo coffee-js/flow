@@ -252,6 +252,11 @@ describe "Flow Interp", ->
     it "filter-seq", ->
 
 
+    it "map", ->
+      expect(run "{ 1 2 3 4 5 } { 1 + } map do").toEqual [2,3,4,5,6]
+      expect(run "10 { a >> b: 100 a b 1 2 3 4 5 } apply { 1 + } map do").toEqual [111,2,3,4,5,6]
+
+
   describe "simple function impl", ->
 
     filterFn = \

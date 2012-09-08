@@ -229,7 +229,45 @@ buildinWords = {
     c = cElem.val
     c.filterSeq()
 
-  # "map"
+  "map": bw 2, (ctx, cElem, bElem) ->
+    ck ctx, cElem, Closure
+    ck ctx, bElem, Closure
+
+    c = cElem.val
+    b = bElem.val
+
+    oldRetSeqLen = ctx.retSeq.length
+
+    wordSeq = []
+    for name of c.words
+      if c.block.argWords[name] != undefined
+        continue
+      ctx.retSeq.push c.words[name]
+      seqApplyEval b, ctx
+      elem = ctx.retSeq.pop()
+      wordSeq.push {name, elem}
+
+    seq = []
+    for e in c.seq(ctx)
+      ctx.retSeq.push e
+      seqApplyEval b, ctx
+      e = ctx.retSeq.pop()
+      seq.push e
+
+    argWords = {}
+    for name of c.argWords
+      ctx.retSeq.push c.argWords[name]
+      seqApplyEval b, ctx
+      e = ctx.retSeq.pop()
+      argWords[name] = e
+
+    if oldRetSeqLen != ctx.retSeq.length
+      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, bElem.srcInfo
+
+    block = new ast.Block b.block.args, wordSeq, seq, b.block.elemType, null
+    new Closure block, b.block.wordEnv, argWords
+
+
   # "filter"
   # "fold"
 }
@@ -441,7 +479,7 @@ class Closure
         v = new Closure e.val, @wordEnv
       else
         v = e.val
-      e = new ast.Elem v, name, e.srcInfo
+      e = new ast.Elem v, e.srcInfo
       @words[name] = e
 
   elemEval: (e, ctx) ->
@@ -478,12 +516,18 @@ class Closure
     new Closure @block, @preWordEnv, aw
 
   seq: (ctx) ->
-    if @_seq != undefined
-      return @_seq
-    @_seq = []
-    for e in @block.seq
-      @_seq.push new ast.Elem @elemEval(e, ctx), e.srcInfo
+    if @_seq == undefined
+      @_seq = []
+      for e in @block.seq
+        @_seq.push new ast.Elem @elemEval(e, ctx), e.srcInfo
     @_seq
+
+  elems: (ctx) ->
+    if @_elems == undefined
+      @_elems = seq ctx
+      for name of @words
+        @_elems.push @words[name]
+    @_elems
 
   getElem: (name, ctx) ->
     [name, opt] = sepWordNameProc name
