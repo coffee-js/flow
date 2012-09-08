@@ -262,6 +262,7 @@ describe "Flow Interp", ->
       expect(run "{ 0 3 1 4 1 5 2 } { 3 <= } filter do").toEqual [0,3,1,1,2]
       expect(run "{ 0 3 5 4 1 5 2 } { 4 <= } filter do").toEqual [0,3,4,1,2]
       expect(run "{ 0 3 5 4 1 5 2 } { 0 <  } filter do").toEqual []
+      expect(run "10 {a >> b: 100 1 2 3} apply count").toEqual [5]
       expect(run "10 {a >> b: 100 1 2 3} apply {100 <} filter count").toEqual [4]
 
 
@@ -269,7 +270,25 @@ describe "Flow Interp", ->
       expect(run "{1 2 3 4 5} 0 {+} fold").toEqual [15]
 
 
+    it "seq-map", ->
+      expect(run "{1 2 3 4 5} {1 +} seq-map do").toEqual [2,3,4,5,6]
+      expect(run "10 {a >> b: 100 1 2 3} apply {1 +} seq-map .a").toEqual [10]
+
+
+    it "seq-filter", ->
+      expect(run "{ 1 } { 3 <= } seq-filter do").toEqual [1]
+      expect(run "{ 0 1 } { 3 < } seq-filter do").toEqual [0,1]
+      expect(run "{ 0 3 1 4 1 5 2 } { 3 <= } seq-filter do").toEqual [0,3,1,1,2]
+      expect(run "{ 0 3 5 4 1 5 2 } { 4 <= } seq-filter do").toEqual [0,3,4,1,2]
+      expect(run "{ 0 3 5 4 1 5 2 } { 0 <  } seq-filter do").toEqual []
+      expect(run "10 {a >> b: 100 1 2 3} apply count").toEqual [5]
+      expect(run "10 {a >> b: 100 1 2 3} apply {100 <} seq-filter count").toEqual [5]
+
+
   it "to-str", ->
+    expect(run "1 to-str").toEqual ["1"]
+    expect(run "\"a\" to-str").toEqual ["\"a\""]
+    expect(run "10 {a >> b: 100 1 2 3} apply to-str").toEqual ["{ a >> b: 100 1 2 3 }"]
     expect(run "10 {a >> b: 100 1 2 3} apply {100 <} filter to-str").toEqual ["{ a >> 1 2 3 }"]
 
 

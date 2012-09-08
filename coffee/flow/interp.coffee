@@ -327,7 +327,7 @@ buildinWords = {
     if oldRetSeqLen != ctx.retSeq.length
       err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, c.srcInfo
 
-    block = new ast.Block c.block.args, c.block.wordSeq, seq, c.block.elemType, null
+    block = new ast.Block c.block.args, c.block.wordSeq(), seq, c.block.elemType, null
     new Closure block, c.wordEnv, c.argWords
 
   "words-map": bw 2, (ctx, c, proc) ->
