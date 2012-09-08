@@ -253,7 +253,7 @@ describe "Flow Interp", ->
 
     it "map", ->
       expect(run "{1 2 3 4 5} {1 +} map do").toEqual [2,3,4,5,6]
-      expect(run "10 {a >> b: 100 a b 1 2 3} apply {1 +} map do").toEqual [11,101,2,3,4]
+      expect(run "10 {a >> b: 100 1 2 3} apply {1 +} map .a").toEqual [11]
 
 
     it "filter", ->
@@ -262,7 +262,7 @@ describe "Flow Interp", ->
       expect(run "{ 0 3 1 4 1 5 2 } { 3 <= } filter do").toEqual [0,3,1,1,2]
       expect(run "{ 0 3 5 4 1 5 2 } { 4 <= } filter do").toEqual [0,3,4,1,2]
       expect(run "{ 0 3 5 4 1 5 2 } { 0 <  } filter do").toEqual []
-      expect(run "10 {a >> b: 100 a b 1 2 3} apply {100 <} filter do").toEqual [10,1,2,3]
+      expect(run "10 {a >> b: 100 1 2 3} apply {100 <} filter do").toEqual [1,2,3]
 
 
     it "fold", ->
@@ -340,12 +340,14 @@ describe "Flow Interp", ->
   describe "apply block", ->
     it "apply", ->
       expect(run "3 { a >> a 2 + } apply do").toEqual [5]
+      expect(run "3 { a >> a 2 + } apply .a").toEqual [3]
       expect(run "1 2 { + } { a >> a } apply do do").toEqual [3]
       expect(run "3 { 1 + } apply do").toEqual [4]
 
 
-    it "apply", ->
+    it "curry", ->
       expect(run "3 { a >> a 2 + } 1 curry do").toEqual [5]
+      expect(run "3 { a >> a 2 + } 1 curry .a").toEqual [3]
       expect(run "1 2 { + } { a >> a } 3 curry do do").toEqual [3]
       expect(run "3 { 1 + } 0 curry do").toEqual [4]
 
