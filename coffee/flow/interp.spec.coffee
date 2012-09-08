@@ -253,8 +253,21 @@ describe "Flow Interp", ->
 
 
     it "map", ->
-      expect(run "{ 1 2 3 4 5 } { 1 + } map do").toEqual [2,3,4,5,6]
-      expect(run "10 { a >> b: 100 a b 1 2 3 4 5 } apply { 1 + } map do").toEqual [111,2,3,4,5,6]
+      expect(run "{1 2 3 4 5} {1 +} map do").toEqual [2,3,4,5,6]
+      expect(run "10 {a >> b: 100 a b 1 2 3} apply {1 +} map do").toEqual [11,101,2,3,4]
+
+
+    it "filter", ->
+      expect(run "{ 1 } { 3 <= } filter do").toEqual [1]
+      expect(run "{ 0 1 } { 3 < } filter do").toEqual [0,1]
+      expect(run "{ 0 3 1 4 1 5 2 } { 3 <= } filter do").toEqual [0,3,1,1,2]
+      expect(run "{ 0 3 5 4 1 5 2 } { 4 <= } filter do").toEqual [0,3,4,1,2]
+      expect(run "{ 0 3 5 4 1 5 2 } { 0 <  } filter do").toEqual []
+      expect(run "10 {a >> b: 100 a b 1 2 3} apply {100 <} filter do").toEqual [10,1,2,3]
+
+
+    it "fold", ->
+      expect(run "{1 2 3 4 5} 0 {+} fold").toEqual [15]
 
 
   describe "simple function impl", ->

@@ -61,6 +61,8 @@ class BuildinWord
     args = [ctx].concat args
     @fn args...
 
+  toStr: -> ""
+
 
 bw = ->
   new BuildinWord arguments...
@@ -268,8 +270,65 @@ buildinWords = {
     new Closure block, b.block.wordEnv, argWords
 
 
-  # "filter"
-  # "fold"
+  "filter": bw 2, (ctx, cElem, bElem) ->
+    ck ctx, cElem, Closure
+    ck ctx, bElem, Closure
+
+    c = cElem.val
+    b = bElem.val
+
+    oldRetSeqLen = ctx.retSeq.length
+
+    wordSeq = []
+    for name of c.words
+      if c.block.argWords[name] != undefined
+        continue
+      elem = c.words[name]
+      ctx.retSeq.push elem
+      seqApplyEval b, ctx
+      if ctx.retSeq.pop().val
+        wordSeq.push {name, elem}
+
+    seq = []
+    for e in c.seq(ctx)
+      ctx.retSeq.push e
+      seqApplyEval b, ctx
+      if ctx.retSeq.pop().val
+        seq.push e
+
+    argWords = {}
+    for name of c.argWords
+      e = c.argWords[name]
+      ctx.retSeq.push e
+      seqApplyEval b, ctx
+      if ctx.retSeq.pop().val
+        argWords[name] = e
+
+    if oldRetSeqLen != ctx.retSeq.length
+      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, bElem.srcInfo
+
+    block = new ast.Block b.block.args, wordSeq, seq, b.block.elemType, null
+    new Closure block, b.block.wordEnv, argWords
+
+  "fold": bw 3, (ctx, cElem, aElem, bElem) ->
+    ck ctx, cElem, Closure
+    ck ctx, bElem, Closure
+
+    c = cElem.val
+    b = bElem.val
+
+    oldRetSeqLen = ctx.retSeq.length
+
+    seq = []
+    for e in c.seq(ctx)
+      ctx.retSeq.push aElem
+      ctx.retSeq.push e
+      seqApplyEval b, ctx
+      aElem = ctx.retSeq.pop()
+
+    if oldRetSeqLen != ctx.retSeq.length
+      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, bElem.srcInfo
+    aElem.val
 }
 
 
