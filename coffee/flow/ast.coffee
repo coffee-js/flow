@@ -30,7 +30,7 @@ class ast.Node
 ast.toStr = (e) ->
   switch typeof(e)
     when "object"
-      if (e instanceof ast.Node) or (e instanceof ast.SrcInfo)
+      if e.toStr
         e.toStr()
       else
         "#{e}"
@@ -192,6 +192,24 @@ class ast.Block extends ast.Node
 
   filterSeq: ->
     new ast.Block [], [], @seq, @elemType, @srcInfo
+
+  valDup: ->
+    switch @elemType
+      when "EVAL"
+        new ast.Block @args, @wordSeq(), @seq, "VAL", @srcInfo
+      when "VAL"
+        @
+      else
+        err "fatal error: #{@toStr()} @elemType:#{@elemType}"
+
+  evalDup: ->
+    switch @elemType
+      when "EVAL"
+        @
+      when "VAL"
+        new ast.Block @args, @wordSeq(), @seq, "EVAL", @srcInfo
+      else
+        err "fatal error: #{@toStr()} @elemType:#{@elemType}"
 
   toStr: ->
     s = ""

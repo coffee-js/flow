@@ -208,9 +208,9 @@ buildinWords = {
     ck ctx, c, Closure
     c.filterSeq()
 
-  "map": bw 2, (ctx, c, b) ->
+  "map": bw 2, (ctx, c, proc) ->
     ck ctx, c, Closure
-    ck ctx, b, Closure
+    ck ctx, proc, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     wordSeq = []
@@ -218,33 +218,33 @@ buildinWords = {
       if c.block.argWords[name] != undefined
         continue
       ctx.retSeq.push c.block.words[name]
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       elem = ctx.retSeq.pop()
       wordSeq.push {name, elem}
 
     seq = []
     for e in c.block.seq
       ctx.retSeq.push e
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       e = ctx.retSeq.pop()
       seq.push e
 
     argWords = {}
     for name of c.argWords
       ctx.retSeq.push c.argWords[name]
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       e = ctx.retSeq.pop()
       argWords[name] = e
 
     if oldRetSeqLen != ctx.retSeq.length
       err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, c.srcInfo
 
-    block = new ast.Block c.block.args, wordSeq, seq, c.elemType, null
+    block = new ast.Block c.block.args, wordSeq, seq, c.block.elemType, null
     new Closure block, c.wordEnv, argWords
 
-  "filter": bw 2, (ctx, c, b) ->
+  "filter": bw 2, (ctx, c, proc) ->
     ck ctx, c, Closure
-    ck ctx, b, Closure
+    ck ctx, proc, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     wordSeq = []
@@ -253,14 +253,14 @@ buildinWords = {
         continue
       elem = c.block.words[name]
       ctx.retSeq.push elem
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       if ctx.retSeq.pop()
         wordSeq.push {name, elem}
 
     seq = []
     for e in c.block.seq
       ctx.retSeq.push e
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       if ctx.retSeq.pop()
         seq.push e
 
@@ -268,71 +268,71 @@ buildinWords = {
     for name of c.argWords
       e = c.argWords[name]
       ctx.retSeq.push e
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       if ctx.retSeq.pop()
         argWords[name] = e
 
     if oldRetSeqLen != ctx.retSeq.length
       err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, c.srcInfo
 
-    block = new ast.Block c.block.args, wordSeq, seq, c.elemType, null
+    block = new ast.Block c.block.args, wordSeq, seq, c.block.elemType, null
     new Closure block, c.wordEnv, argWords
 
-  "fold": bw 3, (ctx, c, a, b) ->
+  "fold": bw 3, (ctx, c, a, proc) ->
     ck ctx, c, Closure
-    ck ctx, b, Closure
+    ck ctx, proc, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     seq = []
     for e in c.block.seq
       ctx.retSeq.push a
       ctx.retSeq.push e
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       a = ctx.retSeq.pop()
 
     if oldRetSeqLen != ctx.retSeq.length
       err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, c.srcInfo
     a
 
-  "seq-map": bw 2, (ctx, c, b) ->
+  "seq-map": bw 2, (ctx, c, proc) ->
     ck ctx, c, Closure
-    ck ctx, b, Closure
+    ck ctx, proc, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     seq = []
     for e in c.block.seq
       ctx.retSeq.push e
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       e = ctx.retSeq.pop()
       seq.push e
 
     if oldRetSeqLen != ctx.retSeq.length
       err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, c.srcInfo
 
-    block = new ast.Block c.block.args, c.block.wordSeq(), seq, c.elemType, null
+    block = new ast.Block c.block.args, c.block.wordSeq(), seq, c.block.elemType, null
     new Closure block, c.wordEnv, c.argWords
 
-  "seq-filter": bw 2, (ctx, c, b) ->
+  "seq-filter": bw 2, (ctx, c, proc) ->
     ck ctx, c, Closure
-    ck ctx, b, Closure
+    ck ctx, proc, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     seq = []
     for e in c.block.seq
       ctx.retSeq.push e
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       if ctx.retSeq.pop()
         seq.push e
 
     if oldRetSeqLen != ctx.retSeq.length
       err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, c.srcInfo
 
-    block = new ast.Block c.block.args, c.block.wordSeq, seq, c.elemType, null
+    block = new ast.Block c.block.args, c.block.wordSeq, seq, c.block.elemType, null
     new Closure block, c.wordEnv, c.argWords
 
-  "words-map": bw 2, (ctx, c, b) ->
+  "words-map": bw 2, (ctx, c, proc) ->
     ck ctx, c, Closure
-    ck ctx, b, Closure
+    ck ctx, proc, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     wordSeq = []
@@ -340,22 +340,25 @@ buildinWords = {
       if c.block.argWords[name] != undefined
         continue
       ctx.retSeq.push c.block.words[name]
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       elem = ctx.retSeq.pop()
       wordSeq.push {name, elem}
 
     argWords = {}
     for name of c.argWords
       ctx.retSeq.push c.argWords[name]
-      seqApplyEval b, ctx
+      seqApplyEval proc, ctx
       e = ctx.retSeq.pop()
       argWords[name] = e
 
     if oldRetSeqLen != ctx.retSeq.length
       err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, c.srcInfo
 
-    block = new ast.Block c.block.args, wordSeq, c.block.seq, c.elemType, null
+    block = new ast.Block c.block.args, wordSeq, c.block.seq, c.block.elemType, null
     new Closure block, c.wordEnv, argWords
+
+  "to-str": bw 1, (ctx, n) ->
+    ast.toStr n
 }
 
 
@@ -417,7 +420,7 @@ wordVal = (word, wordEnv, ctx) ->
   if word.opt == "'"
     if !(v instanceof Closure)
       err "word:#{word.name} is not a block", ctx, srcInfo
-    v = v.valDup ctx
+    v = v.valDup()
   else if word.opt != null && word.opt[0] == "#"
     if word.entry != null
       elem = ctx.retSeq.pop()
@@ -427,7 +430,7 @@ wordVal = (word, wordEnv, ctx) ->
     if word.opt == "#!"
       name = "!#{name}"
     v = v.setElem name, elem, ctx
-    v = v.valDup ctx
+    v = v.valDup()
   if word.entry == null
     ctx.retSeq.length = ctx.retSeq.length-n
   v
@@ -489,7 +492,7 @@ seqApplyEval = (c, ctx) ->
 
 
 seqEval = (e, ctx, wordEnv) ->
-  if      e instanceof Closure && e.elemType == "EVAL"
+  if      e instanceof Closure && e.block.elemType == "EVAL"
     seqApplyEval e, ctx
   else if e instanceof BuildinWord
     v = e.eval ctx
@@ -514,7 +517,6 @@ class Word
 
 class Closure
   constructor: (@block, @preWordEnv, argWords=null) ->
-    @elemType = @block.elemType
     @words = {}
     @argWords = {}
     @argWordCount = 0
@@ -529,27 +531,13 @@ class Closure
     else
       @args = @block.args
 
-  valDup: (ctx) ->
-    switch @elemType
-      when "EVAL"
-        c = new Closure @block, @preWordEnv, @argWords
-        c.elemType = "VAL"
-        c
-      when "VAL"
-        @
-      else
-        err "fatal error: #{@toStr()} @elemType:#{@elemType}", ctx, null
+  valDup: ->
+    b = @block.valDup()
+    new Closure b, @preWordEnv, @argWords
 
-  evalDup: (ctx) ->
-    switch @elemType
-      when "EVAL"
-        @
-      when "VAL"
-        c = new Closure @block, @preWordEnv, @argWords
-        c.elemType = "EVAL"
-        c
-      else
-        err "fatal error: #{@toStr()} @elemType:#{@elemType}", ctx, null
+  evalDup: ->
+    b = @block.evalDup()
+    new Closure b, @preWordEnv, @argWords
 
   wordEnvInit: ->
     if @wordEnv != undefined
@@ -625,13 +613,13 @@ class Closure
       else
         found = false
     if found && e instanceof Closure && opt == "'"
-      e = e.valDup ctx
+      e = e.valDup()
     [found, e]
 
   setElem: (name, elem, ctx) ->
     [name, opt] = sepWordNameProc name
     if opt == "!"
-      elem = elem.evalDup ctx
+      elem = elem.evalDup()
     if @block.argWords[name] != undefined
       aw = {}
       for aname in @block.args

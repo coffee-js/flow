@@ -262,11 +262,15 @@ describe "Flow Interp", ->
       expect(run "{ 0 3 1 4 1 5 2 } { 3 <= } filter do").toEqual [0,3,1,1,2]
       expect(run "{ 0 3 5 4 1 5 2 } { 4 <= } filter do").toEqual [0,3,4,1,2]
       expect(run "{ 0 3 5 4 1 5 2 } { 0 <  } filter do").toEqual []
-      expect(run "10 {a >> b: 100 1 2 3} apply {100 <} filter do").toEqual [1,2,3]
+      expect(run "10 {a >> b: 100 1 2 3} apply {100 <} filter count").toEqual [4]
 
 
     it "fold", ->
       expect(run "{1 2 3 4 5} 0 {+} fold").toEqual [15]
+
+
+  it "to-str", ->
+    expect(run "10 {a >> b: 100 1 2 3} apply {100 <} filter to-str").toEqual ["{ a >> 1 2 3 }"]
 
 
   describe "simple function impl", ->
