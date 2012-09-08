@@ -36,9 +36,9 @@ err = (txt, ctx, srcInfo) ->
   if ctx != null && ctx.debug != null
     a = []
     for b in ctx.debug.blockStack
-      a.unshift "from #{b.srcInfo.toStr()}"
+      a.unshift "from #{ast.toStr b.srcInfo}"
     ctxInfo = a.join "\n"
-  if srcInfo != null
+  if (srcInfo != null) or (srcInfo != undefined)
     s = "#{srcInfo.toStr()} #{txt}\n#{ctxInfo}"
   else
     s = "#{txt}\n#{ctxInfo}"
@@ -61,19 +61,17 @@ class BuildinWord
     args = [ctx].concat args
     @fn args...
 
-  toStr: -> ""
-
 
 bw = ->
   new BuildinWord arguments...
 
 ct = (ctx, e, ta...) ->
   for t in ta
-    if typeof(e.val) == t
+    if typeof(e) == t
       pass = true
   if !pass
     ts = ta.join " or "
-    err "expect a #{ts}, got:[#{e.toStr()}:#{typeof(e.val)}]", ctx, e.srcInfo
+    err "expect a #{ts}, got:[#{ast.toStr(e)}:#{typeof(e)}]", ctx, e.srcInfo
 
 ct2 = (ctx, a, b, t) ->
   ct ctx, a, t; ct ctx, b, t
@@ -81,112 +79,98 @@ ct2 = (ctx, a, b, t) ->
 ck = (ctx, e, ka...) ->
   ct ctx, e, "object"
   for k in ka
-    if e.val instanceof k
+    if e instanceof k
       pass = true
   if !pass
     ks = ka.join " or "
-    err "expect a #{ks}: #{e.toStr()}", ctx, e.srcInfo
+    err "expect a #{ks}: #{ast.toStr(e)}", ctx, e.srcInfo
 
 
 buildinWords = {
-  "+":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val+b.val
-  "-":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val-b.val
-  "*":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val*b.val
-  "/":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val/b.val
-  "%":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val%b.val
-  "neg":  bw 1, (ctx, a)    -> ct  ctx, a,    "number"; -a.val
-  "abs":  bw 1, (ctx, a)    -> ct  ctx, a,    "number"; Math.abs a.val
+  "+":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a+b
+  "-":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a-b
+  "*":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a*b
+  "/":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a/b
+  "%":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a%b
+  "neg":  bw 1, (ctx, a)    -> ct  ctx, a,    "number"; -a
+  "abs":  bw 1, (ctx, a)    -> ct  ctx, a,    "number"; Math.abs a
 
-  "=":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val==b.val
-  "<":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val<b.val
-  ">":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val>b.val
-  "<=":   bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val<=b.val
-  ">=":   bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a.val>=b.val
+  "=":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a==b
+  "<":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a<b
+  ">":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a>b
+  "<=":   bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a<=b
+  ">=":   bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a>=b
 
-  "not":  bw 1, (ctx, a)    -> ct  ctx, a,    "boolean"; !a.val
-  "and":  bw 2, (ctx, a, b) -> ct2 ctx, a, b, "boolean"; a.val&&b.val
-  "or":   bw 2, (ctx, a, b) -> ct2 ctx, a, b, "boolean"; a.val||b.val
+  "not":  bw 1, (ctx, a)    -> ct  ctx, a,    "boolean"; !a
+  "and":  bw 2, (ctx, a, b) -> ct2 ctx, a, b, "boolean"; a&&b
+  "or":   bw 2, (ctx, a, b) -> ct2 ctx, a, b, "boolean"; a||b
 
   "if":   bw 3, (ctx, cond, whenTrue, whenFals) ->
     ct ctx, cond, "boolean"
     ck ctx, whenTrue, Closure
     ck ctx, whenFals, Closure
 
-    if cond.val
-      seqApplyEval whenTrue.val, ctx
+    if cond
+      seqApplyEval whenTrue, ctx
     else
-      seqApplyEval whenFals.val, ctx
+      seqApplyEval whenFals, ctx
     undefined
 
-  "apply": bw 1, (ctx, elem) ->
-    ck ctx, elem, Closure
-    c = elem.val
+  "apply": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     seqApply c, ctx
 
-  "do": bw 1, (ctx, elem) ->
-    ck ctx, elem, Closure
-    c = elem.val
+  "do": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     seqApplyEval c, ctx
     undefined
 
-  "len":  bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "len":  bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.len()
 
-  "count-arg-words": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "count-arg-words": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.argWordCount
 
-  "count-non-arg-words": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "count-non-arg-words": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.nonArgWordCount()
 
-  "count-words": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "count-words": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.wordCount()
 
-  "count-arg-slots": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "count-arg-slots": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.argSlotCount()
 
-  "count": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "count": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.count()
 
-  "slice": bw 3, (ctx, cElem, start, end) ->
-    ck ctx, cElem, Closure
+  "slice": bw 3, (ctx, c, start, end) ->
+    ck ctx, c, Closure
     ct ctx, start, "number"
     ct ctx, end, "number"
-
-    c = cElem.val
-    c.slice start.val, end.val
+    c.slice start, end
 
   "concat": bw 2, (ctx, a, b) ->
     ck ctx, a, Closure
     ck ctx, b, Closure
-    a.val.concat b.val
+    a.concat b
 
-  "splice": bw 4, (ctx, cElem, iElem, delCountElem, addElemsCElem) ->
-    ck ctx, cElem, Closure
-    ct ctx, iElem, "number"
-    ct ctx, delCountElem, "number"
-    ck ctx, addElemsCElem, Closure
+  "splice": bw 4, (ctx, c, i, delCount, addElemsC) ->
+    ck ctx, c, Closure
+    ct ctx, i, "number"
+    ct ctx, delCount, "number"
+    ck ctx, addElemsC, Closure
+    c.splice i, delCount, addElemsC.seq(ctx)
 
-    c = cElem.val
-    c.splice iElem.val, delCountElem.val, addElemsCElem.val.seq(ctx)
+  "curry": bw 2, (ctx, c, n) ->
+    ck ctx, c, Closure
+    ct ctx, n, "number"
 
-  "curry": bw 2, (ctx, cElem, nElem) ->
-    ck ctx, cElem, Closure
-    ct ctx, nElem, "number"
-
-    c = cElem.val
-    n = nElem.val
     if n > c.args.length
       argN = c.args.length
       seqN = n - c.args.length
@@ -201,43 +185,32 @@ buildinWords = {
       r = r.splice 1, 0, unshifts
     r
 
-  "wapply": bw 2, (ctx, wElem, cElem) ->
-    ck ctx, wElem, Closure
-    ck ctx, cElem, Closure
-
-    w = wElem.val
-    c = cElem.val
+  "wapply": bw 2, (ctx, w, c) ->
+    ck ctx, w, Closure
+    ck ctx, c, Closure
     w.wordEnvInit()
     argWords = w.words
     c.apply argWords
 
-  "filter-arg-words": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "filter-arg-words": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.filterArgWords()
 
-  "filter-words": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "filter-words": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.filterWords()
 
-  "filter-non-arg-words": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "filter-non-arg-words": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.filterNonArgWords()
 
-  "filter-seq": bw 1, (ctx, cElem) ->
-    ck ctx, cElem, Closure
-    c = cElem.val
+  "filter-seq": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
     c.filterSeq()
 
-  "map": bw 2, (ctx, cElem, bElem) ->
-    ck ctx, cElem, Closure
-    ck ctx, bElem, Closure
-
-    c = cElem.val
-    b = bElem.val
-
+  "map": bw 2, (ctx, c, b) ->
+    ck ctx, c, Closure
+    ck ctx, b, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     wordSeq = []
@@ -264,19 +237,15 @@ buildinWords = {
       argWords[name] = e
 
     if oldRetSeqLen != ctx.retSeq.length
-      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, bElem.srcInfo
+      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, b.srcInfo
 
     block = new ast.Block b.block.args, wordSeq, seq, b.block.elemType, null
     new Closure block, b.block.wordEnv, argWords
 
 
-  "filter": bw 2, (ctx, cElem, bElem) ->
-    ck ctx, cElem, Closure
-    ck ctx, bElem, Closure
-
-    c = cElem.val
-    b = bElem.val
-
+  "filter": bw 2, (ctx, c, b) ->
+    ck ctx, c, Closure
+    ck ctx, b, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     wordSeq = []
@@ -286,14 +255,14 @@ buildinWords = {
       elem = c.words[name]
       ctx.retSeq.push elem
       seqApplyEval b, ctx
-      if ctx.retSeq.pop().val
+      if ctx.retSeq.pop()
         wordSeq.push {name, elem}
 
     seq = []
     for e in c.seq(ctx)
       ctx.retSeq.push e
       seqApplyEval b, ctx
-      if ctx.retSeq.pop().val
+      if ctx.retSeq.pop()
         seq.push e
 
     argWords = {}
@@ -301,34 +270,30 @@ buildinWords = {
       e = c.argWords[name]
       ctx.retSeq.push e
       seqApplyEval b, ctx
-      if ctx.retSeq.pop().val
+      if ctx.retSeq.pop()
         argWords[name] = e
 
     if oldRetSeqLen != ctx.retSeq.length
-      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, bElem.srcInfo
+      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, b.srcInfo
 
     block = new ast.Block b.block.args, wordSeq, seq, b.block.elemType, null
     new Closure block, b.block.wordEnv, argWords
 
-  "fold": bw 3, (ctx, cElem, aElem, bElem) ->
-    ck ctx, cElem, Closure
-    ck ctx, bElem, Closure
-
-    c = cElem.val
-    b = bElem.val
-
+  "fold": bw 3, (ctx, c, a, b) ->
+    ck ctx, c, Closure
+    ck ctx, b, Closure
     oldRetSeqLen = ctx.retSeq.length
 
     seq = []
     for e in c.seq(ctx)
-      ctx.retSeq.push aElem
+      ctx.retSeq.push a
       ctx.retSeq.push e
       seqApplyEval b, ctx
-      aElem = ctx.retSeq.pop()
+      a = ctx.retSeq.pop()
 
     if oldRetSeqLen != ctx.retSeq.length
-      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, bElem.srcInfo
-    aElem.val
+      err "retSeq len:#{ctx.retSeq.length} not eq before:#{oldRetSeqLen}", ctx, b.srcInfo
+    a
 }
 
 
@@ -345,10 +310,10 @@ wordInEnv = (name, wordEnv, ctx) ->
   for words in wordEnv
     e = words[name]
     if e != undefined
-      if e.val instanceof Word
-        return wordVal e.val, e.val.wordEnv, ctx
+      if e instanceof Word
+        return wordVal e, e.wordEnv, ctx
       else
-        return e.val
+        return e
   null
 
 wordVal = (word, wordEnv, ctx) ->
@@ -371,9 +336,8 @@ wordVal = (word, wordEnv, ctx) ->
       n = 1
     if ctx.retSeq.length < n
       err "no enough args in seq:#{ctx.retSeq}", ctx, srcInfo
-    cElem = ctx.retSeq[ctx.retSeq.length-n]
-    ck ctx, cElem, Closure
-    v = cElem.val
+    v = ctx.retSeq[ctx.retSeq.length-n]
+    ck ctx, v, Closure
     curPath = [null]
 
   if word.opt != null && word.opt[0] == "#"
@@ -387,7 +351,7 @@ wordVal = (word, wordEnv, ctx) ->
     [found, e] = v.getElem name, ctx
     if !found
       err "word:#{name} not defined in path:#{curPath.slice(0,-1).join(".")}", ctx, srcInfo
-    v = e.val
+    v = e
   if word.opt == "'"
     if !(v instanceof Closure)
       err "word:#{word.name} is not a block", ctx, srcInfo
@@ -462,11 +426,11 @@ seqApplyEval = (c, ctx) ->
   (seqApply c, ctx).eval ctx
 
 
-seqEval = (val, ctx, wordEnv) ->
-  if      val instanceof Closure && val.elemType == "EVAL"
-    seqApplyEval val, ctx
-  else if val instanceof BuildinWord
-    v = val.eval ctx
+seqEval = (e, ctx, wordEnv) ->
+  if      e instanceof Closure && e.elemType == "EVAL"
+    seqApplyEval e, ctx
+  else if e instanceof BuildinWord
+    v = e.eval ctx
     if v != undefined
       seqEval v, ctx, wordEnv
   else
@@ -474,7 +438,7 @@ seqEval = (val, ctx, wordEnv) ->
       srcInfo = ctx.debug.pElem().srcInfo
     else
       srcInfo = null
-    ctx.retSeq.push new ast.Elem val, srcInfo
+    ctx.retSeq.push e
 
 
 class Word
@@ -483,6 +447,7 @@ class Word
     @refines = w.refines
     @name = w.name
     @opt = w.opt
+    @srcInfo = w.srcInfo
 
 
 class Closure
@@ -532,30 +497,29 @@ class Closure
       e = @block.words[name]
       if e == null
         continue
-      if      e.val instanceof ast.Word
-        v = new Word e.val, @wordEnv
-      else if e.val instanceof ast.Block
-        v = new Closure e.val, @wordEnv
+      if      e instanceof ast.Word
+        v = new Word e, @wordEnv
+      else if e instanceof ast.Block
+        v = new Closure e, @wordEnv
       else
-        v = e.val
-      e = new ast.Elem v, e.srcInfo
-      @words[name] = e
+        v = e
+      @words[name] = v
 
   elemEval: (e, ctx) ->
     @wordEnvInit()
-    if      e.val instanceof ast.Word
-      v = wordVal e.val, @wordEnv, ctx
+    if      e instanceof ast.Word
+      v = wordVal e, @wordEnv, ctx
       if v == undefined
-        err "word:#{e.val.name} not defined", ctx, e.srcInfo
-    else if e.val instanceof ast.Block
+        err "word:#{e.name} not defined", ctx, e.srcInfo
+    else if e instanceof ast.Block
       args = []
       for name in @block.args
         if @argWords[name] == undefined
           args.push name
-      b = e.val.addArgs args
+      b = e.addArgs args
       v = new Closure b, @wordEnv
     else
-      v = e.val
+      v = e
     v
 
   eval: (ctx) ->
@@ -578,7 +542,7 @@ class Closure
     if @_seq == undefined
       @_seq = []
       for e in @block.seq
-        @_seq.push new ast.Elem @elemEval(e, ctx), e.srcInfo
+        @_seq.push @elemEval(e, ctx)
     @_seq
 
   elems: (ctx) ->
@@ -593,19 +557,19 @@ class Closure
     [found, e] = @block.getElem name
     if found
       if e != null
-        e = new ast.Elem @elemEval(e, ctx), e.srcInfo
+        e = @elemEval e, ctx
       else if @argWords[name] != undefined
         e = @argWords[name]
       else
         found = false
-    if found && e.val instanceof Closure && opt == "'"
-      e.val = e.val.valDup ctx
+    if found && e instanceof Closure && opt == "'"
+      e = e.valDup ctx
     [found, e]
 
   setElem: (name, elem, ctx) ->
     [name, opt] = sepWordNameProc name
     if opt == "!"
-      elem.val = elem.val.evalDup ctx
+      elem = elem.evalDup ctx
     if @block.argWords[name] != undefined
       aw = {}
       for aname in @block.args
@@ -661,8 +625,7 @@ class Closure
 
 
 
-interp.eval = (blockElem) ->
-  b = blockElem.val
+interp.eval = (b) ->
   ctx = new Context
   ctx.debug = new DebugContex null, b
   c = new Closure b, []

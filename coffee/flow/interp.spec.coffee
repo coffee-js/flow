@@ -10,8 +10,7 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 run = (txt) ->
   src = new pc.Source txt, null
-  b = interp.eval (parser.parse src)
-  b.map (e) -> e.val
+  interp.eval (parser.parse src)
 
 
 

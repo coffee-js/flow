@@ -117,13 +117,11 @@ describe "Flow Parser", ->
     it "match seq", ->
       p = parser.seq
       t = (parse p, "sdf 435 dfg").match
-      (expect t[0].val.name).toEqual "sdf"
+      (expect t[0].name).toEqual "sdf"
       (expect t[0].srcInfo.pos).toEqual 0
-      (expect t[1].val).toEqual 435
-      (expect t[1].srcInfo.pos).toEqual 4
-      t = (parse p, "serdgd 465 [564]").match[2].val.seq[0]
-      (expect t.val).toEqual 564
-      (expect t.srcInfo.pos).toEqual 12
+      (expect t[1]).toEqual 435
+      t = (parse p, "serdgd 465 [564]").match[2].seq[0]
+      (expect t).toEqual 564
 
 
   describe "combinator block", ->
@@ -132,13 +130,13 @@ describe "Flow Parser", ->
       p = parser.evalBlock
 
       a = (parse p, "[[sd: 45 aa] -]").match
-      (expect a.seq[0].val.words["sd"].name).toEqual "sd"
-      (expect a.seq[0].val.seq[0].val.name).toEqual "aa"
+      (expect a.seq[0].words["sd"]).toEqual 45
+      (expect a.seq[0].seq[0].name).toEqual "aa"
 
       a = (parse p, "[aa bb >> [cc >> sd: 45 aa] - aa]").match
       (expect a.args[1]).toEqual "bb"
-      (expect a.seq[0].val.words["sd"].val).toEqual 45
-      (expect a.seq[0].val.seq[0].val.name).toEqual "aa"
+      (expect a.seq[0].words["sd"]).toEqual 45
+      (expect a.seq[0].seq[0].name).toEqual "aa"
 
 
   describe "parse", ->

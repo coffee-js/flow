@@ -49,7 +49,7 @@ combinator = do ->
   word = pc.map pc.seq(pc.optional(wordOpt), pc.choice(
       pc.seq(wordName, pc.optional(wordRefine)),
       wordRefine
-    )), (n) ->
+    )), (n, pos, src) ->
       a = n[1]
       if a[1] == true
         entry = a[0]
@@ -61,23 +61,21 @@ combinator = do ->
         entry = null
         refines = a
       opt = if n[0]==true then null else n[0]
-      new ast.Word entry, refines, opt
+      new ast.Word entry, refines, opt, new ast.SrcInfo(pos, src)
 
   elem = null
-  _elem = pc.lazy ->elem
+  _elem = pc.lazy -> elem
 
   args = pc.map pc.seq(pc.rep1(pc.ws(wordName)), pc.ws(pc.tok('>>'))),
     (n) -> n[0]
 
   namedElem = pc.map pc.seq(name, _elem),
-    (n, pos) ->
+    (n, pos, src) ->
       name = n[0]
       e = n[1]
-      e.name = name
-      e.srcInfo.pos = pos
-      if e.val instanceof ast.Block
-        e.val.srcInfo.name = name
-      {name, elem:e}
+      if e instanceof ast.Block
+        e.srcInfo.name = name
+      {name, elem:e, srcInfo:(new ast.SrcInfo pos, src)}
 
   wordMap = pc.rep1 pc.ws(namedElem)
   seq = pc.rep1 pc.ws(_elem)
@@ -110,8 +108,7 @@ combinator = do ->
       args = args.concat ["VAL", srcInfo]
       new ast.Block args...
 
-  elem = pc.map pc.choice(evalBlock, valBlock, number, string, word),
-    (n, pos, src) -> new ast.Elem n, new ast.SrcInfo(pos, src)
+  elem = pc.choice evalBlock, valBlock, number, string, word
 
   { int10, number, string, colon, wordChar, nameChar, name, wordName, wordRefine, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
 
@@ -126,9 +123,8 @@ parser.parse = (src) ->
   if r.match == null
     err "syntex error", r.state.lastFailPos, src
   
-  b = new ast.Block [], r.match.wordSeq, r.match.seq, "EVAL", new ast.SrcInfo(0, src)
-  e = new ast.Elem b, new ast.SrcInfo(0)
-  e
+  new ast.Block [], r.match.wordSeq, r.match.seq, "EVAL", new ast.SrcInfo(0, src)
+
 
 
 

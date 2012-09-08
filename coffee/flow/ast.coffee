@@ -7,7 +7,7 @@ pp = (s) -> console.log JSON.stringify s, null, '  '
 
 
 err = (s, srcInfo=null) ->
-  if srcInfo != null
+  if srcInfo != null && srcInfo != undefined
     throw "#{srcInfo.toStr()} #{s}"
   else
     throw s
@@ -27,27 +27,25 @@ class ast.SrcInfo
 class ast.Node
 
 
+ast.toStr = (e) ->
+  switch typeof(e)
+    when "object"
+      if (e instanceof ast.Node) or (e instanceof ast.SrcInfo)
+        e.toStr()
+      else
+        "#{e}"
+    when "string"
+      "\"#{e}\""
+    when "number"
+      "#{e}"
+
+
 class ast.Word extends ast.Node
-  constructor: (@entry, @refines, @opt) ->
+  constructor: (@entry, @refines, @opt, @srcInfo=null) ->
     @name = ([@entry].concat @refines).join '.'
 
   toStr: ->
     @name
-
-
-class ast.Elem extends ast.Node
-  constructor: (@val, @srcInfo=null) ->
-
-  toStr: ->
-    switch typeof(@val)
-      when "number"
-        @val
-      when "string"
-        "\"#{@val.replace('"','\"')}\""
-      when "object"
-        @val.toStr()
-      else
-        err "elem val type:#{typeof(@val)}", @srcInfo
 
 
 class ast.Block extends ast.Node
@@ -62,7 +60,7 @@ class ast.Block extends ast.Node
     for e in wordSeq
       name = e.name
       if @words[name] != undefined
-        err "redefined word:\"#{name}\"", e.elem.srcInfo
+        err "redefined word:\"#{name}\"", e.srcInfo
       @words[name] = e.elem
       @wordCount += 1
 
@@ -203,9 +201,9 @@ class ast.Block extends ast.Node
       s += ">> "
     for name of @words
       if @words[name] != null
-        s += "#{name}: #{@words[name].toStr()} "
+        s += "#{name}: #{ast.toStr @words[name]} "
     for e in @seq
-      s += "#{e.toStr()} "
+      s += "#{ast.toStr e} "
     switch @elemType
       when "EVAL"
         "[ #{s}]"
