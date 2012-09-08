@@ -132,8 +132,8 @@ describe "Flow Interp", ->
 
 
     it "write refinements with no entry", ->
-      expect(run "100 { a: [ [ b: 10 ] ] } #.a.1.b .b").toEqual [100]
-      expect(run "{ 1 2 + } { a: [ [ b: 10 ] ] } #!.a.1.b .b").toEqual [3]
+      expect(run "{ a: [ [ b: 10 ] ] } 100 #.a.1.b .b").toEqual [100]
+      expect(run "{ a: [ [ b: 10 ] ] } { 1 2 + } #!.a.1.b .b").toEqual [3]
 
 
     it "closure test", ->
@@ -145,44 +145,46 @@ describe "Flow Interp", ->
 
   describe "basic block data access", ->
 
-    it "read named elem with get", ->
-      expect(run "{ a: 100 } \"a\" get").toEqual [100]
-      expect(run "{ a: { b: 10 } } \"a\" get \"b\" get").toEqual [10]
+    it "read named elem", ->
+      expect(run "{ a: 100 } .a").toEqual [100]
+      expect(run "{ a: { b: 10 } } .a.b").toEqual [10]
+      expect(run "{ a: { b: 10 } } .a .b").toEqual [10]
 
 
-    it "read nth elem with get", ->
-      expect(run "{ 100 } -1 get").toEqual [100]
-      expect(run "{ { 10 } } 1 get 1 get").toEqual [10]
+    it "read nth elem", ->
+      expect(run "{ 100 } .-1").toEqual [100]
+      expect(run "{ { 10 } } .1.1").toEqual [10]
+      expect(run "{ { 10 } } .1 .1").toEqual [10]
 
 
-    it "read arg elem with get", ->
-      expect(-> run "{ a >> + } \"a\" get").toThrow()
+    it "read arg elem", ->
+      expect(-> run "{ a >> + } .a").toThrow()
 
 
-    it "write named elem with set", ->
-      expect(run "{ } 5 \"a\" set \"a\" get").toEqual [5]
-      expect(run "{ a: { } } \"a\" get 200 \"b\" set \"b\" get").toEqual [200]
+    it "write named elem", ->
+      expect(run "{ } 5 #.a .a").toEqual [5]
+      expect(run "{ a: { } } .a 200 #.b .b").toEqual [200]
 
 
-    it "write nth elem with set", ->
-      expect(run "{ } 5 1 set 1 get").toEqual [5]
-      expect(run "{ { } } 1 get 200 1 set 1 get").toEqual [200]
-      expect(run "{ { 3 4 } } -1 get 5 -2 set -2 get").toEqual [5]
+    it "write nth elem", ->
+      expect(run "{ } 5 #.1 .1").toEqual [5]
+      expect(run "{ { } } .1 200 #.1 .1").toEqual [200]
+      expect(run "{ { 3 4 } } .-1 5 #.-2 .-2").toEqual [5]
 
 
-    it "write arg elem with set", ->
-      expect(run "{ a >> + } 5 \"a\" set \"a\" get").toEqual [5]
-      expect(run "{ a >> + } 5 \"a\" set count-words").toEqual [1]
-      expect(run "{ a >> + } 5 \"a\" set count").toEqual [2]
+    it "write arg elem", ->
+      expect(run "{ a >> + } 5 #.a .a").toEqual [5]
+      expect(run "{ a >> + } 5 #.a count-words").toEqual [1]
+      expect(run "{ a >> + } 5 #.a count").toEqual [2]
 
 
-    it "write eval elem with set", ->
-      expect(run "{ a: [ + ] } { 5 } \"!a\" set .a").toEqual [5]
+    it "write eval elem", ->
+      expect(run "{ a: [ + ] } { 5 } #!.a .a").toEqual [5]
 
 
     it "use \"'\" read val of a eval elem", ->
-      expect(run "{ [ 100 ] } \"'-1\" get do").toEqual [100]
-      expect(run "{ a: [ 100 ] } \"'a\" get do").toEqual [100]
+      expect(run "{ [ 100 ] } '.-1 do").toEqual [100]
+      expect(run "{ a: [ 100 ] } '.a do").toEqual [100]
 
 
     it "len", ->
@@ -338,7 +340,7 @@ describe "Flow Interp", ->
     it "apply OO features", ->
       expect(run "5 { a >> b: a } 1 curry .b").toEqual [5]
       expect(run "3 { a >> b: [ a 2 + ] } 1 curry .b").toEqual [5]
-      expect(run "3 { a >> [ a 2 + ] } 1 curry 1 get").toEqual [5]
+      expect(run "3 { a >> [ a 2 + ] } 1 curry .1").toEqual [5]
 
 
     it "auto apply OO features", ->

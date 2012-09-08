@@ -127,26 +127,6 @@ buildinWords = {
     seqApplyEval c, ctx
     undefined
 
-  "get":  bw 2, (ctx, cElem, nameElem) ->
-    ck ctx, cElem, Closure
-    ct ctx, nameElem, "number", "string"
-
-    c = cElem.val
-    name = nameElem.val
-    [found, elem] = c.getElem name, ctx
-    if found
-      elem.val
-    else
-      err "no elem named:#{name} in block #{c.toStr()}", ctx, nameElem.srcInfo
-
-  "set":  bw 3, (ctx, cElem, elem, nameElem) ->
-    ck ctx, cElem, Closure
-    ct ctx, nameElem, "number", "string"
-
-    c = cElem.val
-    name = nameElem.val
-    c.setElem name, elem, ctx
-
   "len":  bw 1, (ctx, cElem) ->
     ck ctx, cElem, Closure
     c = cElem.val
@@ -288,9 +268,13 @@ wordVal = (word, wordEnv, ctx) ->
     else
       curPath = [name]
   else
-    if ctx.retSeq.length == 0
+    if word.opt != null && word.opt[0] == "#"
+      n = 2
+    else
+      n = 1
+    if ctx.retSeq.length < n
       err "no enough args in seq:#{ctx.retSeq}", ctx, srcInfo
-    cElem = ctx.retSeq.pop()
+    cElem = ctx.retSeq[ctx.retSeq.length-n]
     ck ctx, cElem, Closure
     v = cElem.val
     curPath = [null]
@@ -312,14 +296,17 @@ wordVal = (word, wordEnv, ctx) ->
       err "word:#{word.name} is not a block", ctx, srcInfo
     v = v.valDup ctx
   else if word.opt != null && word.opt[0] == "#"
-    if ctx.retSeq.length == 0
-      err "no enough args in seq:#{ctx.retSeq}", ctx, srcInfo
-    elem = ctx.retSeq.pop()
+    if word.entry != null
+      elem = ctx.retSeq.pop()
+    else
+      elem = ctx.retSeq[ctx.retSeq.length-n+1]
     name = word.refines[refines.length]
     if word.opt == "#!"
       name = "!#{name}"
     v = v.setElem name, elem, ctx
     v = v.valDup ctx
+  if word.entry == null
+    ctx.retSeq.length = ctx.retSeq.length-n
   v
 
 curryArgWords = (c, ctx, n) ->
