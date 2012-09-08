@@ -242,7 +242,6 @@ buildinWords = {
     block = new ast.Block b.block.args, wordSeq, seq, b.block.elemType, null
     new Closure block, b.block.wordEnv, argWords
 
-
   "filter": bw 2, (ctx, c, b) ->
     ck ctx, c, Closure
     ck ctx, b, Closure
