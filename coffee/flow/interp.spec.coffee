@@ -285,6 +285,11 @@ describe "Flow Interp", ->
       expect(run "10 {a >> b: 100 1 2 3} apply {100 <} seq-filter count").toEqual [5]
 
 
+    it "words-map", ->
+      expect(run "{1 2 3 4 5} {1 +} words-map do").toEqual [1,2,3,4,5]
+      expect(run "10 {a >> b: 100 1 2 3} apply {1 +} words-map .a").toEqual [11]
+
+
   it "to-str", ->
     expect(run "1 to-str").toEqual ["1"]
     expect(run "\"a\" to-str").toEqual ["\"a\""]
