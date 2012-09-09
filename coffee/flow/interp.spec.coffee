@@ -143,6 +143,7 @@ describe "Flow Interp", ->
       expect(run "a: [b: x] a/b name").toEqual ["x"]
       expect(run "a: [b: [x]] a/b/1 name").toEqual ["x"]
       expect(run "a: [b: [x]] a.b/1 name").toEqual ["x"]
+      expect(run "{b: [x]} /b/1 name").toEqual ["x"]
       expect(run "{b: [x]} .b/1 name").toEqual ["x"]
 
 
