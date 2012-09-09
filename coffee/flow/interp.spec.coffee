@@ -297,6 +297,11 @@ describe "Flow Interp", ->
     expect(run "10 {a >> b: 100 1 2 3} apply {100 <} filter to-str").toEqual ["{ a >> 1 2 3 }"]
 
 
+  it "type", ->
+    expect(run "{1 \"2\" a {4}} {type} map do").toEqual ["number","string","word","block"]
+
+
+
   describe "simple function impl", ->
 
     filterFn = \

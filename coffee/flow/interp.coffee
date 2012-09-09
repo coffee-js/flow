@@ -359,6 +359,24 @@ buildinWords = {
 
   "to-str": bw 1, (ctx, n) ->
     ast.toStr n
+
+  "type": bw 1, (ctx, n) ->
+    switch typeof n
+      when "number"
+        return "number"
+      when "string"
+        return "string"
+      else
+        if      n instanceof Closure or n instanceof ast.Block
+          return "block"
+        else if n instanceof Word    or n instanceof ast.Word
+          return "word"
+        else
+          err "#{n} type is unsupport", ctx, n.srcInfo
+
+  "name": bw 1, (ctx, w) ->
+    ck ctx, w, Word, ast.Word
+    w.name
 }
 
 
