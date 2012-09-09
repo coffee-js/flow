@@ -139,6 +139,13 @@ describe "Flow Interp", ->
       expect(run "{ a: [ [ b: 10 ] ] } { 1 2 + } #!.a.1.b .b").toEqual [3]
 
 
+    it "use \"/\" refinements get word self not eval", ->
+      expect(run "a: [b: x] a/b name").toEqual ["x"]
+      expect(run "a: [b: [x]] a/b/1 name").toEqual ["x"]
+      expect(run "a: [b: [x]] a.b/1 name").toEqual ["x"]
+      expect(run "{b: [x]} .b/1 name").toEqual ["x"]
+
+
     it "closure test", ->
 
 

@@ -42,7 +42,8 @@ ast.toStr = (e) ->
 
 class ast.Word extends ast.Node
   constructor: (@entry, @refines, @opt, @srcInfo=null) ->
-    @name = ([@entry].concat @refines).join '.'
+    a = @refines.map (nn) -> nn[0]
+    @name = ([@entry].concat a).join '.'
 
   toStr: ->
     @name

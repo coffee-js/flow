@@ -28,7 +28,7 @@ combinator = do ->
       else ""
 
   colon = pc.ch ":"
-  sep = pc.ch "."
+  sep = pc.ch "./"
   wordChar = pc.and pc.neg(pc.space()), pc.neg(sep), pc.neg(pc.ch "[]{}")
   nameChar = pc.and wordChar, pc.neg(pc.seq colon, pc.space())
 
@@ -43,7 +43,7 @@ combinator = do ->
     (n) -> n.reduce (t,s) -> t.concat(s)
 
   wordRefine = pc.map pc.rep1(pc.seq(sep, wordName)),
-    (n) -> n.map (nn) -> nn.reduce (s,w) -> w
+    (n) -> n.map (nn) -> nn.reduce (s,w) -> [w,s]
 
   wordOpt = pc.choice pc.tok("#!"), pc.ch("'#:")
   word = pc.map pc.seq(pc.optional(wordOpt), pc.choice(
@@ -54,7 +54,7 @@ combinator = do ->
       if a[1] == true
         entry = a[0]
         refines = []
-      else if a[1] instanceof Array
+      else if !(a[0] instanceof Array)
         entry = a[0]
         refines = a[1]
       else

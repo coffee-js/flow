@@ -94,8 +94,8 @@ describe "Flow Parser", ->
     it "match wordRefine", ->
       p = parser.wordRefine
       (expect (parse p, " ").match).toEqual null
-      (expect (parse p, ".abc").match).toEqual ["abc"]
-      (expect (parse p, ".a.b.c").match).toEqual ["a","b","c"]
+      (expect (parse p, ".abc").match).toEqual [["abc","."]]
+      (expect (parse p, ".a.b.c").match).toEqual [["a","."],["b","."],["c","."]]
 
 
   describe "combinator word", ->
@@ -105,10 +105,10 @@ describe "Flow Parser", ->
       (expect (parse p, " ").match).toEqual null
       (expect (parse p, "abc").match.entry).toEqual "abc"
       (expect (parse p, "a.b.c").match.entry).toEqual "a"
-      (expect (parse p, "a.b.c").match.refines).toEqual ["b","c"]
+      (expect (parse p, "a.b.c").match.refines).toEqual [["b","."],["c","."]]
       (expect (parse p, ".b.c").match.entry).toEqual null
-      (expect (parse p, ".b.c").match.refines).toEqual ["b","c"]
-      (expect (parse p, "'.b.c").match.refines).toEqual ["b","c"]
+      (expect (parse p, ".b.c").match.refines).toEqual [["b","."],["c","."]]
+      (expect (parse p, "'.b.c").match.refines).toEqual [["b","."],["c","."]]
       (expect (parse p, "'.b.c").match.opt).toEqual "'"
 
 

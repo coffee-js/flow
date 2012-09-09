@@ -38,7 +38,7 @@ err = (txt, ctx, srcInfo) ->
     for b in ctx.debug.blockStack
       a.unshift "from #{ast.toStr b.srcInfo}"
     ctxInfo = a.join "\n"
-  if (srcInfo != null) or (srcInfo != undefined)
+  if (srcInfo != null) && (srcInfo != undefined)
     s = "#{srcInfo.toStr()} #{txt}\n#{ctxInfo}"
   else
     s = "#{txt}\n#{ctxInfo}"
@@ -429,11 +429,14 @@ wordVal = (word, wordEnv, ctx) ->
     refines = word.refines.slice 0,-1
   else
     refines = word.refines
-  for name in refines
+  for [name, sep] in refines
     curPath.push name
-    if !(v instanceof Closure)
+    if !(v instanceof Closure) && !(v instanceof ast.Block)
       err "path:#{curPath.join(".")} can not reach", ctx, srcInfo
-    [found, e] = v.getElem name, ctx
+    if (v instanceof Closure) && sep == "/"
+      [found, e] = v.block.getElem name, ctx
+    else
+      [found, e] = v.getElem name, ctx        
     if !found
       err "word:#{name} not defined in path:#{curPath.slice(0,-1).join(".")}", ctx, srcInfo
     v = e
@@ -446,7 +449,7 @@ wordVal = (word, wordEnv, ctx) ->
       elem = ctx.retSeq.pop()
     else
       elem = ctx.retSeq[ctx.retSeq.length-n+1]
-    name = word.refines[refines.length]
+    name = word.refines[refines.length][0]
     if word.opt == "#!"
       name = "!#{name}"
     v = v.setElem name, elem, ctx
