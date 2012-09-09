@@ -400,6 +400,8 @@ wordInEnv = (name, wordEnv, ctx) ->
   null
 
 wordVal = (word, wordEnv, ctx) ->
+  if word.opt == ":"
+    return word
   if ctx.debug
     srcInfo = ctx.debug.pElem().srcInfo
   else

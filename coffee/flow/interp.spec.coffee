@@ -110,6 +110,10 @@ describe "Flow Interp", ->
       expect(run "a: [ 2 + ] 1 'a do").toEqual [3]
 
 
+    it "use \":\" get word self not eval", ->
+      expect(run ":a type").toEqual ["word"]
+
+
     it "read refinements with entry", ->
       expect(run "a: [ a: [ [ b: 10 ] ] ] a.a.1.b").toEqual [10]
       expect(-> run "a: [ a: 1 ] a.a.1.b").toThrow()
@@ -300,6 +304,9 @@ describe "Flow Interp", ->
   it "type", ->
     expect(run "{1 \"2\" a {4}} {type} map do").toEqual ["number","string","word","block"]
 
+
+  it "name", ->
+    expect(run ":a name").toEqual ["a"]
 
 
   describe "simple function impl", ->
