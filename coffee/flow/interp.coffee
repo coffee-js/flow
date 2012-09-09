@@ -380,15 +380,6 @@ buildinWords = {
 }
 
 
-sepWordNameProc = (name) ->
-  opt = null
-  switch name[0]
-    when "'", "!"
-      opt = name[0]
-      name = name.slice 1
-  [name, opt]
-
-
 wordInEnv = (name, wordEnv, ctx) ->
   for words in wordEnv
     e = words[name]
@@ -451,7 +442,7 @@ wordVal = (word, wordEnv, ctx) ->
       elem = ctx.retSeq[ctx.retSeq.length-n+1]
     name = word.refines[refines.length][0]
     if word.opt == "#!"
-      name = "!#{name}"
+      elem = elem.evalDup()
     v = v.setElem name, elem, ctx
     v = v.valDup()
   if word.entry == null
@@ -626,7 +617,6 @@ class Closure
     @_elems
 
   getElem: (name, ctx) ->
-    [name, opt] = sepWordNameProc name
     [found, e] = @block.getElem name
     if found
       if e != null
@@ -635,14 +625,9 @@ class Closure
         e = @argWords[name]
       else
         found = false
-    if found && e instanceof Closure && opt == "'"
-      e = e.valDup()
     [found, e]
 
   setElem: (name, elem, ctx) ->
-    [name, opt] = sepWordNameProc name
-    if opt == "!"
-      elem = elem.evalDup()
     if @block.argWords[name] != undefined
       aw = {}
       for aname in @block.args
