@@ -43,7 +43,7 @@ describe "Flow Interp", ->
         expect(-> run "1 2 > 3 { 3 4 + } if").toThrow()
 
 
-    describe "eval block", ->
+    describe "do block", ->
 
       it "basic", ->
         expect(run "{ 1 2 + } do").toEqual [3]
@@ -56,6 +56,11 @@ describe "Flow Interp", ->
         expect(run "1 { 2 + } do").toEqual [3]
         expect(run "1 2 { + } do").toEqual [3]
 
+
+    it "reduce block", ->
+      expect(run "{ 1 2 + } reduce len").toEqual [1]
+      expect(run "{ 1 2 + } reduce .1").toEqual [3]
+      expect(run "{ 1 2 + } reduce .1 4 +").toEqual [7]
 
 
   describe "word call", ->

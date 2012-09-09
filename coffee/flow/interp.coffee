@@ -125,6 +125,10 @@ buildinWords = {
     seqApplyEval c, ctx
     undefined
 
+  "reduce": bw 1, (ctx, c) ->
+    ck ctx, c, Closure
+    seqApplyEval c, ctx.reduce()
+
   "len":  bw 1, (ctx, c) ->
     ck ctx, c, Closure
     c.len()
@@ -480,18 +484,16 @@ seqApply = (c, ctx) ->
 
 
 class Context
-  constructor: ->
-    @retSeq = []
-    @debug = null
+  constructor: (@retSeq=[], @debug=null, @mode="eval") ->
 
   into: (b) ->
     if @debug == null
       @
     else
-      c = new Context
-      c.retSeq = @retSeq
-      c.debug = @debug.into b
-      c
+      if @mode == "reduce"
+        new Context [], (@debug.into b), @mode
+      else
+        new Context @retSeq, (@debug.into b), @mode
 
   next: ->
     if @debug == null
@@ -499,6 +501,9 @@ class Context
     else
       @debug = @debug.next()
       @
+
+  reduce: ->
+     new Context @retSeq, @debug, "reduce"
 
 
 seqApplyEval = (c, ctx) ->
@@ -592,6 +597,9 @@ class Closure
       ctx = ctx.next()
       seqEval @elemEval(e, ctx), ctx, @wordEnv
 
+    if ctx.mode == "reduce"
+      b = new ast.Block @block.args, @block.wordSeq(), ctx.retSeq, @block.elemType, @block.srcInfo
+      new Closure b, @wordEnv, @argWords
 
   apply: (argWords) ->
     aw = {}
