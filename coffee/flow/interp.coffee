@@ -381,6 +381,23 @@ buildinWords = {
   "name": bw 1, (ctx, w) ->
     ck ctx, w, Word, ast.Word
     w.name
+
+  "ext-call": bw 2, (ctx, apiName, n) ->
+    args = []
+    for e in ctx.retSeq.slice(-n)
+      args.push ast.toStr e
+    ctx.retSeq.length = ctx.retSeq.length - n
+    if apiName[0] == "."
+      o = args.shift()
+      a = args.join ","
+      code = "#{o}#{apiName}(#{a})"
+    else if apiName[0] == "/" && n == 1
+      o = args.shift()
+      code = "#{o}.#{apiName.slice(1)}"
+    else
+      a = args.join ","
+      code = "#{apiName}(#{a})"
+    eval code
 }
 
 

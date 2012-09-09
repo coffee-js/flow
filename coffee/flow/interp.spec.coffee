@@ -435,8 +435,15 @@ describe "Flow Interp", ->
       expect(run "100 20 { b: 2 } { a b c >> a b c } wapply do").toEqual [100,2,20]
 
 
+  putsFn = "puts: [\"console.log\" 1 ext-call]"
+  strLenFn = "str-len: [\"/length\" 1 ext-call]"
+  strConcatFn = "str-concat: [\".concat\" 2 ext-call]"
+
+
   it "external call", ->
-    #expect(run "\"hello world!\" js/console.log").toEqual ["hello world!", undefined]
+    expect(run "#{putsFn} \"hello world!\" puts").toEqual []
+    expect(run "#{strLenFn} \"hello world!\" str-len").toEqual [12]
+    expect(run "#{strConcatFn} \"hello \" \"world!\" str-concat").toEqual ["hello world!"]
 
 
 
