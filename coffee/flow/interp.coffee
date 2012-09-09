@@ -707,7 +707,6 @@ class Closure
     @block.toStr()
 
 
-
 interp.eval = (b) ->
   ctx = new Context
   ctx.debug = new DebugContex null, b
