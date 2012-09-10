@@ -79,9 +79,10 @@ ct2 = (ctx, a, b, t) ->
   ct ctx, a, t; ct ctx, b, t
 
 ck = (ctx, e, ka...) ->
-  ct ctx, e, "object"
   for k in ka
-    if e instanceof k
+    if typeof(k)=="string" && typeof(e)==k
+      pass = true
+    else if e instanceof k
       pass = true
   if !pass
     ks = ka.join " or "
