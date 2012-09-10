@@ -320,6 +320,14 @@ describe "Flow Interp", ->
 
   it "name", ->
     expect(run ":a name").toEqual ["a"]
+    expect(run ":a/b/c name").toEqual ["a/b/c"]
+    expect(run ":a.b/c name").toEqual ["a.b/c"]
+
+
+  it "make-word", ->
+    expect(run "\"a\" make-word name").toEqual ["a"]
+    expect(run "\".a/b\" make-word name").toEqual [".a/b"]
+    expect(run "{ a: [ b: 100 ] } \".a/b\" make-word do").toEqual [100]
 
 
   describe "simple function impl", ->

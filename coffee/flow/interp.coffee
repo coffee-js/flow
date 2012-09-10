@@ -1,5 +1,7 @@
 interp = exports
 ast = require "./ast"
+pc = require "../pc"
+parser = require "./parser"
 
 
 log = (s) -> console.log s
@@ -45,7 +47,7 @@ err = (txt, ctx, srcInfo) ->
   throw s
 
 
-class BuildinWord
+class NativeWord
   constructor: (@argCount, @fn) ->
 
   eval: (ctx) ->
@@ -63,7 +65,7 @@ class BuildinWord
 
 
 bw = ->
-  new BuildinWord arguments...
+  new NativeWord arguments...
 
 ct = (ctx, e, ta...) ->
   for t in ta
@@ -86,7 +88,7 @@ ck = (ctx, e, ka...) ->
     err "expect a #{ks}: #{ast.toStr(e)}", ctx, e.srcInfo
 
 
-buildinWords = {
+nativeWords = {
   "+":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a+b
   "-":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a-b
   "*":    bw 2, (ctx, a, b) -> ct2 ctx, a, b, "number"; a*b
@@ -120,10 +122,15 @@ buildinWords = {
     ck ctx, c, Closure
     seqApply c, ctx
 
-  "do": bw 1, (ctx, c) ->
-    ck ctx, c, Closure
-    seqApplyEval c, ctx
-    undefined
+  "do": bw 1, (ctx, x) ->
+    ck ctx, x, Closure, Word, ast.Word
+    if x instanceof Closure
+      seqApplyEval x, ctx
+      undefined
+    else
+      if ctx.block == null
+        err "fatal error", x.srcInfo
+      wordVal x, ctx.block.wordEnv, ctx
 
   "reduce": bw 1, (ctx, c) ->
     ck ctx, c, Closure
@@ -382,6 +389,14 @@ buildinWords = {
     ck ctx, w, Word, ast.Word
     w.name
 
+  "make-word": bw 1, (ctx, s) ->
+    ct ctx, s, "string"
+    src = new pc.Source s, null
+    w = (parser.word pc.ps src, 0).match
+    if w != null
+      w.srcInfo = null
+    w
+
   "ext-call": bw 2, (ctx, apiName, n) ->
     args = []
     for e in ctx.retSeq.slice(-n)
@@ -423,7 +438,7 @@ wordVal = (word, wordEnv, ctx) ->
     name = word.entry
     v = wordInEnv name, wordEnv, ctx
     if v == null && word.refines.length == 0
-      v = buildinWords[name]
+      v = nativeWords[name]
     else
       curPath = [name]
   else
@@ -501,16 +516,16 @@ seqApply = (c, ctx) ->
 
 
 class Context
-  constructor: (@retSeq=[], @debug=null, @mode="eval") ->
+  constructor: (@retSeq=[], @block=null, @debug=null, @mode="eval") ->
 
   into: (b) ->
     if @debug == null
-      @
+      new Context [], b, null, @mode
     else
       if @mode == "reduce"
-        new Context [], (@debug.into b), @mode
+        new Context [], b, (@debug.into b), @mode
       else
-        new Context @retSeq, (@debug.into b), @mode
+        new Context @retSeq, b, (@debug.into b), @mode
 
   next: ->
     if @debug == null
@@ -520,7 +535,7 @@ class Context
       @
 
   reduce: ->
-     new Context @retSeq, @debug, "reduce"
+     new Context @retSeq, @block, @debug, "reduce"
 
 
 seqApplyEval = (c, ctx) ->
@@ -530,7 +545,7 @@ seqApplyEval = (c, ctx) ->
 seqEval = (e, ctx, wordEnv) ->
   if      e instanceof Closure && e.block.elemType == "EVAL"
     seqApplyEval e, ctx
-  else if e instanceof BuildinWord
+  else if e instanceof NativeWord
     v = e.eval ctx
     if v != undefined
       seqEval v, ctx, wordEnv
