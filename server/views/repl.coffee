@@ -9,9 +9,19 @@ head ->
 
   link rel: "stylesheet", type: "text/css", href: "/codemirror/codemirror.css"
   script src: "/codemirror/codemirror.js"
+  link rel: "stylesheet", type: "text/css", href: "/repl.css"
 
 body ->
+  textarea id: "code", ->
 
+  coffeescript ->
+    editor = CodeMirror.fromTextArea $("#code")[0], {
+      lineNumbers: true
+      matchBrackets: true
+      indentWithTabs: true
+      tabSize: 2
+      indentUnit: 2
+    }
 
 
 coffeescript ->

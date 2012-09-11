@@ -22,13 +22,13 @@ onWindows = ->
 
 
 publicDir = "public"
-viewsDir = "playground/views"
+viewsDir = "server/views"
 
 
 app = module.exports = express.createServer()
 
 app.configure ->
-  app.set "views", "playground/views"
+  app.set "views", "server/views"
   app.set "view engine", "coffee"
   app.register ".coffee", ck.adapters.express
   #app.set "view options", layout: false
