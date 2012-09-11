@@ -51,7 +51,7 @@ task :autocmd do |t|
 	sh "jasmine-node --autotest --coffee coffee"
 end
 
-desc 'Run server'
+desc 'Run playground server'
 task :auto => %w[compile_srv] do
   sh "node server.js"
 end
