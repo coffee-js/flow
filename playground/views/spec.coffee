@@ -70,3 +70,12 @@ coffeescript ->
       t.appendTo "body"
     t.text s
 
+
+
+
+
+
+
+
+
+

@@ -31,9 +31,9 @@ task :compile => src do
   compile '-bc', CliJsDir
 end
 
-desc 'compile #{SrvJsDir}/app/ from spec/'
-task :compile_spec => src do
-  sh "#{CoffeeCmd} -c -o #{SrvJsDir}/app/ spec/spec.coffee"
+desc 'compile #{SrvJsDir}/app/ from playground/'
+task :compile_playground => src do
+  sh "#{CoffeeCmd} -c -o #{SrvJsDir}/app/ playground/playground.coffee"
 end
 
 desc 'Run test'
@@ -51,9 +51,9 @@ task :autocmd do |t|
 	sh "jasmine-node --autotest --coffee coffee"
 end
 
-desc 'run auto spec test in browser'
-task :auto => %w[compile_spec] do
-  sh "node spec.js"
+desc 'Run playground server'
+task :auto => %w[compile_playground] do
+  sh "node playground.js"
 end
 
 task :default => :compile

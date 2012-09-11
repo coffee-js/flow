@@ -22,13 +22,13 @@ onWindows = ->
 
 
 publicDir = "public"
-viewsDir = "spec/views"
+viewsDir = "playground/views"
 
 
 app = module.exports = express.createServer()
 
 app.configure ->
-  app.set "views", "spec/views"
+  app.set "views", "playground/views"
   app.set "view engine", "coffee"
   app.register ".coffee", ck.adapters.express
   #app.set "view options", layout: false
@@ -81,6 +81,15 @@ app.get "/", (req, resp) ->
     # locals:
     #   srcs:  jsSrcs
     #   specs: jsSpecs
+
+app.get "/spec", (req, resp) ->
+  resp.render "spec"
+
+app.get "/repl", (req, resp) ->
+  resp.render "repl"
+
+# app.get "/:name", (req, resp) ->
+#   resp.render req.params.name
 
 
 readJS = (path, res) ->
