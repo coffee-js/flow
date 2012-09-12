@@ -10,6 +10,7 @@ head ->
   link rel: "stylesheet", type: "text/css", href: "/jasmine/jasmine.css"
   script src: "/jasmine/jasmine.js"
   script src: "/jasmine/jasmine-html.js"
+  link rel: "stylesheet", type: "text/css", href: "http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin"
 
 body ->
   coffeescript ->
@@ -35,7 +36,7 @@ body ->
         "color: black"
         "background: #FEF"
         "font-size: .9em"
-        "font-family: Ubuntu, Lucida Grande, Gill Sans, Segoe UI, Lucida Sans Unicode, Tahoma, sans-serif"
+        "font-family: Ubuntu, sans-serif"
         #"font-family: \"Menlo\", \"Monaco\", \"Courier New\", monospace"
         "margin: 5px 17px 5px 0"
         "padding: 2px 0 2px 10px"
@@ -46,6 +47,7 @@ body ->
         ].join(";"), -> "NodeJS:"
         pre id: "NodeJS-Console", style: [
           "font-size: .9em"
+          "font-family: Ubuntu, sans-serif"
           #"padding: 10px"
         ].join(";"), -> ""
 
@@ -54,9 +56,11 @@ coffeescript ->
     # now.name = prompt "What's your name?", ""
     t = $("#NodeJS-Console")
     t.text now.commJsOut
+    t.css "font-family", "Ubuntu, sans-serif"
 
     tp = $("#TrivialReporter")
     tp.css "position", "relative"
+    tp.css "font-family", "Ubuntu, sans-serif"
 
   now.empty = ->
     $("body").empty()
