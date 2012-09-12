@@ -185,16 +185,8 @@ compile = (f) ->
   else if f.match /\.styl$/i
     compileCSS f
 
-compileCSS = (f) ->
-  dirname = path.dirname f
-  outdir = dirname.replace (new RegExp "^#{stylDir}", "i"), cssDir
 
-  opts = ["-o", outdir, f]
-  a = opts.slice 0
-  a.unshift stylusCmd
-  cmd = a.join " "
-  puts cmd
-
+compileComm = (cmd, f) ->
   compileInfoz[f].reset()
 
   everyone.now.commJsOut = ""
@@ -225,6 +217,20 @@ compileCSS = (f) ->
         everyone.now.printErr? errInfo
       else
         everyone.now.retest?()
+
+
+compileCSS = (f) ->
+  dirname = path.dirname f
+  outdir = dirname.replace (new RegExp "^#{stylDir}", "i"), cssDir
+
+  opts = ["-o", outdir, f]
+  a = opts.slice 0
+  a.unshift stylusCmd
+  cmd = a.join " "
+  puts cmd
+
+  compileComm cmd, f
+
 
 compileJS = (f) ->
   dirname = path.dirname f
@@ -251,36 +257,7 @@ compileJS = (f) ->
   #   else
   #     everyone.now.retest?()
 
-  compileInfoz[f].reset()
-
-  everyone.now.commJsOut = ""
-  exec cmd, (err, stdout, stderr) ->
-    compileInfoz[f].state = CompileState.COMPILING
-    if err
-      puts "exec \"#{cmd}\" error: #{err}"
-    if stdout
-      puts "stdout: #{stdout}"
-    if stderr
-      puts "stderr: #{stderr}"
-
-    if err
-      compileInfoz[f].state = CompileState.FAILED
-      errInfo = "exec \"#{cmd}\" error: #{err}\nstderr: #{stderr}\n"
-      compileInfoz[f].errInfo = errInfo
-    else
-      compileInfoz[f].state = CompileState.SUCCESSED
-
-    if allCompileDone()
-      puts "ALL COMPILE DONE"
-      msg = ""
-      for f, info of compileInfoz
-        if info.state == CompileState.FAILED
-          msg += info.state.errInfo
-      if msg.length > 0
-        everyone.now.empty?()
-        everyone.now.printErr? errInfo
-      else
-        everyone.now.retest?()
+  compileComm cmd, f
 
 
 for f, info of compileInfoz
