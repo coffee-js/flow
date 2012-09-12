@@ -9,6 +9,7 @@ head ->
 
   link rel: "stylesheet", type: "text/css", href: "/codemirror/codemirror.css"
   script src: "/codemirror/codemirror.js"
+  link rel: "stylesheet", type: "text/css", href: "http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin"
   link rel: "stylesheet", type: "text/css", href: "/css/repl.css"
 
 body ->
