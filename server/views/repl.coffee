@@ -9,7 +9,7 @@ head ->
 
   link rel: "stylesheet", type: "text/css", href: "/codemirror/codemirror.css"
   script src: "/codemirror/codemirror.js"
-  link rel: "stylesheet", type: "text/css", href: "/repl.css"
+  link rel: "stylesheet", type: "text/css", href: "/css/repl.css"
 
 body ->
   textarea id: "code", ->

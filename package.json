@@ -33,7 +33,8 @@
     "walkdir": ">= 0.0.4",
     "mocha": ">= 1.0.0",
     "coffee-script": ">= 1.1.0",
-    "requirejs": ">= 2.0.0"
+    "requirejs": ">= 2.0.0",
+    "stylus": ">= 0.29.0"
   },
   "engines": {
     "node": ">= 0.8.0"

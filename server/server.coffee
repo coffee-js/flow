@@ -8,6 +8,7 @@ fs      = require "fs"
 path    = require "path"
 walkdir = require "walkdir"
 now     = require "now"
+stylus  = require "stylus"
 exec    = (require "child_process").exec
 spawn   = (require "child_process").spawn
 
@@ -45,9 +46,11 @@ app.configure "production", ->
 
 
 srcDir = "coffee"
+stylDir = "stylus"
 CommJsDir = "js/lib"
-jsDir = "public/js"
+jsDir = "#{publicDir}/js"
 jsLibDir = "#{jsDir}/lib"
+cssDir = "#{publicDir}/css"
 
 
 scanDir = (dir, matcher) ->
@@ -123,6 +126,11 @@ if onWindows()
 else
   jasmineCmd = "jasmine-node"
 
+if onWindows()
+  stylusCmd = "stylus.cmd"
+else
+  stylusCmd = "stylus"
+
 
 everyone.now.commJsOut = ""
 
@@ -158,6 +166,8 @@ class CompileInfo
     @errInfo = ""
 
 srcs = scanDir srcDir, /\.coffee$/i
+stylSrcs = scanDir stylDir, /\.styl$/i
+srcs = srcs.concat stylSrcs
 compileInfoz = {}
 for f in srcs
   compileInfoz[f] = new CompileInfo()
@@ -169,11 +179,58 @@ allCompileDone = ->
       return false
   true
 
-compile = (file) ->
-  dirname = path.dirname file
+compile = (f) ->
+  if      f.match /\.coffee$/i
+    compileJS f
+  else if f.match /\.styl$/i
+    compileCSS f
+
+compileCSS = (f) ->
+  dirname = path.dirname f
+  outdir = dirname.replace (new RegExp "^#{stylDir}", "i"), cssDir
+
+  opts = ["-o", outdir, f]
+  a = opts.slice 0
+  a.unshift stylusCmd
+  cmd = a.join " "
+  puts cmd
+
+  compileInfoz[f].reset()
+
+  everyone.now.commJsOut = ""
+  exec cmd, (err, stdout, stderr) ->
+    compileInfoz[f].state = CompileState.COMPILING
+    if err
+      puts "exec \"#{cmd}\" error: #{err}"
+    if stdout
+      puts "stdout: #{stdout}"
+    if stderr
+      puts "stderr: #{stderr}"
+
+    if err
+      compileInfoz[f].state = CompileState.FAILED
+      errInfo = "exec \"#{cmd}\" error: #{err}\nstderr: #{stderr}\n"
+      compileInfoz[f].errInfo = errInfo
+    else
+      compileInfoz[f].state = CompileState.SUCCESSED
+
+    if allCompileDone()
+      puts "ALL COMPILE DONE"
+      msg = ""
+      for f, info of compileInfoz
+        if info.state == CompileState.FAILED
+          msg += info.state.errInfo
+      if msg.length > 0
+        everyone.now.empty?()
+        everyone.now.printErr? errInfo
+      else
+        everyone.now.retest?()
+
+compileJS = (f) ->
+  dirname = path.dirname f
   outdir = dirname.replace (new RegExp "^#{srcDir}", "i"), jsLibDir
 
-  opts = ["-bc", "-o", outdir, file]
+  opts = ["-bc", "-o", outdir, f]
   a = opts.slice 0
   a.unshift coffeeCmd
   cmd = a.join " "
@@ -231,7 +288,7 @@ for f, info of compileInfoz
 
 
 watchr.watch
-  path: srcDir
+  paths: [srcDir, stylDir]
 
   next: (err, watcher) ->
     if err
@@ -242,7 +299,7 @@ watchr.watch
     if onWindows()
       file = file.replace /\\/g, "/"
     sys.puts "#{e}: \"#{file}\""
-    if /\.coffee$/i.test file
+    if /\.(coffee|styl)$/i.test file
       if "new" == e
         if !compileInfoz[file]
           compileInfoz[file] = new CompileInfo()
