@@ -13,16 +13,26 @@ head ->
   link rel: "stylesheet", type: "text/css", href: "/css/repl.css"
 
 body ->
-  textarea id: "code", ->
-
   coffeescript ->
-    editor = CodeMirror.fromTextArea $("#code")[0], {
+    editor = CodeMirror $("body")[0], {
+      mode: "text/html"
       lineNumbers: true
       matchBrackets: true
       indentWithTabs: true
       tabSize: 2
       indentUnit: 2
+      tabMode: "indent"
     }
+    ee = editor.getWrapperElement()
+    ee.style.position = "absolute"
+    ee.style.width = window.innerWidth + "px"
+    ee.style.height = window.innerHeight + "px"
+
+    window.addEventListener 'resize', (e) ->
+      ee.style.width = window.innerWidth + "px"
+      ee.style.height = window.innerHeight + "px"
+
+    editor.setValue ""
 
 
 coffeescript ->
