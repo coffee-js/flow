@@ -9,13 +9,14 @@ head ->
 
   link rel: "stylesheet", type: "text/css", href: "/codemirror/codemirror.css"
   script src: "/codemirror/codemirror.js"
+  script src: "/codemirror/mode/javascript.js"
   link rel: "stylesheet", type: "text/css", href: "http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin"
   link rel: "stylesheet", type: "text/css", href: "/css/repl.css"
 
 body ->
   coffeescript ->
     editor = CodeMirror $("body")[0], {
-      mode: "text/html"
+      mode: "text/javascript"
       lineNumbers: true
       matchBrackets: true
       indentWithTabs: true

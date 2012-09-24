@@ -9,12 +9,19 @@ pp = (s) -> console.log JSON.stringify s, null, "  "
 
 CodeMirror.defineMode 'flow', (config) ->
 
+  tokenBase = (stream, state) ->
+
+
+
   {
     startState: ->
-      pos: 0
+      tokenize: tokenBase
 
     token: (stream, state) ->
-
+      if stream.eatSpace()
+        null
+      else
+        state.tokenize stream, state
   }
 
 

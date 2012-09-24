@@ -15,29 +15,87 @@ body
   overflow: hidden
 
 
+// CodeMirror
+
 .CodeMirror
   min-width: 300px
-  color: #ccc
-  font-family: Ubuntu Mono, sans-serif
-  font-style: normal
-  font-size: 150%
   letter-spacing: 0px
-  background-color: rgba(15, 15, 15, 0.55)
-  border-radius: 3px
-  border: none
-
-  //box-shadow: 0 0 15px #111
 
 .CodeMirror-scroll
+  overflow: auto
   height: 100%
 
 .CodeMirror-gutter
   background-color: transparent
   font-family: Ubuntu, sans-serif
-  border-right: 5px solid #333
+  border-right: 0px solid #333
 
 .CodeMirror pre.CodeMirror-cursor
-  border-left: 10px solid #eee
+  border-left: 10px solid
+
+
+// CodeMirror default theme
+
+span.CodeMirror-selected { background: #d9d9d9; }
+.CodeMirror-focused span.CodeMirror-selected { background: #d2dcf8; }
+
+.CodeMirror-searching {background: #ffa;}
+.CodeMirror pre.CodeMirror-cursor {border-color: #b2b2b2;}
+.cm-s-default {background: #222;}
+.cm-s-default span.cm-keyword {color: #a3d;}
+.cm-s-default span.cm-atom {color: #69c;}
+.cm-s-default span.cm-number {color: #6cf;}
+.cm-s-default span.cm-def {color: #00f;}
+.cm-s-default span.cm-variable {color: #a2a2a2;}
+.cm-s-default span.cm-variable-2 {color: #05a;}
+.cm-s-default span.cm-variable-3 {color: #085;}
+.cm-s-default span.cm-property {color: #a2a2a2;}
+.cm-s-default span.cm-operator {color: #a2a2a2;}
+.cm-s-default span.cm-comment {color: #888;}
+.cm-s-default span.cm-string {color: #6cf;}
+.cm-s-default span.cm-string-2 {color: #f55;}
+.cm-s-default span.cm-meta {color: #555;}
+.cm-s-default span.cm-error {color: #f00;}
+.cm-s-default span.cm-qualifier {color: #555;}
+.cm-s-default span.cm-builtin {color: #0db;}
+.cm-s-default span.cm-bracket {color: #999;}
+.cm-s-default span.cm-tag {color: #c654ff;}
+.cm-s-default span.cm-attribute {color: #00c;}
+.cm-s-default span.cm-header {color: #a0a;}
+.cm-s-default span.cm-quote {color: #090;}
+.cm-s-default span.cm-hr {color: #999;}
+.cm-s-default span.cm-link {color: #00c;}
+
+div.CodeMirror span.CodeMirror-matchingbracket
+  color: #9cf
+  background: #4d4d7d
+
+div.CodeMirror span.CodeMirror-nonmatchingbracket
+  color: #f88
+  background:#733
+
+.CodeMirror
+  color: #ccc
+  font-family: Ubuntu Mono, sans-serif
+  font-size: 150%
+  background: transparent
+  overflow: auto
+  border-radius: 3px
+  border: none
+
+.CodeMirror-gutter {}
+
+.cm-s-default div.CodeMirror-selected {background: #49483E !important;}
+
+.cm-SUBST {color: #50f050;}
+.cm-SUBST-PIPE {display: none;}
+
+
+
+
+
+
+
 
 
 
