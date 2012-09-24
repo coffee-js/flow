@@ -16,9 +16,13 @@ err = (s, pos=null, src=null) ->
 
 
 combinator = do ->
-  int10 = pc.map pc.rep1(pc.range '0','9'), (n) -> n.reduce (t,s) -> t.concat(s)
+  decimalNumber = pc.map pc.rep1(pc.range '0','9'), (n) -> n.reduce (t,s) -> t.concat(s)
+  #pc.regexp /^(?:[-+]i|[-+](?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)i|[-+]?(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)@[-+]?(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)|[-+]?(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)[-+](?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)?i|(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*))(?=[()\s;"]|$)/i
+  binaryNumber = pc.regexp /^(?:[-+]i|[-+][01]+#*(?:\/[01]+#*)?i|[-+]?[01]+#*(?:\/[01]+#*)?@[-+]?[01]+#*(?:\/[01]+#*)?|[-+]?[01]+#*(?:\/[01]+#*)?[-+](?:[01]+#*(?:\/[01]+#*)?)?i|[-+]?[01]+#*(?:\/[01]+#*)?)(?=[()\s;"]|$)/i
+  octalNumber = pc.regexp /^(?:[-+]i|[-+][0-7]+#*(?:\/[0-7]+#*)?i|[-+]?[0-7]+#*(?:\/[0-7]+#*)?@[-+]?[0-7]+#*(?:\/[0-7]+#*)?|[-+]?[0-7]+#*(?:\/[0-7]+#*)?[-+](?:[0-7]+#*(?:\/[0-7]+#*)?)?i|[-+]?[0-7]+#*(?:\/[0-7]+#*)?)(?=[()\s;"]|$)/i
+  hexNumber = pc.regexp /^(?:[-+]i|[-+][\da-f]+#*(?:\/[\da-f]+#*)?i|[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?@[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?|[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?[-+](?:[\da-f]+#*(?:\/[\da-f]+#*)?)?i|[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?)(?=[()\s;"]|$)/i
 
-  number = pc.map pc.seq(pc.optional(pc.tok '-'), int10),
+  number = pc.map pc.seq(pc.optional(pc.tok '-'), decimalNumber),
     (n) -> parseInt(if n[0]=='-' then n[0].concat(n[1]) else n[1])
 
   string = pc.map pc.seq(pc.tok('"'), pc.rep0(pc.choice pc.tok('\\"'), pc.neg(pc.tok('"'))), pc.tok('"')),
@@ -110,7 +114,7 @@ combinator = do ->
 
   elem = pc.choice evalBlock, valBlock, number, string, word
 
-  { int10, number, string, colon, wordChar, nameChar, name, wordName, wordRefine, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
+  { decimalNumber, number, string, colon, wordChar, nameChar, name, wordName, wordRefine, word, elem, wordMap, seq, body, block, evalBlock, valBlock }
 
 
 for k, v of combinator

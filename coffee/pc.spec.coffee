@@ -100,16 +100,6 @@ describe "Parser Combinator", ->
       (expect (parse p, "123456  ", 7).state.lastFailPos).toEqual null
 
 
-  describe "number", ->
-
-    it "match number", ->
-      p = pc.number()
-      (expect (parse p, "1").match).toEqual "1"
-      (expect (parse p, "1.1").match).toEqual "1.1"
-      (expect (parse p, "0.05").match).toEqual "0.05"
-      #(expect (parse p, "0xff").match).toEqual "0xff"
-
-
   describe "ws", ->
 
     it "match something with space before it", ->
