@@ -15,25 +15,31 @@ head ->
 
 body ->
   coffeescript ->
-    editor = CodeMirror $("body")[0], {
-      mode: "text/javascript"
-      lineNumbers: true
-      matchBrackets: true
-      indentWithTabs: true
-      tabSize: 2
-      indentUnit: 2
-      tabMode: "indent"
-    }
-    ee = editor.getWrapperElement()
-    ee.style.position = "absolute"
-    ee.style.width = window.innerWidth + "px"
-    ee.style.height = window.innerHeight + "px"
+    requirejs.config
+      baseUrl: "/public/js/lib"
 
-    window.addEventListener 'resize', (e) ->
+    requirejs [
+      #"flow/codemirror",
+    ], ->
+      editor = CodeMirror $("body")[0], {
+        mode: "text/x-flow"
+        lineNumbers: true
+        matchBrackets: true
+        indentWithTabs: true
+        tabSize: 2
+        indentUnit: 2
+        tabMode: "indent"
+      }
+      ee = editor.getWrapperElement()
+      ee.style.position = "absolute"
       ee.style.width = window.innerWidth + "px"
       ee.style.height = window.innerHeight + "px"
 
-    editor.setValue ""
+      window.addEventListener 'resize', (e) ->
+        ee.style.width = window.innerWidth + "px"
+        ee.style.height = window.innerHeight + "px"
+
+      editor.setValue ""
 
 
 coffeescript ->

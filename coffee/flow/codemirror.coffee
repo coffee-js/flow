@@ -10,7 +10,7 @@ pp = (s) -> console.log JSON.stringify s, null, "  "
 CodeMirror.defineMode 'flow', (config) ->
 
   tokenBase = (stream, state) ->
-
+    ch = stream.next()
 
 
   {
