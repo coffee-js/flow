@@ -67,12 +67,27 @@ pc.range = (lower, upper) ->
       else pc.ret st.fail(), null
     else pc.ret st.fail(), null
 
-pc.space = ->
+pc.regexp = (regexp) ->
   (st) ->
-    m = st.txt().slice(st.pos, st.txt().length).match /^\s+/
+    m = st.txt().slice(st.pos, st.txt().length).match regexp
     if m != null
       pc.ret st.forward(m[0].length), m[0]
     else pc.ret st.fail(), null
+
+pc.space = ->
+  pc.regexp /^\s+/
+
+pc.binaryNumber = ->
+  pc.regexp /^(?:[-+]i|[-+][01]+#*(?:\/[01]+#*)?i|[-+]?[01]+#*(?:\/[01]+#*)?@[-+]?[01]+#*(?:\/[01]+#*)?|[-+]?[01]+#*(?:\/[01]+#*)?[-+](?:[01]+#*(?:\/[01]+#*)?)?i|[-+]?[01]+#*(?:\/[01]+#*)?)(?=[()\s;"]|$)/i
+
+pc.octalNumber = ->
+  pc.regexp /^(?:[-+]i|[-+][0-7]+#*(?:\/[0-7]+#*)?i|[-+]?[0-7]+#*(?:\/[0-7]+#*)?@[-+]?[0-7]+#*(?:\/[0-7]+#*)?|[-+]?[0-7]+#*(?:\/[0-7]+#*)?[-+](?:[0-7]+#*(?:\/[0-7]+#*)?)?i|[-+]?[0-7]+#*(?:\/[0-7]+#*)?)(?=[()\s;"]|$)/i
+
+pc.hexNumber = ->
+  pc.regexp /^(?:[-+]i|[-+][\da-f]+#*(?:\/[\da-f]+#*)?i|[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?@[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?|[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?[-+](?:[\da-f]+#*(?:\/[\da-f]+#*)?)?i|[-+]?[\da-f]+#*(?:\/[\da-f]+#*)?)(?=[()\s;"]|$)/i
+
+pc.decimalNumber = ->
+  pc.regexp /^(?:[-+]i|[-+](?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)i|[-+]?(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)@[-+]?(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)|[-+]?(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)[-+](?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*)?i|(?:(?:(?:\d+#+\.?#*|\d+\.\d*#*|\.\d+#*|\d+)(?:[esfdl][-+]?\d+)?)|\d+#*\/\d+#*))(?=[()\s;"]|$)/i
 
 pc.ws = (p) ->
   (st) ->
@@ -97,6 +112,9 @@ pc.choice = ->
       if last.state.lastFailPos < r.state.lastFailPos
         last = r
     return last
+
+pc.number = ->
+  pc.choice pc.binaryNumber(), pc.octalNumber(), pc.hexNumber(), pc.decimalNumber()
 
 pc.seq = ->
   parsers = (p for p in arguments)

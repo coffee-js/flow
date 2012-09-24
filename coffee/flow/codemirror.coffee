@@ -1,3 +1,4 @@
+pc = require "../pc"
 parser = require "./parser"
 
 
@@ -8,20 +9,13 @@ pp = (s) -> console.log JSON.stringify s, null, "  "
 
 CodeMirror.defineMode 'flow', (config) ->
 
+  {
+    startState: ->
+      pos: 0
 
+    token: (stream, state) ->
 
-
-
-
-
-
-
-
-
-
-
-
-
+  }
 
 
 CodeMirror.defineMIME('text/x-flow', 'flow')

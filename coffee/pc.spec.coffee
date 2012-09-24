@@ -74,6 +74,14 @@ describe "Parser Combinator", ->
       (expect (parse p, "123456fz ", 7).state.lastFailPos).toEqual null
 
 
+  describe "regexp", ->
+
+    it "match regexp", ->
+      p = pc.regexp /abc$/
+      (expect (parse p, "abc").match).toEqual "abc"
+      (expect (parse p, "abcd").match).toEqual null
+
+
   describe "space", ->
 
     it "match space", ->
@@ -90,6 +98,16 @@ describe "Parser Combinator", ->
       (expect (parse p, "12345 ", 5).state.lastFailPos).toEqual null
       (expect (parse p, "1234567", 6).state.lastFailPos).toEqual 6
       (expect (parse p, "123456  ", 7).state.lastFailPos).toEqual null
+
+
+  describe "number", ->
+
+    it "match number", ->
+      p = pc.number()
+      (expect (parse p, "1").match).toEqual "1"
+      (expect (parse p, "1.1").match).toEqual "1.1"
+      (expect (parse p, "0.05").match).toEqual "0.05"
+      #(expect (parse p, "0xff").match).toEqual "0xff"
 
 
   describe "ws", ->
