@@ -3,26 +3,41 @@ border-radius()
   -moz-border-radius: arguments
   border-radius: arguments
 
+*
+  margin: 0
+  padding: 0
+  border: 0
+
 body
-  background: #fff
-  color: #000
   font-family: Ubuntu, sans-serif
-  margin: 0px
+  background: #404040
+  color: #ccc
   overflow: hidden
 
 .CodeMirror
-  background-color: rgba(255,255,255,0.75)
-  color: #111
+  background-color: transparent
+  min-width: 300px
+  color: #ccc
   font-family: Ubuntu Mono, sans-serif
   font-style: normal
   font-size: 150%
   letter-spacing: 0px
+  background: transparent
+  border-radius: 3px
+  border: none
+
+  //box-shadow: 0 0 15px #111
 
 .CodeMirror-scroll
   height: 100%
 
 .CodeMirror-gutter
-  background-color: #eee
+  background-color: rgba(15, 15, 15, 0.55)
+  font-family: Ubuntu, sans-serif
+  border: none
+
+.CodeMirror pre.CodeMirror-cursor
+  border-left: 10px solid #eee
 
 
 
