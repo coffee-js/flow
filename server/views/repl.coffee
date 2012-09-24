@@ -19,7 +19,7 @@ body ->
       baseUrl: "/public/js/lib"
 
     requirejs [
-      #"flow/codemirror",
+      "flow/codemirror",
     ], ->
       editor = CodeMirror $("body")[0], {
         mode: "text/x-flow"
