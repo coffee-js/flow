@@ -9,6 +9,8 @@ head ->
 
   link rel: "stylesheet", type: "text/css", href: "/codemirror/codemirror.css"
   script src: "/codemirror/codemirror.js"
+  script src: "/codemirror/searchcursor.js"
+  script src: "/codemirror/match-highlighter.js"
   script src: "/codemirror/mode/javascript.js"
   link rel: "stylesheet", type: "text/css", href: "http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin"
   link rel: "stylesheet", type: "text/css", href: "/css/repl.css"
@@ -29,6 +31,8 @@ body ->
         tabSize: 2
         indentUnit: 2
         tabMode: "indent"
+        onCursorActivity: ->
+          editor.matchHighlight "CodeMirror-matchhighlight"
       }
       ee = editor.getWrapperElement()
       ee.style.position = "absolute"

@@ -23,7 +23,9 @@ CodeMirror.defineMode 'flow', (config) ->
   tokenSeq = (stream, state) ->
     ch = stream.next()
     switch ch
-      when ":", ".", "#", "!"
+      when ":"
+        "commit"
+      when ".", "#", "!"
         "keyword"
       when '"'
         state.tokenize = tokenString
@@ -47,7 +49,9 @@ CodeMirror.defineMode 'flow', (config) ->
         else
           stream.eatWhile /[^\s\[\]\{\}:\.#!]/
           cur = stream.current()
-          if words[cur] != undefined
+          if stream.peek() == ":"
+            "tag"
+          else if words[cur] != undefined
             words[cur]
           else
             "variable"
