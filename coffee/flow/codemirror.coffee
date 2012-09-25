@@ -57,15 +57,17 @@ CodeMirror.defineMode 'flow', (config) ->
             "variable"
 
   tokenString = (stream, state) ->
-    end = false
     escaped = false
-    while (next = stream.next()) != null
-      if next == '"' && !escaped
-        end = true
+    ch = stream.next()
+    while ch != undefined
+      if ch == '"' && !escaped
+        state.tokenize = tokenSeq
         break
-      escaped = !escaped && next == '\\'
-    if end && !escaped
-      state.tokenize = tokenSeq
+      if ch == "\\"
+        escaped = !escaped
+      else
+        escaped = false
+      ch = stream.next()
     "string"
 
   tokenBlock = (stream, state) ->
