@@ -28,13 +28,15 @@ body ->
         #lineNumbers: true
         matchBrackets: true
         indentWithTabs: true
+        smartIndent: true
         tabSize: 2
         indentUnit: 2
         tabMode: "indent"
         onCursorActivity: ->
           editor.matchHighlight "CodeMirror-matchhighlight"
       }
-      editor.setValue ""
+      code = ""
+      editor.setValue code
 
 
 coffeescript ->
