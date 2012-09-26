@@ -25,7 +25,7 @@ body ->
     ], ->
       editor = CodeMirror $("body")[0], {
         mode: "text/x-flow"
-        lineNumbers: true
+        #lineNumbers: true
         matchBrackets: true
         indentWithTabs: true
         tabSize: 2
