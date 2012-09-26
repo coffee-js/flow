@@ -34,15 +34,6 @@ body ->
         onCursorActivity: ->
           editor.matchHighlight "CodeMirror-matchhighlight"
       }
-      ee = editor.getWrapperElement()
-      ee.style.position = "absolute"
-      ee.style.width = window.innerWidth + "px"
-      ee.style.height = window.innerHeight + "px"
-
-      window.addEventListener 'resize', (e) ->
-        ee.style.width = window.innerWidth + "px"
-        ee.style.height = window.innerHeight + "px"
-
       editor.setValue ""
 
 
