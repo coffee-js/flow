@@ -16,6 +16,8 @@ head ->
   link rel: "stylesheet", type: "text/css", href: "/css/repl.css"
 
 body ->
+  div id: "wrapper"
+
   coffeescript ->
     requirejs.config
       baseUrl: "/public/js/lib"
@@ -23,8 +25,8 @@ body ->
     requirejs [
       "flow/codemirror",
     ], ->
-      editor = CodeMirror $("body")[0], {
-        mode: "text/x-flow"
+      editor = CodeMirror $("#wrapper")[0], {
+        mode: "text/javascript"
         #lineNumbers: true
         matchBrackets: true
         indentWithTabs: true
@@ -35,8 +37,7 @@ body ->
         onCursorActivity: ->
           editor.matchHighlight "CodeMirror-matchhighlight"
       }
-      code = ""
-      editor.setValue code
+      editor.setValue ""
 
 
 coffeescript ->
