@@ -1,10 +1,13 @@
 {
   "name": "flow-script",
   "version": "0.0.1",
-  "description": "flow programming language (protype)",
+  "description": "flow programming language interpreter on JS",
   "keywords": [
+    "flow",
+    "flow-script",
     "language",
     "compiler",
+    "interpreter",
     "javascript"
    ],
   "author": "logicthink <emerge260@gmail.com>",
