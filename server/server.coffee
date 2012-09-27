@@ -85,12 +85,6 @@ app.get "/", (req, resp) ->
     #   srcs:  jsSrcs
     #   specs: jsSpecs
 
-app.get "/spec", (req, resp) ->
-  resp.render "spec"
-
-app.get "/repl", (req, resp) ->
-  resp.render "repl"
-
 # app.get "/:name", (req, resp) ->
 #   resp.render req.params.name
 
@@ -166,8 +160,8 @@ class CompileInfo
     @errInfo = ""
 
 srcs = scanDir srcDir, /\.coffee$/i
-stylSrcs = scanDir stylDir, /\.styl$/i
-srcs = srcs.concat stylSrcs
+# stylSrcs = scanDir stylDir, /\.styl$/i
+# srcs = srcs.concat stylSrcs
 compileInfoz = {}
 for f in srcs
   compileInfoz[f] = new CompileInfo()
