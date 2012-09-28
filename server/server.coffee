@@ -1,5 +1,5 @@
 express = require "express"
-sys     = require "sys"
+util     = require "util"
 ck      = require "coffeekup"
 watchr  = require "watchr"
 coffee  = require "coffee-script"
@@ -13,7 +13,7 @@ exec    = (require "child_process").exec
 spawn   = (require "child_process").spawn
 
 
-puts = (s) -> sys.puts s
+puts = (s) -> util.puts s
 log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, '  '
 write = (s) -> process.stdout.write s
@@ -60,10 +60,10 @@ scanDir = (dir, matcher) ->
       f = f.replace path.resolve(dir), dir
       if fs.statSync(f).isFile()
         if !/.*node_modules.*/i.test(f) && matcher.test(path.basename f)
-          #sys.puts "find: \"#{f}\""
+          #util.puts "find: \"#{f}\""
           srcs.push f
     catch err
-      sys.puts "walkdir err: #{err}"
+      util.puts "walkdir err: #{err}"
   srcs
 
 
@@ -92,7 +92,7 @@ app.get "/", (req, resp) ->
 readJS = (path, res) ->
   fs.readFile path, "utf8", (err, data) ->
     if err
-      sys.puts "read file: #{path} error: #{err}"
+      util.puts "read file: #{path} error: #{err}"
     else if /\.js$/i.test path
       mod = "define(function(require, exports, module) {\n#{data}\nreturn exports;\n});"
       res.send mod, "Content-Type":"application/javascript"
@@ -104,7 +104,7 @@ app.get "/#{jsLibDir}/*", (req, res) ->
 
 port = 4321
 app.listen port, ->
-	sys.puts "Listening on #{port}\nPress CTRL-C to stop server."
+	util.puts "Listening on #{port}\nPress CTRL-C to stop server."
 
 
 everyone = now.initialize app
@@ -264,12 +264,12 @@ watchr.watch
   next: (err, watcher) ->
     if err
     	throw err
-    sys.puts "watching srcdir: \"#{srcDir}\""
+    util.puts "watching srcdir: \"#{srcDir}\""
   
   listener: (e, file, curr, prev) ->
     if onWindows()
       file = file.replace /\\/g, "/"
-    sys.puts "#{e}: \"#{file}\""
+    util.puts "#{e}: \"#{file}\""
     if /\.(coffee|styl)$/i.test file
       if "new" == e
         if !compileInfoz[file]
@@ -287,12 +287,12 @@ watchr.watch
   next: (err, watcher) ->
     if err
       throw err
-    sys.puts "watching views dir: \"#{viewsDir}\""
+    util.puts "watching views dir: \"#{viewsDir}\""
 
   listener: (e, file, curr, prev) ->
     if onWindows()
       file = file.replace /\\/g, "/"
-    sys.puts "#{e}: \"#{file}\""
+    util.puts "#{e}: \"#{file}\""
     if /\.coffee$/i.test file
       everyone.now.retest?()
 
@@ -302,20 +302,20 @@ watchr.watch
   next: (err, watcher) ->
     if err
       throw err
-    sys.puts "watching public dir: \"#{publicDir}\""
+    util.puts "watching public dir: \"#{publicDir}\""
 
   listener: (e, file, curr, prev) ->
     if onWindows()
       file = file.replace /\\/g, "/"
-    sys.puts "#{e}: \"#{file}\""
+    util.puts "#{e}: \"#{file}\""
     everyone.now.retest?()
 
 
 everyone.connected ->
-  sys.puts "Joined: #{@now.name}"
+  util.puts "Joined: #{@now.name}"
 
 everyone.disconnected ->
-  sys.puts "Left: #{@now.name}"
+  util.puts "Left: #{@now.name}"
 
 
 

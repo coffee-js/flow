@@ -13,13 +13,11 @@
   "author": "logicthink <emerge260@gmail.com>",
   "main": "./js/lib/flow.js",
   "directories": {
-    "bin": "./js/bin",
+    "bin": "./js/app",
     "lib": "./js/lib",
     "src": "./coffee",
-    "docs": "./docs",
-    "test": "./test"
-  },
-  "bin": {
+    "public": "./public",
+    "server": "./server"
   },
   "repository": {
     "type": "git",
