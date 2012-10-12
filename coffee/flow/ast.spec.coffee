@@ -30,6 +30,20 @@ describe "Flow AST", ->
       (expect (parse "a: [ b: a c: { x y >> a } + ] 1 2 a").toStr()).toEqual "[ a: [ b: a c: { x y >> a } + ] 1 2 a ]"
 
 
+  describe "serialize", ->
+
+    it "word", ->
+      w = (parse "a").seq[0]
+      d = w.serialize()
+      (expect d.nodeType).toEqual "Word"
+      w1 = new ast[d.nodeType] d.entry, d.refines, d.opt
+      w.srcInfo = null
+      s = JSON.stringify w
+      s1 = JSON.stringify w1
+      (expect s).toEqual s1
+
+
+
 
 
 

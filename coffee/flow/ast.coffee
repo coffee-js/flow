@@ -51,6 +51,12 @@ class ast.Word extends ast.Node
   toStr: ->
     @name
 
+  serialize: ->
+    nodeType: "Word"
+    entry: @entry
+    refines: @refines
+    opt: @opt
+
 
 class ast.Block extends ast.Node
   constructor: (@args, wordSeq, @seq, @elemType, @srcInfo=null) ->
@@ -67,6 +73,20 @@ class ast.Block extends ast.Node
         err "redefined word:\"#{name}\"", e.srcInfo
       @words[name] = e.elem
       @wordCount += 1
+
+  serialize: ->
+    wordSeq = []
+    for w in @wordSeq()
+      e = w.elem
+      if e instanceof ast.Node
+        e = e.serialize()
+      wordSeq.push {name:[w.name], elem:e}
+    seq = []
+    for e in @seq
+      if e instanceof ast.Node
+        e = e.serialize()
+      seq.push e
+    {nodeType: "Block", @args, wordSeq, seq, @elemType}
 
   wordSeq: ->
     wordSeq = []
