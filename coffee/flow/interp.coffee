@@ -4,6 +4,17 @@ pc = require "../pc"
 parser = require "./parser"
 
 
+type = (obj) ->
+  if obj == undefined or obj == null
+    return String obj
+  classToType = new Object
+  for name in "Boolean Number String Function Array Date RegExp".split(" ")
+    classToType["[object " + name + "]"] = name.toLowerCase()
+  myClass = Object.prototype.toString.call obj
+  if myClass of classToType
+    return classToType[myClass]
+  return "object"
+
 log = (s) -> console.log s
 pp = (s) -> console.log JSON.stringify s, null, "  "
 
@@ -69,18 +80,18 @@ bw = ->
 
 ct = (ctx, e, ta...) ->
   for t in ta
-    if typeof(e) == t
+    if type(e) == t
       pass = true
   if !pass
     ts = ta.join " or "
-    err "expect a #{ts}, got:[#{ast.toStr(e)}:#{typeof(e)}]", ctx, e.srcInfo
+    err "expect a #{ts}, got:[#{ast.toStr(e)}:#{type(e)}]", ctx, e.srcInfo
 
 ct2 = (ctx, a, b, t) ->
   ct ctx, a, t; ct ctx, b, t
 
 ck = (ctx, e, ka...) ->
   for k in ka
-    if typeof(k)=="string" && typeof(e)==k
+    if type(k)=="string" && type(e)==k
       pass = true
     else if e instanceof k
       pass = true
@@ -373,7 +384,7 @@ nativeWords = {
     ast.toStr n
 
   "type": bw 1, (ctx, n) ->
-    switch typeof n
+    switch type n
       when "number"
         return "number"
       when "string"
