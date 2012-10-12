@@ -80,7 +80,7 @@ class ast.Block extends ast.Node
       e = w.elem
       if e instanceof ast.Node
         e = e.serialize()
-      wordSeq.push {name:[w.name], elem:e}
+      wordSeq.push {name:w.name, elem:e}
     seq = []
     for e in @seq
       if e instanceof ast.Node
