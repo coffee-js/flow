@@ -36,7 +36,7 @@ describe "Flow AST", ->
       w = (parse "a").seq[0]
       d = w.serialize()
       (expect d.nodeType).toEqual "Word"
-      w1 = new ast[d.nodeType] d.entry, d.refines, d.opt
+      w1 = ast[d.nodeType].obj2node d
       d1 = w1.serialize()
       s = JSON.stringify d
       s1 = JSON.stringify d1
@@ -46,7 +46,7 @@ describe "Flow AST", ->
     it "block", ->
       b = (parse "a: [ b: a c: { x y >> a } + ] 1 2 a")
       d = b.serialize()
-      b1 = new ast[d.nodeType] d.args, d.wordSeq, d.seq, d.elemType
+      b1 = ast[d.nodeType].obj2node d
       d1 = b1.serialize()
       s = JSON.stringify d
       s1 = JSON.stringify d1

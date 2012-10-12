@@ -57,6 +57,9 @@ class ast.Word extends ast.Node
     refines: @refines
     opt: @opt
 
+  @obj2node: (o) ->
+    new ast.Word o.entry, o.refines, o.opt
+
 
 class ast.Block extends ast.Node
   constructor: (@args, wordSeq, @seq, @elemType, @srcInfo=null) ->
@@ -87,6 +90,9 @@ class ast.Block extends ast.Node
         e = e.serialize()
       seq.push e
     {nodeType: "Block", @args, wordSeq, seq, @elemType}
+
+  @obj2node: (o) ->
+    new ast.Block o.args, o.wordSeq, o.seq, o.elemType
 
   wordSeq: ->
     wordSeq = []
